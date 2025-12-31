@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đang chuyển hướng...</title>
+</head>
+<body style="text-align:center;font-family:sans-serif">
+
+  <h2>Vui lòng chờ...</h2>
+  <p id="count">5</p>
+
+  <script>
+    // 🔗 LINK THẬT (CHỈ SỬA Ở ĐÂY)
+    const links = {
+      1: "https://nghienapp.online/SgSiTKtW3nkoVTpMQ7BZ",
+      2: "https://nghienapp.online/qTZsWKhekrkvITlbzj88",
+      3: "https://nghienapp.online/cyTiTaraN470hPrZaBHm"
+    };
+
+    // ⏱️ THỜI GIAN CHỜ (giây)
+    let time = 5;
+
+    // 📌 LẤY ID TỪ URL
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    const target = links[id];
+
+    if (!target) {
+      document.body.innerHTML = "Link không tồn tại";
+    } else {
+      const counter = document.getElementById("count");
+
+      const timer = setInterval(() => {
+        time--;
+        counter.innerText = time;
+        if (time <= 0) {
+          clearInterval(timer);
+          window.location.href = target;
+        }
+      }, 1000);
+    }
+  </script>
+
+</body>
+</html>
