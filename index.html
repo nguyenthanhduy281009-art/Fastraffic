@@ -3,71 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đang kiểm tra bảo mật...</title>
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <title>Fastraffic - Chọn Nhiệm Vụ</title>
     <style>
-        body { font-family: sans-serif; background-color: #f4f4f4; text-align: center; padding-top: 100px; }
-        .box { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        #count { font-size: 30px; color: #ff0000; font-weight: bold; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        h1 { color: #1a73e8; margin-bottom: 5px; }
+        .category { background: #e8f0fe; color: #1967d2; padding: 10px; border-radius: 8px; margin: 20px 0 10px; font-weight: bold; text-align: left; }
+        .btn { display: block; background: #fff; border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 10px; text-decoration: none; color: #333; font-weight: 500; transition: 0.3s; text-align: left; }
+        .btn:hover { background: #f8f9fa; border-color: #1a73e8; transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .icon { margin-right: 10px; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>🚀 FASTRAFFIC</h1>
+        <p style="color: #666;">Vui lòng chọn link nhiệm vụ bên dưới</p>
 
-<div class="box">
-    <div id="auth-section">
-        <h3>Vui lòng xác minh con người</h3>
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAACJ58mUD1xXb3uHV" data-callback="startProcess"></div>
+        <div class="category">📍 NHIỆM VỤ TRAFFICTOT</div>
+        <a href="wait.html?id=t1" class="btn"><span class="icon">🔗</span> Vượt link Traffictot #1</a>
+        <a href="wait.html?id=t2" class="btn"><span class="icon">🔗</span> Vượt link Traffictot #2</a>
+
+        <div class="category">⚡ NHIỆM VỤ CLICK1S</div>
+        <a href="wait.html?id=c1" class="btn"><span class="icon">🖱️</span> Vượt link Click1s #1</a>
+        <a href="wait.html?id=c2" class="btn"><span class="icon">🖱️</span> Vượt link Click1s #2</a>
+
+        <div style="margin-top: 25px; font-size: 11px; color: #aaa;">© 2025 Fastraffic Security System</div>
     </div>
-
-    <div id="countdown-section" style="display: none;">
-        <h3>Xác minh thành công!</h3>
-        <p>Hệ thống đang chuyển hướng sau:</p>
-        <div id="count">3</div>
-    </div>
-</div>
-
-<script>
-    // PHÂN LOẠI DANH SÁCH LINK TẠI ĐÂY
-    const links = {
-        // Nhiệm vụ Traffictot
-        "t1": "https://nghienapp.online/HSF6BnbweEUhrDlxGAOs",
-        "t2": "https://nghienapp.online/2VJvMqwpgoc8tDi8biUK",
-        "t3": "https://nghienapp.online/w8FPq4AcEYKjHprf0Qqm",
-        
-        // Nhiệm vụ Click1s
-        "c1": "https://click1s.com/aWeLrgi2",
-        "c2": "https://click1s.com/ZLvEPkmv" 
-    };
-
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
-    const target = links[id];
-
-    function startProcess(token) {
-        if (!target) {
-            alert("Lỗi: Không tìm thấy link này!");
-            return;
-        }
-
-        // Hiện đếm ngược
-        document.getElementById("auth-section").style.display = "none";
-        document.getElementById("countdown-section").style.display = "block";
-
-        let time = 3;
-        const counter = document.getElementById("count");
-        const timer = setInterval(() => {
-            time--;
-            counter.innerText = time;
-            if (time <= 0) {
-                clearInterval(timer);
-                window.location.href = target;
-            }
-        }, 1000);
-    }
-</script>
-
 </body>
 </html>
-
-
-
