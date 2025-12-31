@@ -2,31 +2,57 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Vượt link đơn giản</title>
+  <title>Vượt link</title>
 </head>
 <body>
 
-  <h2>Vui lòng chờ...</h2>
-  <p id="time">5</p>
+  <h2>Danh sách link</h2>
 
+  <!-- LINK CÓ SẴN -->
+  <button onclick="vuotLink(https://nghienapp.online/cyTiTaraN470hPrZaBHm')">Vượt link Google</button>
+  <br><br>
+  <button onclick="vuotLink('https://nghienapp.online/qTZsWKhekrkvITlbzj88')">Vượt link Example</button>
+  <br><br>
+  <button onclick="vuotLink('https://nghienapp.online/SgSiTKtW3nkoVTpMQ7BZ')">
+    Vượt link của bạn
+  </button>
+
+  <hr>
+
+  <p id="time"></p>
   <button id="btn" disabled>Mở link</button>
 
   <script>
-    let t = 5;
-    let timer = setInterval(() => {
-      t--;
-      document.getElementById("time").innerText = t;
+    let linkGoc = "";
+    let t;
+    let timer;
 
-      if (t === 0) {
-        clearInterval(timer);
-        document.getElementById("btn").disabled = false;
-      }
-    }, 1000);
+    function vuotLink(link) {
+      linkGoc = link;
+      t = 5;
+      document.getElementById("btn").disabled = true;
+      document.getElementById("time").innerText =
+        "Vui lòng chờ " + t + " giây";
+
+      clearInterval(timer);
+      timer = setInterval(() => {
+        t--;
+        document.getElementById("time").innerText =
+          "Vui lòng chờ " + t + " giây";
+
+        if (t === 0) {
+          clearInterval(timer);
+          document.getElementById("btn").disabled = false;
+        }
+      }, 1000);
+    }
 
     document.getElementById("btn").onclick = function () {
-      window.location.href = "https://nghienapp.online/SgSiTKtW3nkoVTpMQ7BZ";
+      window.location.href = linkGoc;
     };
   </script>
 
 </body>
 </html>
+
+
