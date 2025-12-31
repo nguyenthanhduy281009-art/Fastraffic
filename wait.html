@@ -4,10 +4,17 @@
   <meta charset="UTF-8">
   <title>Đang chuyển hướng...</title>
 </head>
-<body style="text-align:center;font-family:sans-serif">
+<body style="text-align:center; font-family:sans-serif; padding-top: 50px;">
+  
+<div id="auth-section">
+  <h2 id="status">Vui lòng xác minh bạn là con người</h2>
+  <div class="cf-turnstile" data-sitekey="0x4AAAAAACJ58mUD1xXb3uHV" data-callback="startCountdown"></div>
 
-  <h2>Vui lòng chờ...</h2>
-  <p id="count">5</p>
+    <div id="countdown-section" style="display: none;">
+      <h2>Vui lòng chờ...</h2>
+      <p id="count" style="font-size: 24px; font-weight: bold;">3</p>
+      </div>
+ 
 
   <script>
     // 🔗 LINK THẬT (CHỈ SỬA Ở ĐÂY)
@@ -43,4 +50,5 @@
 
 </body>
 </html>
+
 
