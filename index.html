@@ -3,33 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fastraffic - Chọn Nhiệm Vụ</title>
+    <title>Fastraffic - Hệ thống nhiệm vụ</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
-        h1 { color: #1a73e8; margin-bottom: 5px; }
-        .category { background: #e8f0fe; color: #1967d2; padding: 10px; border-radius: 8px; margin: 20px 0 10px; font-weight: bold; text-align: left; }
-        .btn { display: block; background: #fff; border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 10px; text-decoration: none; color: #333; font-weight: 500; transition: 0.3s; text-align: left; }
-        .btn:hover { background: #f8f9fa; border-color: #1a73e8; transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .icon { margin-right: 10px; }
+        body { font-family: Arial, sans-serif; background-color: #f0f2f5; text-align: center; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        .btn { display: block; background: #007bff; color: white; padding: 12px; margin: 10px 0; border-radius: 8px; text-decoration: none; font-weight: bold; }
+        .btn-c { background: #28a745; }
+        .completed { opacity: 0.5; pointer-events: none; background: #6c757d !important; }
+        h3 { border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 20px; color: #333; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 FASTRAFFIC</h1>
-        <p style="color: #666;">Vui lòng chọn nhiệm vụ bên dưới</p>
+        <h2>🚀 CHỌN NHIỆM VỤ</h2>
+        
+        <h3>📍 TRAFFICTOT</h3>
+        <a href="wait.html?id=t1" class="btn">Vượt link Traffictot 1</a>
+        <a href="wait.html?id=t2" class="btn">Vượt link Traffictot 2</a>
+        <a href="wait.html?id=t3" class="btn">Vượt link Traffictot 3</a>
 
-        <div class="category">📍 NHIỆM VỤ TRAFFICTOT</div>
-        <a href="wait.html?id=t1" class="btn"><span class="icon">🔗</span> Vượt link Traffictot #1</a>
-        <a href="wait.html?id=t2" class="btn"><span class="icon">🔗</span> Vượt link Traffictot #2</a>
-        <a href="wait.html?id=t3" class="btn"><span class="icon">🔗</span> Vượt link Traffictot #3</a>
-
-        <div class="category">⚡ NHIỆM VỤ CLICK1S</div>
-        <a href="wait.html?id=c1" class="btn"><span class="icon">🖱️</span> Vượt link Click1s #1</a>
-        <a href="wait.html?id=c2" class="btn"><span class="icon">🖱️</span> Vượt link Click1s #2</a>
-
-        <div style="margin-top: 25px; font-size: 11px; color: #aaa;">© 2025 Fastraffic Security System</div>
+        <h3>🖱️ CLICK1S</h3>
+        <a href="wait.html?id=c1" class="btn btn-c">Vượt link Click1s 1</a>
+        <a href="wait.html?id=c2" class="btn btn-c">Vượt link Click1s 2</a>
     </div>
+
+    <script>
+        // Kiểm tra cookie để ẩn link đã làm trong ngày
+        const ids = ["t1", "t2", "t3", "c1", "c2"];
+        ids.forEach(id => {
+            if (document.cookie.split('; ').find(row => row.startsWith('done_' + id + '='))) {
+                const link = document.querySelector(`a[href*="id=${id}"]`);
+                if (link) {
+                    link.classList.add("completed");
+                    link.innerText = "✅ Đã hoàn thành hôm nay";
+                }
+            }
+        });
+    </script>
 </body>
 </html>
-
