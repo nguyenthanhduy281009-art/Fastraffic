@@ -1,57 +1,60 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Vui lòng xác minh bạn là con người</title>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <meta charset="UTF-8">
+    <title>Xác minh con người</title>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
-<body style="text-align:center; font-family:sans-serif; padding-top: 100px;">
-  
-<div id="auth-section">
-  <h2 id="status">Vui lòng xác minh bạn là con người</h2>
-  <div class="cf-turnstile" data-sitekey="0x4AAAAAACJ58mUD1xXb3uHV" data-callback="startCountdown"></div>
-  </div>
+<body style="text-align:center; font-family:sans-serif; padding-top:100px;">
+
+    <div id="auth-box">
+        <h2>Vui lòng xác minh để tiếp tục</h2>
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAACJ58mUD1xXb3uHV" data-callback="verifySuccess"></div>
+    </div>
 
     <div id="countdown-box" style="display:none;">
-      <h2>Xác minh thành công!.</h2>
-     <p>Bạn sẽ được chuyển hướng sau <span id="count">3</span> giây...</p>
+        <h2>Xác minh thành công!</h2>
+        <p>Bạn sẽ được chuyển hướng sau <span id="count">3</span> giây...</p>
     </div>
- 
 
-  <script>
-    // 🔗 LINK THẬT (CHỈ SỬA Ở ĐÂY)
-    const links = {
-      1: "https://nghienapp.online/HSF6BnbweEUhrDlxGAOs",
-      2: "https://nghienapp.online/2VJvMqWpgoc8tDi8bIUK",
-      3: "https://nghienapp.online/w8FPq4AcEYKjHprf0Qqm"
-    };
+    <script>
+        const links = {
+            1: "https://nghienapp.online/HSF6BnbweEUhrDlxGAOs",
+            2: "https://nghienapp.online/2VJvMqwpgoc8tDi8biUK",
+            3: "https://nghienapp.online/w8FPq4AcEYKjHprf0Qqm"
+        };
 
-    // ⏱️ THỜI GIAN CHỜ (giây)
-    let time = 3;
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get("id");
+        const target = links[id];
 
-    // 📌 LẤY ID TỪ URL
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
-    const target = links[id];
+        // HÀM NÀY CHỈ CHẠY KHI BẤM XÁC MINH XONG
+        function verifySuccess(token) {
+            if (!target) {
+                alert("Link không hợp lệ!");
+                return;
+            }
 
-    if (!target) {
-      document.body.innerHTML = "Link không tồn tại";
-    } else {
-      const counter = document.getElementById("count");
+            // Ẩn ô xác minh, hiện ô đếm ngược
+            document.getElementById("auth-box").style.display = "none";
+            document.getElementById("countdown-box").style.display = "block";
 
-      const timer = setInterval(() => {
-        time--;
-        counter.innerText = time;
-        if (time <= 0) {
-          clearInterval(timer);
-          window.location.href = target;
+            let time = 3;
+            const counter = document.getElementById("count");
+
+            const timer = setInterval(() => {
+                time--;
+                counter.innerText = time;
+                if (time <= 0) {
+                    clearInterval(timer);
+                    window.location.href = target;
+                }
+            }, 1000);
         }
-      }, 1000);
-    }
-  </script>
-
+    </script>
 </body>
 </html>
+
 
 
 
