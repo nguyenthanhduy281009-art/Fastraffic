@@ -1,66 +1,25 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Xác minh nhiệm vụ</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding-top: 50px; background: #f4f4f4; }
-        .container { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        #status { color: #27ae60; font-weight: bold; margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div id="auth-section">
-            <h3>Vui lòng xác minh để nhận điểm</h3>
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAACJ58mUD1xXb3uHV" data-callback="onSuccess"></div>
-        </div>
-        <div id="status" style="display:none;">
-            <p>Xác minh thành công!</p>
-            <p>Đang gửi dữ liệu duyệt... <span id="timer">3</span>s</p>
-        </div>
-    </div>
-
+<head><meta charset="UTF-8"><title>Đang xác minh</title></head>
+<body style="text-align:center; padding-top:50px; font-family:Arial;">
+    <h3>Đang gửi kết quả...</h3>
     <script>
-        // Link đã sửa lỗi ký tự và đồng bộ với auth.html
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbywWtXbdp4tsk2JyZL5r9VdlFpRkq9x45yLe5d-pBRaPHgyGLBT3iPgEcv2vIO9dZ8/exec';
-        const targetURL = "https://google.com"; // Thay link rút gọn của bạn ở đây
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwt8Bl0vig-hMm-O0sXjiwM6ceoStZbTIGo1NSVHEOhXrOMjfCAGCWDDQ_nzDMhUbxW/exec';
+        const user = localStorage.getItem("username") || "Ẩn danh";
+        const urlParams = new URLSearchParams(window.location.search);
+        const taskId = urlParams.get("id") || "Nhiệm vụ";
 
-        function onSuccess() {
-            document.getElementById("auth-section").style.display = "none";
-            document.getElementById("status").style.display = "block";
-            
-            const user = localStorage.getItem("username") || "Ẩn danh";
-            const urlParams = new URLSearchParams(window.location.search);
-            const taskId = urlParams.get("id") || "Chưa rõ";
+        fetch(scriptURL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify({ action: "task", username: user, id: taskId }) 
+        });
 
-            // Gửi dữ liệu về tab History bằng mode no-cors
-            fetch(scriptURL, { 
-                method: 'POST', 
-                mode: 'no-cors',
-                body: JSON.stringify({ 
-                    action: "task", 
-                    username: user, 
-                    id: taskId 
-                }) 
-            });
-
-            let time = 3;
-            const interval = setInterval(() => {
-                time--;
-                document.getElementById("timer").innerText = time;
-                if(time <= 0) {
-                    clearInterval(interval);
-                    // Đánh dấu nhiệm vụ đã làm để không hiện nút ở index.html
-                    document.cookie = `done_${taskId}=true; max-age=86400; path=/`;
-                    window.location.href = targetURL;
-                }
-            }, 1000);
-        }
+        setTimeout(() => { 
+            document.cookie = `done_${taskId}=true; max-age=86400; path=/`;
+            window.location.href = "https://google.com"; // Thay bằng link rút gọn của bạn
+        }, 2000);
     </script>
 </body>
 </html>
-
 
