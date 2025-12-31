@@ -2,29 +2,24 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đang kiểm tra bảo mật...</title>
+    <title>Đang kiểm tra...</title>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 350px; }
-        #count { font-size: 40px; color: #d93025; font-weight: bold; margin: 15px 0; }
+        body { font-family: sans-serif; background: #f4f4f4; text-align: center; padding-top: 100px; }
+        .box { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
     <div class="box">
         <div id="auth-section">
             <h3>Xác minh con người</h3>
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAACJ58mUD1xXb3uHV" data-callback="verifySuccess"></div>
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAACJ58mUD1xXb3uHV" data-callback="onSuccess"></div>
         </div>
-
-        <div id="countdown-section" style="display: none;">
-            <h3 style="color:#1e8e3e;">Xác nhận thành công!</h3>
-            <p>Vui lòng đợi trong giây lát:</p>
-            <div id="count">3</div>
+        <div id="countdown-section" style="display:none;">
+            <h3 style="color:green">Xác minh xong!</h3>
+            <p>Đang gửi dữ liệu duyệt: <span id="count">3</span>s</p>
         </div>
     </div>
-
     <script>
         const links = {
             "t1": "https://nghienapp.online/HSF6BnbweEUhrDlxGAOs",
@@ -33,14 +28,20 @@
             "c1": "https://click1s.com/aWeLrgi2",
             "c2": "https://click1s.com/ZLvEPkmv"
         };
-
+        const scriptURL = 'DÁN_LINK_WEB_APP_CỦA_BẠN_Ở_ĐÂY'; //
         const id = new URLSearchParams(window.location.search).get("id");
         const target = links[id];
 
-        function verifySuccess(token) {
-            if (!target) return alert("Lỗi hệ thống!");
+        function onSuccess() {
             document.getElementById("auth-section").style.display = "none";
             document.getElementById("countdown-section").style.display = "block";
+
+            // Gửi dữ liệu duyệt lên Sheet
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ action: "task", username: localStorage.getItem("username"), id: id })
+            });
 
             let time = 3;
             const timer = setInterval(() => {
@@ -48,12 +49,8 @@
                 document.getElementById("count").innerText = time;
                 if (time <= 0) {
                     clearInterval(timer);
-                    
-                    // Lưu Cookie đến 23:59:59 hôm nay
-                    const now = new Date();
-                    const expire = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-                    document.cookie = `done_${id}=true; expires=${expire.toUTCString()}; path=/`;
-
+                    const expire = new Date(new Date().setHours(23,59,59));
+                    document.cookie = `done_${id}=true; expires=${expire.toUTCString()}; path=/`; //
                     window.location.href = target;
                 }
             }, 1000);
