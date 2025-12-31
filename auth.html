@@ -1,17 +1,14 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập & Đăng ký</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #34495e; padding: 40px; border-radius: 15px; width: 350px; text-align: center; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        h2 { margin-bottom: 25px; letter-spacing: 2px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: #3498db; }
-        .toggle { color: #bdc3c7; cursor: pointer; font-size: 14px; margin-top: 20px; display: block; text-decoration: underline; }
+        body { font-family: Arial; background: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #34495e; padding: 40px; border-radius: 15px; width: 350px; text-align: center; color: white; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .toggle { color: #bdc3c7; cursor: pointer; font-size: 14px; margin-top: 20px; display: block; }
     </style>
 </head>
 <body>
@@ -22,11 +19,9 @@
         <button id="btn" onclick="handleAuth()">XÁC NHẬN</button>
         <span class="toggle" onclick="toggle()">Đã có tài khoản? Đăng nhập</span>
     </div>
-
     <script>
         let isLogin = false;
-        // Link đã được sửa lỗi ký tự "l" thường
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbywWtXbdp4tsk2JyZL5r9VdlFpRkq9x45yLe5d-pBRaPHgyGLBT3iPgEcv2vIO9dZ8/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwt8Bl0vig-hMm-O0sXjiwM6ceoStZbTIGo1NSVHEOhXrOMjfCAGCWDDQ_nzDMhUbxW/exec';
 
         function toggle() {
             isLogin = !isLogin;
@@ -37,46 +32,25 @@
         async function handleAuth() {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value.trim();
-            
-            if(!u || !p) {
-                alert("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
-                return;
-            }
-
+            if(!u || !p) return alert("Điền đủ thông tin!");
             const btn = document.getElementById('btn');
-            btn.innerText = "Đang xử lý...";
-            btn.disabled = true;
-
+            btn.innerText = "Chờ tí...";
             try {
-                // Sử dụng mode: 'no-cors' để tránh lỗi chặn kết nối từ Google
-                await fetch(scriptURL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    cache: 'no-cache',
-                    body: JSON.stringify({ 
-                        action: isLogin ? "login" : "register", 
-                        username: u, 
-                        password: p 
-                    }) 
-                });
-
-                // Do no-cors không đọc được phản hồi, ta sẽ mặc định chuyển hướng nếu là Login
-                if(isLogin) {
+                await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: isLogin ? "login" : "register", username: u, password: p }) });
+                if(isLogin) { 
                     localStorage.setItem("user_logged", "true"); 
                     localStorage.setItem("username", u); 
                     window.location.href = "index.html"; 
-                } else {
-                    alert("Yêu cầu đăng ký đã gửi! Hãy thử đăng nhập sau vài giây.");
-                    toggle(); // Chuyển sang màn hình đăng nhập
+                } else { 
+                    alert("Yêu cầu đã gửi! Hãy thử đăng nhập sau vài giây."); 
+                    location.reload(); 
                 }
-            } catch(e) { 
-                alert("Lỗi kết nối! Hãy kiểm tra lại mạng hoặc link Script."); 
-            } finally {
-                btn.innerText = "XÁC NHẬN";
-                btn.disabled = false;
-            }
+            } catch(e) { alert("Lỗi kết nối!"); }
+            btn.innerText = "XÁC NHẬN";
         }
     </script>
 </body>
 </html>
+
+
 
