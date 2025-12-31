@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Đăng nhập/Đăng ký</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập</title>
     <style>
-        body { font-family: Arial; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 320px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
-        .toggle { color: blue; cursor: pointer; font-size: 13px; margin-top: 15px; display: block; }
+        body { font-family: Arial; background: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #34495e; padding: 40px; border-radius: 15px; width: 350px; text-align: center; color: white; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .toggle { color: #bdc3c7; cursor: pointer; font-size: 14px; margin-top: 20px; display: block; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2 id="title">ĐĂNG NHẬP</h2>
+        <h2 id="title">ĐĂNG KÝ</h2>
         <input type="text" id="user" placeholder="Tên tài khoản">
         <input type="password" id="pass" placeholder="Mật khẩu">
         <button id="btn" onclick="handleAuth()">XÁC NHẬN</button>
-        <span class="toggle" onclick="toggle()">Chưa có tài khoản? Đăng ký ngay</span>
+        <span class="toggle" onclick="toggle()">Đã có tài khoản? Đăng nhập</span>
     </div>
-
     <script>
-        let isLogin = true;
-        const scriptURL = 'DÁN_LINK_WEB_APP_CỦA_BẠN_Ở_ĐÂY';
+        let isLogin = false;
+        const scriptURL = 'LINK_WEB_APP_CỦA_BẠN';
 
         function toggle() {
             isLogin = !isLogin;
@@ -31,30 +30,21 @@
         }
 
         async function handleAuth() {
-            const u = document.getElementById('user').value;
-            const p = document.getElementById('pass').value;
-            if(!u || !p) return alert("Vui lòng điền đủ!");
-
-            const action = isLogin ? "login" : "register";
-            document.getElementById('btn').innerText = "Đang xử lý...";
-
-            const response = await fetch(scriptURL, {
-                method: 'POST',
-                body: JSON.stringify({ action: action, username: u, password: p })
-            });
-            const result = await response.text();
-
-            if (result === "success") {
-                localStorage.setItem("user_logged", "true");
-                localStorage.setItem("username", u);
-                alert(isLogin ? "Đăng nhập xong!" : "Đăng ký xong! Hãy đăng nhập.");
-                if(isLogin) window.location.href = "index.html"; else location.reload();
-            } else if (result === "exists") {
-                alert("Tên này đã có người dùng!");
-            } else {
-                alert("Sai tài khoản hoặc mật khẩu!");
-            }
-            document.getElementById('btn').innerText = "XÁC NHẬN";
+            const u = document.getElementById('user').value.trim();
+            const p = document.getElementById('pass').value.trim();
+            if(!u || !p) return alert("Điền đủ thông tin!");
+            const btn = document.getElementById('btn');
+            btn.innerText = "Chờ tí...";
+            try {
+                const res = await fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: isLogin ? "login" : "register", username: u, password: p }) });
+                const result = await res.text();
+                if (result === "success") {
+                    if(isLogin) { localStorage.setItem("user_logged", "true"); localStorage.setItem("username", u); window.location.href = "index.html"; }
+                    else { alert("Xong! Giờ hãy đăng nhập."); location.reload(); }
+                } else if (result === "exists") alert("Tên này có người lấy rồi!");
+                else alert("Sai tài khoản/mật khẩu!");
+            } catch(e) { alert("Lỗi kết nối Sheet!"); }
+            btn.innerText = "XÁC NHẬN";
         }
     </script>
 </body>
