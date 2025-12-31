@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Vượt link đơn giản</title>
+</head>
+<body>
+
+  <h2>Vui lòng chờ...</h2>
+  <p id="time">5</p>
+
+  <button id="btn" disabled>Mở link</button>
+
+  <script>
+    let t = 5;
+    let timer = setInterval(() => {
+      t--;
+      document.getElementById("time").innerText = t;
+
+      if (t === 0) {
+        clearInterval(timer);
+        document.getElementById("btn").disabled = false;
+      }
+    }, 1000);
+
+    document.getElementById("btn").onclick = function () {
+      window.location.href = "https://nghienapp.online/SgSiTKtW3nkoVTpMQ7BZ";
+    };
+  </script>
+
+</body>
+</html>
