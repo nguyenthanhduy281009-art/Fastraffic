@@ -3,39 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fastraffic - Hệ thống nhiệm vụ</title>
+    <title>Fastraffic - Nhiệm vụ</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f0f2f5; text-align: center; padding: 20px; }
-        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        .btn { display: block; background: #007bff; color: white; padding: 12px; margin: 10px 0; border-radius: 8px; text-decoration: none; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; text-align: center; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 450px; margin: auto; }
+        .user-info { text-align: right; font-size: 14px; color: #555; margin-bottom: 20px; }
+        .btn { display: block; background: #007bff; color: white; padding: 15px; margin: 10px 0; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; }
         .btn-c { background: #28a745; }
-        .completed { opacity: 0.5; pointer-events: none; background: #6c757d !important; }
-        h3 { border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 20px; color: #333; }
+        .completed { opacity: 0.6; pointer-events: none; background: #6c757d !important; position: relative; }
+        .completed::after { content: " ✅"; }
+        h3 { border-left: 4px solid #007bff; padding-left: 10px; text-align: left; color: #333; }
     </style>
 </head>
 <body>
+    <script>
+        if (localStorage.getItem("user_logged") !== "true") {
+            window.location.href = "auth.html";
+        }
+    </script>
+
     <div class="container">
-        <h2>🚀 CHỌN NHIỆM VỤ</h2>
+        <div class="user-info">Xin chào, <b id="display-user">Người dùng</b> | <a href="#" onclick="logout()">Thoát</a></div>
+        <h2>🚀 DANH SÁCH NHIỆM VỤ</h2>
         
         <h3>📍 TRAFFICTOT</h3>
-        <a href="wait.html?id=t1" class="btn">Vượt link Traffictot 1</a>
-        <a href="wait.html?id=t2" class="btn">Vượt link Traffictot 2</a>
-        <a href="wait.html?id=t3" class="btn">Vượt link Traffictot 3</a>
+        <a href="wait.html?id=t1" class="btn">Nhiệm vụ Traffictot #1</a>
+        <a href="wait.html?id=t2" class="btn">Nhiệm vụ Traffictot #2</a>
+        <a href="wait.html?id=t3" class="btn">Nhiệm vụ Traffictot #3</a>
 
         <h3>🖱️ CLICK1S</h3>
-        <a href="wait.html?id=c1" class="btn btn-c">Vượt link Click1s 1</a>
-        <a href="wait.html?id=c2" class="btn btn-c">Vượt link Click1s 2</a>
+        <a href="wait.html?id=c1" class="btn btn-c">Nhiệm vụ Click1s #1</a>
+        <a href="wait.html?id=c2" class="btn btn-c">Nhiệm vụ Click1s #2</a>
     </div>
 
     <script>
-        // Kiểm tra cookie để ẩn link đã làm trong ngày
+        document.getElementById("display-user").innerText = localStorage.getItem("username");
+
+        function logout() {
+            localStorage.removeItem("user_logged");
+            window.location.href = "auth.html";
+        }
+
+        // Kiểm tra cookie để ẩn link đã hoàn thành trong ngày
         const ids = ["t1", "t2", "t3", "c1", "c2"];
         ids.forEach(id => {
             if (document.cookie.split('; ').find(row => row.startsWith('done_' + id + '='))) {
                 const link = document.querySelector(`a[href*="id=${id}"]`);
                 if (link) {
                     link.classList.add("completed");
-                    link.innerText = "✅ Đã hoàn thành hôm nay";
+                    link.innerText = "Nhiệm vụ đã làm xong";
                 }
             }
         });
