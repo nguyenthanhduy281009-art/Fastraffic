@@ -1,56 +1,33 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Đang kiểm tra...</title>
+    <meta charset="UTF-8"><title>Xác minh</title>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    <style>
-        body { font-family: sans-serif; background: #f4f4f4; text-align: center; padding-top: 100px; }
-        .box { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-    </style>
 </head>
-<body>
-    <div class="box">
-        <div id="auth-section">
-            <h3>Xác minh con người</h3>
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAACJ58mUD1xXb3uHV" data-callback="onSuccess"></div>
-        </div>
-        <div id="countdown-section" style="display:none;">
-            <h3 style="color:green">Xác minh xong!</h3>
-            <p>Đang gửi dữ liệu duyệt: <span id="count">3</span>s</p>
-        </div>
+<body style="text-align: center; padding-top: 100px; font-family: Arial;">
+    <div id="auth-section">
+        <h3>Vui lòng xác minh</h3>
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAACJ58mUD1xXb3uHV" data-callback="onSuccess"></div>
+    </div>
+    <div id="status" style="display:none; color: green;">
+        <h3>Xong! Đang gửi duyệt... <span id="timer">3</span>s</h3>
     </div>
     <script>
-        const links = {
-            "t1": "https://nghienapp.online/HSF6BnbweEUhrDlxGAOs",
-            "t2": "https://nghienapp.online/2VJvMqwpgoc8tDi8biUK",
-            "t3": "https://nghienapp.online/w8FPq4AcEYKjHprf0Qqm",
-            "c1": "https://click1s.com/aWeLrgi2",
-            "c2": "https://click1s.com/ZLvEPkmv"
-        };
-        const scriptURL = 'DÁN_LINK_WEB_APP_CỦA_BẠN_Ở_ĐÂY'; //
-        const id = new URLSearchParams(window.location.search).get("id");
-        const target = links[id];
-
+        const scriptURL = 'LINK_WEB_APP_CỦA_BẠN';
+        const target = "https://google.com"; // Thay link rút gọn của bạn vào đây
         function onSuccess() {
             document.getElementById("auth-section").style.display = "none";
-            document.getElementById("countdown-section").style.display = "block";
-
-            // Gửi dữ liệu duyệt lên Sheet
-            fetch(scriptURL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ action: "task", username: localStorage.getItem("username"), id: id })
-            });
+            document.getElementById("status").style.display = "block";
+            const user = localStorage.getItem("username");
+            const id = new URLSearchParams(window.location.search).get("id");
+            
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "task", username: user, id: id }) });
 
             let time = 3;
-            const timer = setInterval(() => {
-                time--;
-                document.getElementById("count").innerText = time;
-                if (time <= 0) {
-                    clearInterval(timer);
-                    const expire = new Date(new Date().setHours(23,59,59));
-                    document.cookie = `done_${id}=true; expires=${expire.toUTCString()}; path=/`; //
+            setInterval(() => {
+                time--; document.getElementById("timer").innerText = time;
+                if(time <= 0) {
+                    document.cookie = `done_${id}=true; max-age=86400; path=/`;
                     window.location.href = target;
                 }
             }, 1000);
@@ -58,6 +35,7 @@
     </script>
 </body>
 </html>
+
 
 
 
