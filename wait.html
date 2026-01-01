@@ -1,25 +1,60 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head><meta charset="UTF-8"><title>Đang xác minh</title></head>
-<body style="text-align:center; padding-top:50px; font-family:Arial;">
-    <h3>Đang gửi kết quả...</h3>
-    <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwt8Bl0vig-hMm-O0sXjiwM6ceoStZbTIGo1NSVHEOhXrOMjfCAGCWDDQ_nzDMhUbxW/exec';
-        const user = localStorage.getItem("username") || "Ẩn danh";
-        const urlParams = new URLSearchParams(window.location.search);
-        const taskId = urlParams.get("id") || "Nhiệm vụ";
+<head>
+<meta charset="UTF-8">
+<title>Đang xác thực...</title>
 
-        fetch(scriptURL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify({ action: "task", username: user, id: taskId }) 
-        });
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
 
-        setTimeout(() => { 
-            document.cookie = `done_${taskId}=true; max-age=86400; path=/`;
-            window.location.href = "https://google.com"; // Thay bằng link rút gọn của bạn
-        }, 2000);
-    </script>
+<body>
+<h3 id="status">🔒 Xác thực bạn là con người</h3>
+
+<p>2 + 5 = ?</p>
+<input id="ans">
+<button onclick="verify()">Xác nhận</button>
+
+<script>
+const firebaseConfig = {
+  /* FIREBASE CONFIG Ở ĐÂY */
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+const params = new URLSearchParams(window.location.search);
+const linkId = params.get("id");
+
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "auth.html";
+  }
+});
+
+function verify() {
+  if (document.getElementById("ans").value !== "7") {
+    alert("Sai rồi!");
+    return;
+  }
+
+  let time = 5;
+  const status = document.getElementById("status");
+  status.innerText = "⏳ Vui lòng chờ " + time + " giây";
+
+  const interval = setInterval(() => {
+    time--;
+    status.innerText = "⏳ Vui lòng chờ " + time + " giây";
+
+    if (time <= 0) {
+      clearInterval(interval);
+
+      // 👉 LINK THẬT
+      window.location.href = "https://nghienapp.online/w8FPq4AcEYKjHprf0Qqm";
+    }
+  }, 1000);
+}
+</script>
 </body>
 </html>
 
