@@ -5,7 +5,7 @@
   <title>Fastraffic - Đăng nhập</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Firebase compat SDK -->
+  <!-- Firebase SDK (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
@@ -30,6 +30,9 @@
       margin: 6px 0;
       padding: 8px;
     }
+    button {
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -47,12 +50,12 @@
   </div>
 
   <script>
-    // 🔥 CONFIG FIREBASE (CHỈ DÁN Ở ĐÂY)
+    // ✅ DÁN FIREBASE CONFIG VÀO ĐÂY (KHÔNG SCRIPT KHÁC)
     const firebaseConfig = {
       apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
       authDomain: "fastraffic-8b585.firebaseapp.com",
       projectId: "fastraffic-8b585",
-      storageBucket: "fastraffic-8b585.appspot.com",
+      storageBucket: "fastraffic-8b585.firebasestorage.app",
       messagingSenderId: "124682318080",
       appId: "1:124682318080:web:f536eacba0881a078683e5"
     };
@@ -81,7 +84,7 @@
       auth.signInWithEmailAndPassword(email, password)
         .then(() => {
           document.getElementById("msg").innerText = "✅ Đăng nhập thành công";
-          // window.location.href = "links.html";
+          // window.location.href = "trangvuot.html";
         })
         .catch(err => {
           document.getElementById("msg").innerText = err.message;
@@ -90,5 +93,7 @@
   </script>
 </body>
 </html>
+
+
 
 
