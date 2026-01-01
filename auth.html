@@ -1,56 +1,125 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập</title>
-    <style>
-        body { font-family: Arial; background: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #34495e; padding: 40px; border-radius: 15px; width: 350px; text-align: center; color: white; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #2980b9; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .toggle { color: #bdc3c7; cursor: pointer; font-size: 14px; margin-top: 20px; display: block; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập / Đăng ký</title>
+
+  <!-- Firebase SDK (compat – dễ dùng) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #2c3e50;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .box {
+      background: #34495e;
+      padding: 40px;
+      border-radius: 15px;
+      width: 350px;
+      text-align: center;
+      color: white;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .toggle {
+      color: #bdc3c7;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 20px;
+      display: block;
+    }
+    #msg {
+      margin-top: 15px;
+      color: #f1c40f;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="box">
-        <h2 id="title">ĐĂNG KÝ</h2>
-        <input type="text" id="user" placeholder="Tên tài khoản">
-        <input type="password" id="pass" placeholder="Mật khẩu">
-        <button id="btn" onclick="handleAuth()">XÁC NHẬN</button>
-        <span class="toggle" onclick="toggle()">Đã có tài khoản? Đăng nhập</span>
-    </div>
-    <script>
-        let isLogin = false;
-       const scriptURL = 'https://script.google.com/macros/s/AKfycbwt8Bl0vig-hMm-O0sXjiwM6ceoStZbTIGo1NSVHEOhXrOMjfCAGCWDDQ_nzDMhUbxW/exec';
+  <div class="box">
+    <h2 id="title">ĐĂNG KÝ</h2>
 
-        function toggle() {
-            isLogin = !isLogin;
-            document.getElementById('title').innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
-            document.querySelector('.toggle').innerText = isLogin ? "Chưa có tài khoản? Đăng ký ngay" : "Đã có tài khoản? Đăng nhập";
-        }
+    <!-- Firebase dùng EMAIL làm tài khoản -->
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="pass" placeholder="Mật khẩu">
 
-        async function handleAuth() {
-            const u = document.getElementById('user').value.trim();
-            const p = document.getElementById('pass').value.trim();
-            if(!u || !p) return alert("Điền đủ thông tin!");
-            const btn = document.getElementById('btn');
-            btn.innerText = "Chờ tí...";
-            try {
-                await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: isLogin ? "login" : "register", username: u, password: p }) });
-                if(isLogin) { 
-                    localStorage.setItem("user_logged", "true"); 
-                    localStorage.setItem("username", u); 
-                    window.location.href = "index.html"; 
-                } else { 
-                    alert("Yêu cầu đã gửi! Hãy thử đăng nhập sau vài giây."); 
-                    location.reload(); 
-                }
-            } catch(e) { alert("Lỗi kết nối!"); }
-            btn.innerText = "XÁC NHẬN";
-        }
-    </script>
-</body>
-</html>
+    <button onclick="handleAuth()">XÁC NHẬN</button>
+    <span class="toggle" onclick="toggle()">Đã có tài khoản? Đăng nhập</span>
+
+    <div id="msg"></div>
+  </div>
+
+  <script>
+    // 🔥 FIREBASE CONFIG (CỦA BẠN – ĐÃ DÁN)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
+      authDomain: "fastraffic-8b585.firebaseapp.com",
+      projectId: "fastraffic-8b585",
+      storageBucket: "fastraffic-8b585.firebasestorage.app",
+      messagingSenderId: "124682318080",
+      appId: "1:124682318080:web:f536eacba0881a078683e5"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    let isLogin = false;
+
+    function toggle() {
+      isLogin = !isLogin;
+      document.getElementById("title").innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
+      document.querySelector(".toggle").innerText =
+        isLogin ? "Chưa có tài khoản? Đăng ký" : "Đã có tài khoản? Đăng nhập";
+    }
+
+    function handleAuth() {
+      const email = document.getElementById("email").value.trim();
+      const pass = document.getElementById("pass").value.trim();
+      const msg = document.getElementById("msg");
+
+      if (!email || !pass) {
+        msg.innerText = "⚠️ Nhập đủ thông tin";
+        return;
+      }
+
+      msg.innerText = "⏳ Đang xử lý...";
+
+      if (isLogin) {
+        // 🔐 ĐĂNG NHẬP
+        auth.signInWithEmailAndPassword(email, pass)
+          .then(() => {
+            msg.innerText = "✅ Đăng nhập thành công";
+            setTimeout(() => {
+              window.location.href = "index.html"; // trang vượt link
+            }, 500);
+          })
+          .catch(err => {
+            msg.innerText = "❌ " + err.mess
+
 
 
 
