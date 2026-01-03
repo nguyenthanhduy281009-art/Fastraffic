@@ -6,48 +6,82 @@
     <title>Đăng nhập - Fastraffic</title>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Arial; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .login-box { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
-        h1 { color: #e94560; margin-bottom: 30px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #e94560; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        button:hover { background: #d13851; }
-        .error { color: red; font-size: 13px; margin-top: 10px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .login-box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
+        
+        .logo-placeholder { width: 70px; height: 70px; background: #e94560; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 30px; font-weight: bold; box-shadow: 0 4px 10px rgba(233, 69, 96, 0.3); }
+        
+        h1 { color: #333; margin-bottom: 5px; font-size: 24px; letter-spacing: 1px; }
+        p.subtitle { color: #777; margin-bottom: 30px; font-size: 14px; }
+        
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-group i.left-icon { position: absolute; left: 15px; top: 15px; color: #aaa; }
+        
+        /* Icon con mắt hiện mật khẩu */
+        .input-group i.toggle-password { position: absolute; right: 15px; top: 15px; color: #aaa; cursor: pointer; transition: 0.2s; }
+        .input-group i.toggle-password:hover { color: #e94560; }
+        
+        input { width: 100%; padding: 12px 40px 12px 45px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: 0.3s; }
+        input:focus { border-color: #e94560; outline: none; box-shadow: 0 0 5px rgba(233, 69, 96, 0.2); }
+        
+        button { width: 100%; padding: 13px; background: #e94560; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #d13851; transform: translateY(-1px); }
+        
+        .error { color: #ff4d4d; font-size: 13px; margin-top: 15px; min-height: 18px; }
     </style>
 </head>
 <body>
 
     <div class="login-box">
+        <div class="logo-placeholder">F</div>
         <h1>FASTRAFFIC</h1>
-        <input type="email" id="email" placeholder="Email của bạn">
-        <input type="password" id="password" placeholder="Mật khẩu">
+        <p class="subtitle">Đăng nhập để tiếp tục làm nhiệm vụ</p>
+        
+        <div class="input-group">
+            <i class="fas fa-envelope left-icon"></i>
+            <input type="email" id="email" placeholder="Email của bạn">
+        </div>
+        
+        <div class="input-group">
+            <i class="fas fa-lock left-icon"></i>
+            <input type="password" id="password" placeholder="Mật khẩu">
+            <i class="fas fa-eye toggle-password" id="eye-icon" onclick="togglePass()"></i>
+        </div>
+        
         <button onclick="login()">ĐĂNG NHẬP</button>
         <p id="error-msg" class="error"></p>
     </div>
 
     <script src="firebase-config.js"></script>
-    
     <script>
+        // Hàm ẩn hiện mật khẩu
+        function togglePass() {
+            const passInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eye-icon');
+            
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+
         function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const errorDisplay = document.getElementById('error-msg');
             
+            if(!email || !password) {
+                errorDisplay.innerText = "Vui lòng nhập đầy đủ thông tin!";
+                return;
+            }
+
             firebase.auth().signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
-                // Lưu email vào bộ nhớ máy
                 localStorage.setItem("userEmail", email);
-                window.location.href = "home.html";
-            })
-            .catch((error) => {
-                document.getElementById('error-msg').innerText = "Sai email hoặc mật khẩu!";
-            });
-        }
-
-        // Tự động chuyển hướng nếu đã đăng nhập
-        if (localStorage.getItem("userEmail")) {
-            window.location.href = "home.html";
-        }
-    </script>
-</body>
-</html>
