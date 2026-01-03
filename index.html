@@ -9,66 +9,56 @@
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 
 <style>
-body{
-  font-family:sans-serif;
-  background:#f0f2f5;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center
-}
-.box{
-  background:#fff;
-  padding:25px;
-  border-radius:10px;
-  width:320px;
-  text-align:center
-}
-input{
-  width:100%;
-  padding:10px;
-  margin-bottom:10px
-}
-.pass-wrap{
-  display:flex;
-  gap:5px;
-  margin-bottom:10px
-}
-.pass-wrap input{
-  margin-bottom:0;
-  flex:1
-}
-.pass-wrap button{
-  width:70px;
-  background:#ddd;
-  color:#000;
-  font-size:12px
-}
-button{
-  width:100%;
-  padding:10px;
-  background:#e94560;
-  color:#fff;
-  border:none;
-  cursor:pointer
-}
-button:disabled{
-  opacity:0.6;
-  cursor:not-allowed
-}
-#error{
-  color:red;
-  font-size:13px
-}
+body{font-family:sans-serif;background:#f0f2f5;height:100vh;display:flex;justify-content:center;align-items:center}
+.box{background:#fff;padding:25px;border-radius:10px;width:320px;text-align:center}
+input{width:100%;padding:10px;margin-bottom:10px}
+button{width:100%;padding:10px;background:#e94560;color:#fff;border:none;cursor:pointer}
+#error{color:red;font-size:13px}
 </style>
 </head>
-
 <body>
 
 <div class="box">
-  <h2>ĐĂNG NHẬP</h2>
+<h2>ĐĂNG NHẬP</h2>
 
-  <input id="email" type="email" placeholder="Email">
+<input id="email" type="email" placeholder="Email">
+<input id="pass" type="password" placeholder="Mật khẩu">
 
-  <div class="pass-wrap">
-    <input id="pass" type="pas
+<button onclick="login()">ĐĂNG NHẬP</button>
+<div id="error"></div>
+</div>
+
+<script>
+// 🔥 KHỞI TẠO FIREBASE (BẮT BUỘC)
+firebase.initializeApp({
+  apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
+  authDomain: "fastraffic-8b585.firebaseapp.com",
+  projectId: "fastraffic-8b585",
+});
+
+// 🔥 HÀM LOGIN
+function login(){
+  const email = document.getElementById("email").value;
+  const pass  = document.getElementById("pass").value;
+  const err   = document.getElementById("error");
+
+  err.innerText = "";
+
+  if(!email || !pass){
+    err.innerText = "Nhập đầy đủ thông tin!";
+    return;
+  }
+
+  firebase.auth().signInWithEmailAndPassword(email, pass)
+    .then(()=>{
+      alert("Đăng nhập thành công!");
+    })
+    .catch(e=>{
+      err.innerText = e.message;
+    });
+}
+</script>
+
+</body>
+</html>
+
