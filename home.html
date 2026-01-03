@@ -100,7 +100,90 @@
       localStorage.removeItem("userEmail");
       window.location.href = "index.html";
     }
-  </script>
-</body>
-</html>
+<script>
+  document.getElementById("userDisplay").innerText =
+    localStorage.getItem("userEmail") || "Khách";
 
+  function showPage(pageName) {
+    // Active menu
+    document.querySelectorAll('.menu-item')
+      .forEach(item => item.classList.remove('active'));
+    document.getElementById('btn-' + pageName).classList.add('active');
+
+    const view = document.getElementById('main-view');
+
+    /* ================= TRANG CHỦ ================= */
+    if (pageName === 'trangchu') {
+      view.innerHTML = `
+        <h2>Trang chủ</h2>
+        <p>Chào mừng bạn quay trở lại hệ thống <b>Fastraffic</b>!</p>
+
+        <h3 style="margin-top:25px;">📌 Nhiệm vụ</h3>
+
+        <!-- TRAFFICTOT -->
+        <div class="task-section">
+          <h4 style="color:#e94560;">🚀 Nhiệm vụ TrafficTot</h4>
+
+          <div class="task-item">
+            <div>
+              <b>🔗 Vượt link TrafficTot</b><br>
+              <small>Thưởng: 300đ / lượt</small>
+            </div>
+            <button onclick="startTrafficTot()">Làm nhiệm vụ</button>
+          </div>
+        </div>
+
+        <!-- CLICK1S -->
+        <div class="task-section">
+          <h4 style="color:#e94560;">⚡ Nhiệm vụ Click1s</h4>
+
+          <div class="task-item">
+            <div>
+              <b>🖱 Click quảng cáo Click1s</b><br>
+              <small>Thưởng: 200đ / lượt</small>
+            </div>
+            <button onclick="startClick1s()">Làm nhiệm vụ</button>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ================= QUY ĐỊNH ================= */
+    else if (pageName === 'quydinh') {
+      view.innerHTML = `
+        <h2>Quy định</h2>
+        <ul>
+          <li>Không gian lận nhiệm vụ</li>
+          <li>Không tự vượt link</li>
+          <li>Vi phạm sẽ bị khóa tài khoản</li>
+        </ul>
+      `;
+    }
+
+    /* ================= CÁC TRANG KHÁC ================= */
+    else {
+      view.innerHTML = `
+        <h2>Đang phát triển</h2>
+        <p>Chức năng này sẽ được cập nhật sớm.</p>
+      `;
+    }
+  }
+
+  /* ===== HÀM NHIỆM VỤ ===== */
+  function startTrafficTot() {
+    // sau này đổi thành trang trung gian
+    window.open("https://traffictot.com", "_blank");
+  }
+
+  function startClick1s() {
+    window.open("https://click1s.com", "_blank");
+  }
+
+  // Load trang chủ khi mở
+  showPage('trangchu');
+
+  function logout() {
+    localStorage.removeItem("userEmail");
+    window.location.href = "index.html";
+  }
+</script>
