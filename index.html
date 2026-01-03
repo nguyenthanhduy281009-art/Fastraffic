@@ -41,6 +41,147 @@
         .input-group {
             border: 1px solid #ccc;
             border-radius: 6px;
-            margin-bottom: 12px
+            margin-bottom: 12px;
+            display: flex;
+            overflow: hidden;
+        }
+        .input-group input {
+            flex: 1;
+            border: none;
+            padding: 12px;
+            outline: none;
+            font-size: 15px;
+        }
+        .btn-toggle {
+            background: #eee;
+            border: none;
+            padding: 0 10px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .btn-main {
+            width: 100%;
+            padding: 12px;
+            background: #e94560;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .nav-links {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .nav-links span {
+            color: #e94560;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        #error {
+            color: red;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
 
+<div class="box">
+    <div class="logo">F</div>
+    <h2 id="title">ĐĂNG NHẬP</h2>
 
+    <div class="input-group">
+        <input type="email" id="email" placeholder="Email">
+    </div>
+
+    <div class="input-group">
+        <input type="password" id="pass" placeholder="Mật khẩu">
+        <button type="button" class="btn-toggle" onclick="togglePassword(this)">HIỆN</button>
+    </div>
+
+    <button class="btn-main" id="mainBtn" onclick="handleSubmit()">ĐĂNG NHẬP</button>
+
+    <div class="nav-links">
+        <span onclick="forgotPassword()">Quên mật khẩu?</span><br><br>
+        <div id="switch-text">
+            Chưa có tài khoản? <span onclick="switchToRegister()">Đăng ký</span>
+        </div>
+    </div>
+
+    <div id="error"></div>
+</div>
+
+<!-- Firebase config -->
+<script src="firebase-config.js"></script>
+
+<script>
+let isLogin = true;
+
+function togglePassword(btn) {
+    const p = document.getElementById('pass');
+    p.type = (p.type === "password") ? "text" : "password";
+    btn.innerText = (p.type === "password") ? "HIỆN" : "ẨN";
+}
+
+function switchToRegister() {
+    isLogin = false;
+    document.getElementById('title').innerText = "ĐĂNG KÝ";
+    document.getElementById('mainBtn').innerText = "ĐĂNG KÝ";
+    document.getElementById('switch-text').innerHTML =
+        'Đã có tài khoản? <span onclick="switchToLogin()">Đăng nhập</span>';
+}
+
+function switchToLogin() {
+    isLogin = true;
+    document.getElementById('title').innerText = "ĐĂNG NHẬP";
+    document.getElementById('mainBtn').innerText = "ĐĂNG NHẬP";
+    document.getElementById('switch-text').innerHTML =
+        'Chưa có tài khoản? <span onclick="switchToRegister()">Đăng ký</span>';
+}
+
+function handleSubmit() {
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('pass').value;
+    const err = document.getElementById('error');
+    err.innerText = "";
+
+    if (!email || !pass) {
+        err.innerText = "Vui lòng nhập đủ thông tin!";
+        return;
+    }
+
+    const auth = firebase.auth();
+    const action = isLogin
+        ? auth.signInWithEmailAndPassword(email, pass)
+        : auth.createUserWithEmailAndPassword(email, pass);
+
+    action.then(() => {
+        localStorage.setItem("userEmail", email);
+        window.location.href = "home.html";
+    }).catch(e => {
+        err.innerText = e.message;
+    });
+}
+
+function forgotPassword() {
+    const email = document.getElementById('email').value;
+    if (!email) {
+        alert("Nhập email trước!");
+        return;
+    }
+    firebase.auth().sendPasswordResetEmail(email)
+        .then(() => alert("Đã gửi email đặt lại mật khẩu!"))
+        .catch(e => alert(e.message));
+}
+
+if (localStorage.getItem("userEmail")) {
+    window.location.href = "home.html";
+}
+</script>
+
+</body>
+</html>
