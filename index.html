@@ -10,25 +10,16 @@
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .login-box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
-        
-        .logo-placeholder { width: 70px; height: 70px; background: #e94560; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 30px; font-weight: bold; box-shadow: 0 4px 10px rgba(233, 69, 96, 0.3); }
-        
-        h1 { color: #333; margin-bottom: 5px; font-size: 24px; letter-spacing: 1px; }
-        p.subtitle { color: #777; margin-bottom: 30px; font-size: 14px; }
-        
+        .logo-placeholder { width: 70px; height: 70px; background: #e94560; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 30px; font-weight: bold; }
+        h1 { color: #333; margin-bottom: 5px; font-size: 24px; }
+        .subtitle { color: #777; margin-bottom: 30px; font-size: 14px; }
         .input-group { position: relative; margin-bottom: 20px; }
         .input-group i.left-icon { position: absolute; left: 15px; top: 15px; color: #aaa; }
-        
-        /* Icon con mắt hiện mật khẩu */
-        .input-group i.toggle-password { position: absolute; right: 15px; top: 15px; color: #aaa; cursor: pointer; transition: 0.2s; }
-        .input-group i.toggle-password:hover { color: #e94560; }
-        
-        input { width: 100%; padding: 12px 40px 12px 45px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: 0.3s; }
-        input:focus { border-color: #e94560; outline: none; box-shadow: 0 0 5px rgba(233, 69, 96, 0.2); }
-        
-        button { width: 100%; padding: 13px; background: #e94560; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: #d13851; transform: translateY(-1px); }
-        
+        .input-group i.toggle-password { position: absolute; right: 15px; top: 15px; color: #aaa; cursor: pointer; z-index: 10; }
+        input { width: 100%; padding: 12px 40px 12px 45px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        button { width: 100%; padding: 13px; background: #e94560; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .toggle-text { margin-top: 20px; font-size: 14px; color: #666; }
+        .toggle-text a { color: #e94560; text-decoration: none; font-weight: bold; cursor: pointer; }
         .error { color: #ff4d4d; font-size: 13px; margin-top: 15px; min-height: 18px; }
     </style>
 </head>
@@ -36,8 +27,8 @@
 
     <div class="login-box">
         <div class="logo-placeholder">F</div>
-        <h1>FASTRAFFIC</h1>
-        <p class="subtitle">Đăng nhập để tiếp tục làm nhiệm vụ</p>
+        <h1 id="form-title">ĐĂNG NHẬP</h1>
+        <p class="subtitle" id="form-subtitle">Nhập thông tin để tiếp tục</p>
         
         <div class="input-group">
             <i class="fas fa-envelope left-icon"></i>
@@ -50,38 +41,70 @@
             <i class="fas fa-eye toggle-password" id="eye-icon" onclick="togglePass()"></i>
         </div>
         
-        <button onclick="login()">ĐĂNG NHẬP</button>
+        <button id="main-btn" onclick="handleAuth()">ĐĂNG NHẬP</button>
+        <p class="toggle-text" id="toggle-area">
+            Chưa có tài khoản? <a onclick="switchForm(false)">Đăng ký ngay</a>
+        </p>
         <p id="error-msg" class="error"></p>
     </div>
 
     <script src="firebase-config.js"></script>
     <script>
-        // Hàm ẩn hiện mật khẩu
+        let isLoginMode = true;
+
+        // 1. Sửa lỗi hiện mật khẩu
         function togglePass() {
             const passInput = document.getElementById('password');
             const eyeIcon = document.getElementById('eye-icon');
-            
-            if (passInput.type === 'password') {
-                passInput.type = 'text';
-                eyeIcon.classList.remove('fa-eye');
-                eyeIcon.classList.add('fa-eye-slash');
+            if (passInput.type === "password") {
+                passInput.type = "text";
+                eyeIcon.className = "fas fa-eye-slash toggle-password";
             } else {
-                passInput.type = 'password';
-                eyeIcon.classList.remove('fa-eye-slash');
-                eyeIcon.classList.add('fa-eye');
+                passInput.type = "password";
+                eyeIcon.className = "fas fa-eye toggle-password";
             }
         }
 
-        function login() {
+        // 2. Thêm phần chuyển đổi Đăng ký
+        function switchForm(login) {
+            isLoginMode = login;
+            document.getElementById('form-title').innerText = login ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
+            document.getElementById('main-btn').innerText = login ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
+            document.getElementById('toggle-area').innerHTML = login ? 
+                `Chưa có tài khoản? <a onclick="switchForm(false)">Đăng ký ngay</a>` : 
+                `Đã có tài khoản? <a onclick="switchForm(true)">Đăng nhập</a>`;
+            document.getElementById('error-msg').innerText = "";
+        }
+
+        // 3. Xử lý Đăng nhập & Đăng ký chung một hàm
+        function handleAuth() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorDisplay = document.getElementById('error-msg');
-            
+
             if(!email || !password) {
-                errorDisplay.innerText = "Vui lòng nhập đầy đủ thông tin!";
+                errorDisplay.innerText = "Vui lòng nhập đầy đủ!";
                 return;
             }
 
-            firebase.auth().signInWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                localStorage.setItem("userEmail", email);
+            if(isLoginMode) {
+                firebase.auth().signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    localStorage.setItem("userEmail", email);
+                    window.location.href = "home.html";
+                })
+                .catch(err => { errorDisplay.innerText = "Sai tài khoản hoặc mật khẩu!"; });
+            } else {
+                firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then(() => {
+                    localStorage.setItem("userEmail", email);
+                    window.location.href = "home.html";
+                })
+                .catch(err => { errorDisplay.innerText = "Lỗi đăng ký: " + err.message; });
+            }
+        }
+
+        if (localStorage.getItem("userEmail")) { window.location.href = "home.html"; }
+    </script>
+</body>
+</html>
