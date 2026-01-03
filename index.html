@@ -3,114 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fastraffic - Login</title>
+    <title>Fastraffic Login</title>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Arial; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 15px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        .logo-circle { background: #e94560; color: white; width: 60px; height: 60px; line-height: 60px; border-radius: 50%; margin: 0 auto 15px; font-size: 24px; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #fff; padding: 30px; border-radius: 12px; width: 320px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); text-align: center; }
+        .logo { background: #e94560; color: #fff; width: 60px; height: 60px; line-height: 60px; border-radius: 50%; margin: 0 auto 15px; font-size: 24px; font-weight: bold; }
+        h2 { margin: 0 0 20px; color: #333; }
         
-        /* Cấu trúc ô nhập liệu mới để tránh lệch icon */
-        .input-row { display: flex; align-items: center; background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; padding: 0 15px; }
-        .input-row:focus-within { border-color: #e94560; box-shadow: 0 0 5px rgba(233, 69, 96, 0.2); }
-        .input-row i { color: #aaa; width: 20px; }
-        .input-row input { flex: 1; border: none; padding: 12px 10px; outline: none; font-size: 15px; background: transparent; }
-        
-        .btn-main { width: 100%; padding: 13px; background: #e94560; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 5px; }
-        .btn-main:hover { background: #d13851; }
-        
-        .footer-nav { margin-top: 20px; font-size: 14px; color: #666; }
-        .link { color: #e94560; cursor: pointer; font-weight: bold; text-decoration: none; margin: 5px; display: inline-block; }
-        #error { color: #ff4d4d; font-size: 13px; margin-top: 15px; }
+        .input-box { display: flex; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 15px; overflow: hidden; background: #fff; }
+        .input-box input { flex: 1; border: none; padding: 12px; outline: none; font-size: 15px; }
+        .show-btn { background: #eee; border: none; padding: 0 10px; cursor: pointer; font-size: 12px; font-weight: bold; color: #555; }
+        .show-btn:hover { background: #ddd; }
+
+        .btn-red { width: 100%; padding: 13px; background: #e94560; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+        .btn-red:hover { background: #d13851; }
+
+        .links { font-size: 14px; color: #666; cursor: pointer; }
+        .links span { color: #e94560; font-weight: bold; text-decoration: underline; padding: 5px; }
+        #msg { color: red; font-size: 13px; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="logo-circle">F</div>
-    <h2 id="title">ĐĂNG NHẬP</h2>
+    <div class="logo">F</div>
+    <h2 id="head">ĐĂNG NHẬP</h2>
     
-    <div class="input-row">
-        <i class="fas fa-envelope"></i>
-        <input type="email" id="email" placeholder="Email">
+    <div class="input-box">
+        <input type="email" id="mail" placeholder="Email">
     </div>
     
-    <div class="input-row">
-        <i class="fas fa-lock"></i>
-        <input type="password" id="pass" placeholder="Mật khẩu">
-        <i class="fas fa-eye" id="eye" style="cursor: pointer;" onclick="toggle()"></i>
+    <div class="input-box">
+        <input type="password" id="pw" placeholder="Mật khẩu">
+        <button type="button" class="show-btn" id="eye" onclick="toggleView()">HIỆN</button>
     </div>
     
-    <button class="btn-main" id="submit-btn" onclick="handle()">ĐĂNG NHẬP</button>
+    <button class="btn-red" id="go" onclick="mainAction()">ĐĂNG NHẬP</button>
     
-    <div class="footer-nav">
-        <span class="link" onclick="reset()">Quên mật khẩu?</span><br>
-        <div id="toggle-area">
-            Chưa có tài khoản? <span class="link" onclick="toReg()">Đăng ký</span>
-        </div>
+    <div class="links">
+        <div onclick="resetPw()">Quên mật khẩu?</div><br>
+        <div id="switch-text">Chưa có tài khoản? <span onclick="goReg()">Đăng ký</span></div>
     </div>
     
-    <div id="error"></div>
+    <div id="msg"></div>
 </div>
 
 <script src="firebase-config.js"></script>
 <script>
     let isLogin = true;
 
-    // Hiện ẩn mật khẩu - Đã sửa lỗi lệch
-    function toggle() {
-        const p = document.getElementById('pass');
-        const e = document.getElementById('eye');
+    // Hiện/Ẩn mật khẩu bằng chữ cho chắc chắn
+    function toggleView() {
+        const p = document.getElementById('pw');
+        const b = document.getElementById('eye');
         if (p.type === "password") {
             p.type = "text";
-            e.className = "fas fa-eye-slash";
+            b.innerText = "ẨN";
         } else {
             p.type = "password";
-            e.className = "fas fa-eye";
+            b.innerText = "HIỆN";
         }
     }
 
-    // Chuyển form Đăng ký
-    function toReg() {
+    function goReg() {
         isLogin = false;
-        document.getElementById('title').innerText = "ĐĂNG KÝ";
-        document.getElementById('submit-btn').innerText = "ĐĂNG KÝ";
-        document.getElementById('toggle-area').innerHTML = 'Đã có tài khoản? <span class="link" onclick="toLog()">Đăng nhập</span>';
+        document.getElementById('head').innerText = "ĐĂNG KÝ";
+        document.getElementById('go').innerText = "ĐĂNG KÝ";
+        document.getElementById('switch-text').innerHTML = 'Đã có tài khoản? <span onclick="goLog()">Đăng nhập</span>';
     }
 
-    // Chuyển form Đăng nhập
-    function toLog() {
+    function goLog() {
         isLogin = true;
-        document.getElementById('title').innerText = "ĐĂNG NHẬP";
-        document.getElementById('submit-btn').innerText = "ĐĂNG NHẬP";
-        document.getElementById('toggle-area').innerHTML = 'Chưa có tài khoản? <span class="link" onclick="toReg()">Đăng ký</span>';
+        document.getElementById('head').innerText = "ĐĂNG NHẬP";
+        document.getElementById('go').innerText = "ĐĂNG NHẬP";
+        document.getElementById('switch-text').innerHTML = 'Chưa có tài khoản? <span onclick="goReg()">Đăng ký</span>';
     }
 
-    // Xử lý Firebase
-    function handle() {
-        const mail = document.getElementById('email').value;
-        const pw = document.getElementById('pass').value;
-        const err = document.getElementById('error');
-        err.innerText = "";
+    function mainAction() {
+        const email = document.getElementById('mail').value;
+        const pass = document.getElementById('pw').value;
+        const m = document.getElementById('msg');
+        m.innerText = "";
 
-        if(!mail || !pw) { err.innerText = "Điền đủ thông tin!"; return; }
+        if(!email || !pass) { m.innerText = "Điền đủ thông tin!"; return; }
 
-        const action = isLogin ? 
-            firebase.auth().signInWithEmailAndPassword(mail, pw) : 
-            firebase.auth().createUserWithEmailAndPassword(mail, pw);
+        const run = isLogin ? 
+            firebase.auth().signInWithEmailAndPassword(email, pass) : 
+            firebase.auth().createUserWithEmailAndPassword(email, pass);
 
-        action.then(() => {
-            localStorage.setItem("userEmail", mail);
+        run.then(() => {
+            localStorage.setItem("userEmail", email);
             window.location.href = "home.html";
-        }).catch(e => { err.innerText = "Lỗi: " + e.message; });
+        }).catch(err => { m.innerText = "Lỗi: " + err.message; });
     }
 
-    function reset() {
-        const mail = document.getElementById('email').value;
-        if(!mail) { alert("Nhập email!"); return; }
-        firebase.auth().sendPasswordResetEmail(mail).then(() => alert("Đã gửi mail!")).catch(e => alert(e.message));
+    function resetPw() {
+        const email = document.getElementById('mail').value;
+        if(!email) { alert("Nhập email trước!"); return; }
+        firebase.auth().sendPasswordResetEmail(email).then(() => alert("Đã gửi mail!")).catch(e => alert(e.message));
     }
 
     if (localStorage.getItem("userEmail")) window.location.href = "home.html";
