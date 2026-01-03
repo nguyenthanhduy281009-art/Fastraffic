@@ -2,62 +2,55 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fastraffic - Xác thực tài khoản</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fastraffic - Mobile Optimized</title>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <style>
-        :root { --primary: #e94560; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        :root { --primary: #e94560; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
         
-        .box { background: #fff; padding: 40px; border-radius: 16px; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        h2 { margin-bottom: 25px; color: #1a1a1a; font-weight: 700; text-transform: uppercase; }
+        .box { background: #fff; padding: 30px; border-radius: 16px; width: 100%; max-width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        h2 { margin-bottom: 25px; color: #1a1a1a; font-size: 22px; }
         
         .input-group { position: relative; margin-bottom: 15px; }
-        input { width: 100%; padding: 14px; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 15px; outline: none; background: #fafafa; transition: 0.3s; }
+        input { width: 100%; padding: 15px; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; outline: none; background: #fafafa; -webkit-appearance: none; }
         input:focus { border-color: var(--primary); background: #fff; }
         
-        .show-btn { position: absolute; right: 12px; top: 12px; background: #eee; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; color: #555; }
+        /* Tối ưu nút bấm cho ngón tay (Touch target) */
+        .show-btn { position: absolute; right: 5px; top: 5px; bottom: 5px; background: #eee; border: none; padding: 0 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; color: #555; z-index: 10; }
         
-        .forgot-link { display: block; text-align: right; margin: -5px 0 15px 0; font-size: 13px; color: #888; cursor: pointer; text-decoration: none; }
-        .forgot-link:hover { color: var(--primary); text-decoration: underline; }
+        .forgot-link { display: block; text-align: right; margin-bottom: 15px; font-size: 14px; color: #888; cursor: pointer; padding: 5px 0; }
 
-        .btn-main { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; transition: 0.3s; }
-        .btn-main:hover { background: #d13851; transform: translateY(-1px); }
+        .btn-main { width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; -webkit-tap-highlight-color: transparent; }
+        .btn-main:active { transform: scale(0.98); background: #d13851; }
         
-        #error { color: #ff4d4d; font-size: 13px; margin-top: 15px; font-weight: 600; min-height: 20px; }
+        #error { color: #ff4d4d; font-size: 13px; margin-top: 15px; min-height: 20px; }
         
-        .footer { margin-top: 25px; font-size: 14px; color: #666; padding-top: 15px; border-top: 1px solid #f0f0f0; }
-        .footer span { color: var(--primary); cursor: pointer; font-weight: 700; text-decoration: underline; }
+        .footer { margin-top: 25px; font-size: 15px; color: #666; border-top: 1px solid #f0f0f0; padding-top: 20px; }
+        .footer span { color: var(--primary); cursor: pointer; font-weight: bold; padding: 10px 5px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div class="box">
     <h2 id="title">ĐĂNG NHẬP</h2>
-    
     <div class="input-group">
-        <input type="email" id="email" placeholder="Nhập Email của bạn">
+        <input type="email" id="email" placeholder="Email của bạn" autocomplete="email">
     </div>
-    
     <div class="input-group">
-        <input type="password" id="pass" placeholder="Nhập Mật khẩu">
+        <input type="password" id="pass" placeholder="Mật khẩu">
         <button type="button" class="show-btn" onclick="togglePass()">HIỆN</button>
     </div>
-
     <a class="forgot-link" onclick="forgotPassword()">Quên mật khẩu?</a>
-    
     <button class="btn-main" onclick="handleAuth()" id="btnSubmit">ĐĂNG NHẬP</button>
-    
     <div id="error"></div>
-
     <div class="footer" id="toggleArea">
         Chưa có tài khoản? <span onclick="switchMode(false)">Đăng ký ngay</span>
     </div>
 </div>
 
 <script>
-    // 1. Cấu hình Firebase của bạn
     const firebaseConfig = {
         apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
         authDomain: "fastraffic-8b585.firebaseapp.com",
@@ -67,49 +60,51 @@
 
     let isLoginMode = true;
 
-    // 2. Chức năng Hiện/Ẩn mật khẩu
     function togglePass() {
         const p = document.getElementById("pass");
-        const b = event.target;
         p.type = p.type === "password" ? "text" : "password";
-        b.innerText = p.type === "password" ? "HIỆN" : "ẨN";
+        event.target.innerText = p.type === "password" ? "HIỆN" : "ẨN";
     }
 
-    // 3. Chuyển đổi giữa Đăng nhập và Đăng ký
     function switchMode(toLogin) {
         isLoginMode = toLogin;
         document.getElementById("title").innerText = toLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
         document.getElementById("btnSubmit").innerText = toLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ NGAY";
         document.getElementById("toggleArea").innerHTML = toLogin ? 
             'Chưa có tài khoản? <span onclick="switchMode(false)">Đăng ký ngay</span>' : 
-            'Đã có tài khoản? <span onclick="switchMode(true)">Quay lại Đăng nhập</span>';
-        document.getElementById("error").innerText = "";
+            'Đã có tài khoản? <span onclick="switchMode(true)">Đăng nhập ngay</span>';
     }
 
-    // 4. Chức năng Quên mật khẩu (Gửi email khôi phục)
     async function forgotPassword() {
         const email = document.getElementById("email").value;
-        const err = document.getElementById("error");
-        
-        if (!email) {
-            err.innerText = "Hãy nhập Email để nhận link khôi phục!";
-            return;
-        }
-
+        if (!email) { alert("Hãy nhập Email trước!"); return; }
         try {
             await firebase.auth().sendPasswordResetEmail(email);
-            alert("Đã gửi link khôi phục mật khẩu vào Email: " + email + "\n\nLưu ý: Nếu không thấy, hãy kiểm tra cả thư mục Thư rác (Spam)!");
-            err.innerText = "";
-        } catch (e) {
-            err.innerText = "Lỗi: " + e.message;
-        }
+            alert("Đã gửi link vào Email của bạn (kiểm tra cả Spam)!");
+        } catch (e) { alert("Lỗi: " + e.message); }
     }
 
-    // 5. Xử lý Đăng nhập & Đăng ký (Bắt buộc qua Firebase)
     async function handleAuth() {
         const email = document.getElementById("email").value;
         const pass = document.getElementById("pass").value;
         const err = document.getElementById("error");
-        err.innerText = "Đang xử lý...";
+        err.innerText = "Vui lòng chờ...";
 
-        if(!email || !pass) { err.innerText
+        try {
+            if (isLoginMode) {
+                await firebase.auth().signInWithEmailAndPassword(email, pass);
+                localStorage.setItem("userEmail", email);
+                window.location.href = "home.html";
+            } else {
+                await firebase.auth().createUserWithEmailAndPassword(email, pass);
+                await firebase.auth().signOut();
+                alert("Đăng ký thành công! Hãy đăng nhập lại.");
+                switchMode(true);
+            }
+        } catch (e) {
+            err.innerText = "Lỗi: " + e.message;
+        }
+    }
+</script>
+</body>
+</html>
