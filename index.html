@@ -1,103 +1,72 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ thống Fastraffic</title>
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Arial; background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; }
-        .box { background: #16213e; padding: 30px; border-radius: 12px; width: 300px; text-align: center; border: 1px solid #e94560; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #0f3460; background: #1a1a2e; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.3s; }
-        button:hover { background: #ff4d6d; }
-        button:disabled { background: #555; cursor: not-allowed; }
-        .toggle { color: #8892b0; cursor: pointer; font-size: 13px; margin-top: 15px; display: block; text-decoration: underline; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Fastraffic - Đăng nhập</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: Arial; background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .box { background: white; padding: 25px; width: 320px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; }
+    input { width: 100%; margin: 10px 0; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-login { background: #e94560; color: white; }
+    .btn-reg { background: #f2f2f2; color: #333; font-size: 12px; }
+    #msg { font-size: 13px; margin-top: 10px; color: red; }
+  </style>
 </head>
 <body>
-    <div class="box">
-        <h2 id="title">ĐĂNG KÝ</h2>
-        <input type="text" id="user" placeholder="Email hoặc Tài khoản">
-        <input type="password" id="pass" placeholder="Mật khẩu">
-        <button id="mainBtn" onclick="handleAuth()">XÁC NHẬN</button>
-        <span class="toggle" onclick="toggleMode()" id="toggleText">Đã có tài khoản? Đăng nhập</span>
-    </div>
+  <div class="box">
+    <h3 style="color: #1a1a2e">ĐĂNG NHẬP</h3>
+    <input type="email" id="email" placeholder="Email (ví dụ: abc@gmail.com)">
+    <input type="password" id="password" placeholder="Mật khẩu">
+    <button class="btn-login" onclick="login()">ĐĂNG NHẬP</button>
+    <button class="btn-reg" onclick="register()">TẠO TÀI KHOẢN MỚI</button>
+    <p id="msg"></p>
+  </div>
 
-    <script>
-        // Cấu hình Firebase chuẩn cho server Singapore của bạn
-        const firebaseConfig = {
-            apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
-            authDomain: "fastraffic-8b585.firebaseapp.com",
-            databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "fastraffic-8b585",
-            storageBucket: "fastraffic-8b585.firebasestorage.app",
-            messagingSenderId: "124682318080",
-            appId: "1:124682318080:web:f536eacba0881a078683e5"
-        };
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
+      authDomain: "fastraffic-8b585.firebaseapp.com",
+      databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "fastraffic-8b585",
+      storageBucket: "fastraffic-8b585.firebasestorage.app",
+      messagingSenderId: "124682318080",
+      appId: "1:124682318080:web:f536eacba0881a078683e5"
+    };
 
-        // Khởi tạo
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        let isLoginMode = false;
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-        function toggleMode() {
-            isLoginMode = !isLoginMode;
-            document.getElementById('title').innerText = isLoginMode ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
-            document.getElementById('toggleText').innerText = isLoginMode ? "Chưa có tài khoản? Đăng ký" : "Đã có tài khoản? Đăng nhập";
-        }
+    function register() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      if(!email || !password) return alert("Vui lòng nhập đủ!");
 
-        function handleAuth() {
-            const rawUser = document.getElementById('user').value.trim().toLowerCase();
-            const p = document.getElementById('pass').value.trim();
-            const btn = document.getElementById('mainBtn');
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          const safePath = email.replace(/[@.]/g, "_");
+          db.ref('users/' + safePath).set({ email: email, created: new Date().toLocaleString() });
+          alert("Đăng ký thành công! Giờ bạn có thể Đăng nhập.");
+        })
+        .catch(err => alert("Lỗi đăng ký: " + err.message));
+    }
 
-            if (!rawUser || !p) return alert("Vui lòng nhập đủ thông tin!");
+    function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
 
-            // Xử lý lỗi ký tự đặc biệt trong Gmail
-            const safePath = rawUser.replace(/[@.]/g, "_");
-            
-            btn.disabled = true;
-            btn.innerText = "Đang xử lý...";
-
-            const userRef = db.ref('users/' + safePath);
-
-            if (isLoginMode) {
-                // ĐĂNG NHẬP
-                userRef.once('value').then((snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.password === p) {
-                        localStorage.setItem("username", rawUser);
-                        alert("Đăng nhập thành công!");
-                        window.location.href = "home.html"; // Chuyển sang trang nội dung
-                    } else {
-                        alert("Sai tài khoản hoặc mật khẩu!");
-                        btn.disabled = false;
-                        btn.innerText = "XÁC NHẬN";
-                    }
-                }).catch(e => {
-                    alert("Lỗi kết nối: " + e.message);
-                    btn.disabled = false;
-                });
-            } else {
-                // ĐĂNG KÝ
-                userRef.set({
-                    username: rawUser,
-                    password: p,
-                    time: new Date().toLocaleString()
-                }).then(() => {
-                    alert("Đăng ký thành công tài khoản: " + rawUser);
-                    toggleMode(); // Chuyển sang chế độ đăng nhập luôn
-                    btn.disabled = false;
-                    btn.innerText = "XÁC NHẬN";
-                }).catch(err => {
-                    alert("Lỗi Firebase: " + err.message);
-                    btn.disabled = false;
-                    btn.innerText = "XÁC NHẬN";
-                });
-            }
-        }
-    </script>
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          localStorage.setItem("userEmail", email);
+          window.location.href = "home.html"; // Chuyển đến file home.html có sẵn trên GitHub của bạn
+        })
+        .catch(err => alert("Sai tài khoản hoặc mật khẩu!"));
+    }
+  </script>
 </body>
 </html>
