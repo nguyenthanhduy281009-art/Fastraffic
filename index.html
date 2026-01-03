@@ -1,99 +1,38 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ thống Fastraffic</title>
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Arial; background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; }
-        .box { background: #16213e; padding: 30px; border-radius: 12px; width: 300px; text-align: center; border: 1px solid #e94560; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #0f3460; background: #1a1a2e; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .toggle { color: #8892b0; cursor: pointer; font-size: 13px; margin-top: 15px; display: block; text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h2 id="title">ĐĂNG KÝ</h2>
-        <input type="text" id="user" placeholder="Tên tài khoản">
-        <input type="password" id="pass" placeholder="Mật khẩu">
-        <button id="mainBtn" onclick="handleAuth()">XÁC NHẬN</button>
-        <span class="toggle" onclick="toggleMode()" id="toggleText">Đã có tài khoản? Đăng nhập</span>
-    </div>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
+        authDomain: "fastraffic-8b585.firebaseapp.com",
+        databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "fastraffic-8b585",
+        appId: "1:124682318080:web:f536eacba0881a078683e5"
+    };
 
-    <script>
-        // Cấu hình chuẩn từ ảnh image_5cc969.png của bạn
-        const firebaseConfig = {
-            apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
-            authDomain: "fastraffic-8b585.firebaseapp.com",
-            databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "fastraffic-8b585",
-            storageBucket: "fastraffic-8b585.firebasestorage.app",
-            messagingSenderId: "124682318080",
-            appId: "1:124682318080:web:f536eacba0881a078683e5"
-        };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        // Khởi tạo Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        let isLoginMode = false;
+    function handleAuth() {
+        const u = document.getElementById('user').value.trim().toLowerCase();
+        const p = document.getElementById('pass').value.trim();
+        const btn = document.getElementById('mainBtn');
 
-        function toggleMode() {
-            isLoginMode = !isLoginMode;
-            document.getElementById('title').innerText = isLoginMode ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
-            document.getElementById('toggleText').innerText = isLoginMode ? "Chưa có tài khoản? Đăng ký" : "Đã có tài khoản? Đăng nhập";
-        }
+        if (!u || !p) return alert("Nhập đủ tên và mật khẩu!");
 
-        function handleAuth() {
-            const u = document.getElementById('user').value.trim().toLowerCase();
-            const p = document.getElementById('pass').value.trim();
-            const btn = document.getElementById('mainBtn');
-
-            if (!u || !p) return alert("Vui lòng điền đủ thông tin!");
-            
-            btn.disabled = true;
-            btn.innerText = "Đang xử lý...";
-
-            const userRef = db.ref('users/' + u);
-
-            if (isLoginMode) {
-                // Xử lý Đăng nhập
-                userRef.once('value').then((snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.password === p) {
-                        localStorage.setItem("username", u);
-                        alert("Đăng nhập thành công!");
-                        window.location.href = "home.html"; // Đảm bảo bạn đã đổi index.html cũ thành home.html
-                    } else {
-                        alert("Sai tài khoản hoặc mật khẩu!");
-                        btn.disabled = false;
-                        btn.innerText = "XÁC NHẬN";
-                    }
-                });
-            } else {
-                // Xử lý Đăng ký
-                userRef.set({
-                    username: u,
-                    password: p,
-                    created: new Date().toLocaleString()
-                }).then(() => {
-                    alert("Đăng ký thành công! Hãy chuyển sang Đăng nhập.");
-                    toggleMode();
-                    btn.disabled = false;
-                    btn.innerText = "XÁC NHẬN";
-                }).catch(err => {
-                    alert("Lỗi: " + err.message);
-                    btn.disabled = false;
-                    btn.innerText = "XÁC NHẬN";
-                });
-            }
-        }
-    </script>
-</body>
-</html>
-
-
-
-
+        btn.innerText = "Đang kết nối...";
+        
+        // Gửi dữ liệu và bắt lỗi
+        db.ref('users/' + u).set({
+            password: p,
+            time: new Date().getTime()
+        })
+        .then(() => {
+            alert("THÀNH CÔNG! Dữ liệu đã lên Firebase.");
+            btn.innerText = "XÁC NHẬN";
+        })
+        .catch((error) => {
+            // Nếu có lỗi (sai link, sai Rules), nó sẽ hiện ở đây
+            alert("LỖI RỒI: " + error.message);
+            console.error(error);
+            btn.innerText = "THỬ LẠI";
+        });
+    }
+</script>
