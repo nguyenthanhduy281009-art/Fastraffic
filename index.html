@@ -1,72 +1,110 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Fastraffic - Đăng nhập</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <style>
-    body { font-family: Arial; background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-    .box { background: white; padding: 25px; width: 320px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; }
-    input { width: 100%; margin: 10px 0; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-    button { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    .btn-login { background: #e94560; color: white; }
-    .btn-reg { background: #f2f2f2; color: #333; font-size: 12px; }
-    #msg { font-size: 13px; margin-top: 10px; color: red; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập / Đăng ký - Fastraffic</title>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background-color: #ffffff; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; text-align: center; }
+        .logo-section { margin-bottom: 25px; }
+        .logo-section img { max-width: 150px; height: auto; border-radius: 5px; } /* Kích thước logo */
+        .logo-section h1 { color: #e94560; margin-top: 10px; font-size: 28px; }
+        h2 { color: #333; margin-bottom: 25px; font-size: 24px; }
+        input[type="email"], input[type="password"] { width: calc(100% - 20px); padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 5px; background-color: #e94560; color: white; font-size: 18px; cursor: pointer; transition: background-color 0.3s ease; margin-top: 10px; }
+        button:hover { background-color: #d13851; }
+        .toggle-form { margin-top: 20px; font-size: 14px; color: #666; }
+        .toggle-form a { color: #e94560; text-decoration: none; font-weight: bold; }
+        .error-message { color: #e74c3c; margin-top: 15px; font-size: 14px; }
+    </style>
 </head>
 <body>
-  <div class="box">
-    <h3 style="color: #1a1a2e">ĐĂNG NHẬP</h3>
-    <input type="email" id="email" placeholder="Email (ví dụ: abc@gmail.com)">
-    <input type="password" id="password" placeholder="Mật khẩu">
-    <button class="btn-login" onclick="login()">ĐĂNG NHẬP</button>
-    <button class="btn-reg" onclick="register()">TẠO TÀI KHOẢN MỚI</button>
-    <p id="msg"></p>
-  </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
-      authDomain: "fastraffic-8b585.firebaseapp.com",
-      databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "fastraffic-8b585",
-      storageBucket: "fastraffic-8b585.firebasestorage.app",
-      messagingSenderId: "124682318080",
-      appId: "1:124682318080:web:f536eacba0881a078683e5"
-    };
+    <div class="container">
+        <div class="logo-section">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Fast_traffic_logo_red.png" alt="Fastraffic Logo"> 
+            <h1>Fastraffic</h1>
+        </div>
+        
+        <h2 id="form-title">Đăng nhập</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Mật khẩu">
+        <button id="auth-button" onclick="login()">Đăng nhập</button>
+        <p class="toggle-form">
+            Bạn chưa có tài khoản? <a href="#" onclick="toggleForm()">Đăng ký ngay</a>
+        </p>
+        <p class="error-message" id="error-message"></p>
+    </div>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
+    <script src="firebase-config.js"></script>
+    <script>
+        let isLogin = true; // Biến trạng thái để biết đang ở form login hay register
 
-    function register() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      if(!email || !password) return alert("Vui lòng nhập đủ!");
+        function toggleForm() {
+            isLogin = !isLogin;
+            document.getElementById('form-title').innerText = isLogin ? 'Đăng nhập' : 'Đăng ký';
+            document.getElementById('auth-button').innerText = isLogin ? 'Đăng nhập' : 'Đăng ký';
+            document.querySelector('.toggle-form').innerHTML = isLogin ? 
+                'Bạn chưa có tài khoản? <a href="#" onclick="toggleForm()">Đăng ký ngay</a>' : 
+                'Bạn đã có tài khoản? <a href="#" onclick="toggleForm()">Đăng nhập</a>';
+            document.getElementById('error-message').innerText = ''; // Xóa thông báo lỗi khi chuyển form
+        }
 
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          const safePath = email.replace(/[@.]/g, "_");
-          db.ref('users/' + safePath).set({ email: email, created: new Date().toLocaleString() });
-          alert("Đăng ký thành công! Giờ bạn có thể Đăng nhập.");
-        })
-        .catch(err => alert("Lỗi đăng ký: " + err.message));
-    }
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.innerText = ''; // Reset lỗi
 
-    function login() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    localStorage.setItem("userEmail", email);
+                    window.location.href = "home.html";
+                })
+                .catch((error) => {
+                    errorMessage.innerText = "Lỗi: " + error.message;
+                });
+        }
 
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          localStorage.setItem("userEmail", email);
-          window.location.href = "home.html"; // Chuyển đến file home.html có sẵn trên GitHub của bạn
-        })
-        .catch(err => alert("Sai tài khoản hoặc mật khẩu!"));
-    }
-  </script>
+        function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.innerText = ''; // Reset lỗi
+
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    localStorage.setItem("userEmail", email);
+                    // Cấu hình ban đầu cho người dùng mới trong Realtime Database nếu cần
+                    // firebase.database().ref('users/' + userCredential.user.uid).set({
+                    //     email: email,
+                    //     balance: 0,
+                    //     createdAt: new Date().toISOString()
+                    // });
+                    window.location.href = "home.html";
+                })
+                .catch((error) => {
+                    errorMessage.innerText = "Lỗi: " + error.message;
+                });
+        }
+
+        // Thay đổi hàm gọi button dựa trên trạng thái form
+        document.getElementById('auth-button').onclick = function() {
+            if (isLogin) {
+                login();
+            } else {
+                register();
+            }
+        };
+
+        // Khi load trang, kiểm tra nếu đã đăng nhập thì chuyển hướng ngay
+        if (localStorage.getItem("userEmail")) {
+            window.location.href = "home.html";
+        }
+    </script>
 </body>
 </html>
