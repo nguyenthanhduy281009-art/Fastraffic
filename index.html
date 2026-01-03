@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập hệ thống</title>
+    <title>Hệ thống Fastraffic</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
     <style>
         body { font-family: 'Segoe UI', Arial; background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #16213e; padding: 30px; border-radius: 12px; width: 320px; text-align: center; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #0f3460; background: #1a1a2e; color: white; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: #ff4d6d; }
+        .box { background: #16213e; padding: 30px; border-radius: 12px; width: 320px; text-align: center; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #e94560; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #0f3460; background: #1a1a2e; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .toggle { color: #8892b0; cursor: pointer; font-size: 13px; margin-top: 15px; display: block; }
     </style>
 </head>
@@ -20,12 +19,12 @@
         <h2 id="title">ĐĂNG KÝ</h2>
         <input type="text" id="user" placeholder="Tên tài khoản">
         <input type="password" id="pass" placeholder="Mật khẩu">
-        <button id="btn" onclick="handleAuth()">XÁC NHẬN</button>
+        <button onclick="handleAuth()">XÁC NHẬN</button>
         <span class="toggle" onclick="toggle()">Đã có tài khoản? Đăng nhập</span>
     </div>
 
     <script>
-        // Cấu hình chuẩn từ Firebase của bạn
+        // Cấu hình từ Firebase của bạn
         const firebaseConfig = {
             apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
             authDomain: "fastraffic-8b585.firebaseapp.com",
@@ -33,11 +32,9 @@
             projectId: "fastraffic-8b585",
             storageBucket: "fastraffic-8b585.firebasestorage.app",
             messagingSenderId: "124682318080",
-            appId: "1:124682318080:web:f536eacba0881a078683e5",
-            measurementId: "G-5FBQ8W5Z7G"
+            appId: "1:124682318080:web:f536eacba0881a078683e5"
         };
 
-        // Khởi tạo
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         let isLogin = false;
@@ -45,24 +42,30 @@
         function toggle() {
             isLogin = !isLogin;
             document.getElementById('title').innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
-            document.querySelector('.toggle').innerText = isLogin ? "Chưa có tài khoản? Đăng ký" : "Đã có tài khoản? Đăng nhập";
         }
 
-        async function handleAuth() {
+        function handleAuth() {
             const u = document.getElementById('user').value.trim().toLowerCase();
             const p = document.getElementById('pass').value.trim();
-            const btn = document.getElementById('btn');
-
             if(!u || !p) return alert("Vui lòng nhập đủ!");
-            btn.disabled = true;
-            btn.innerText = "Đang xử lý...";
 
             const userRef = db.ref('users/' + u);
-
             if (isLogin) {
-                // Kiểm tra đăng nhập
-                userRef.once('value',
-
+                userRef.once('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.password === p) {
+                        localStorage.setItem("username", u);
+                        window.location.href = "home.html"; // Chuyển sang trang nội dung
+                    } else { alert("Sai tài khoản hoặc mật khẩu!"); }
+                });
+            } else {
+                userRef.set({ username: u, password: p, date: new Date().toLocaleString() })
+                .then(() => { alert("Đăng ký thành công! Hãy Đăng nhập."); toggle(); });
+            }
+        }
+    </script>
+</body>
+</html>
 
 
 
