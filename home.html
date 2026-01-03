@@ -1,189 +1,65 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bảng điều khiển - Fastraffic</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; display: flex; background: #f4f7f6; color: #333; }
-    
-    /* Sidebar nguyên bản */
-    .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
-    .sidebar-header { padding: 20px; font-weight: bold; color: #e94560; font-size: 20px; border-bottom: 1px solid #eee; text-align: center; }
-    
-    /* Menu Item & Active State */
-    .menu-item { 
-      padding: 15px 20px; 
-      display: flex; 
-      align-items: center; 
-      color: #333; 
-      text-decoration: none; 
-      cursor: pointer;
-      transition: 0.3s;
-      border-left: 4px solid transparent;
-    }
-    .menu-item:hover { background: #fff5f6; color: #e94560; }
-    .menu-item.active {
-      color: #e94560 !important;
-      background: #fff5f6;
-      border-left-color: #e94560;
-      font-weight: bold;
-    }
-    .menu-item i { width: 35px; font-size: 18px; }
-
-    /* Main Area */
-    .main { margin-left: 250px; flex: 1; }
-    .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-    .content-box { padding: 30px; }
-    .logout-btn { background: #ff4d4d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fastraffic - Trang chủ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: sans-serif; margin: 0; display: flex; background: #f4f7f6; }
+        .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
+        .sidebar-header { padding: 20px; font-weight: bold; color: #e94560; font-size: 20px; text-align: center; border-bottom: 1px solid #eee; }
+        .menu-item { padding: 15px 20px; display: flex; align-items: center; color: #333; cursor: pointer; text-decoration: none; }
+        .menu-item:hover, .menu-item.active { background: #fff5f6; color: #e94560; border-left: 4px solid #e94560; }
+        .menu-item i { width: 30px; }
+        .main { margin-left: 250px; flex: 1; }
+        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
+        .content { padding: 30px; }
+        .logout { background: #ff4d4d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    </style>
 </head>
 <body>
 
-  <script>
-    // Kiểm tra bảo mật
+<script>
     if (!localStorage.getItem("userEmail")) { window.location.href = "index.html"; }
-  </script>
+</script>
 
-  <div class="sidebar">
+<div class="sidebar">
     <div class="sidebar-header">FASTRAFFIC</div>
-    
-    <div class="menu-item active" id="btn-trangchu" onclick="showPage('trangchu')">
-        <i class="fas fa-home"></i> <span>Trang chủ</span>
-    </div>
-    <div class="menu-item" id="btn-lichsu" onclick="showPage('lichsu')">
-        <i class="fas fa-history"></i> <span>Lịch sử nhiệm vụ</span>
-    </div>
-    <div class="menu-item" id="btn-quydinh" onclick="showPage('quydinh')">
-        <i class="fas fa-gavel"></i> <span>Quy định</span>
-    </div>
-    <div class="menu-item" id="btn-ruttien" onclick="showPage('ruttien')">
-        <i class="fas fa-wallet"></i> <span>Rút tiền</span>
-    </div>
-  </div>
+    <div class="menu-item active" onclick="show('trangchu')"><i class="fas fa-home"></i> Trang chủ</div>
+    <div class="menu-item" onclick="show('lichsu')"><i class="fas fa-history"></i> Lịch sử</div>
+    <div class="menu-item" onclick="show('quydinh')"><i class="fas fa-gavel"></i> Quy định</div>
+    <div class="menu-item" onclick="show('ruttien')"><i class="fas fa-wallet"></i> Rút tiền</div>
+</div>
 
-  <div class="main">
+<div class="main">
     <div class="top-bar">
-      <span>Tài khoản: <b id="userDisplay" style="color: #e94560;"></b></span>
-      <button class="logout-btn" onclick="logout()">Đăng xuất</button>
+        <span>Chào, <b id="userMail"></b></span>
+        <button class="logout" onclick="logout()">Đăng xuất</button>
     </div>
+    <div class="content" id="view"></div>
+</div>
 
-    <div class="content-box" id="main-view">
-        </div>
-  </div>
+<script>
+    document.getElementById("userMail").innerText = localStorage.getItem("userEmail");
 
-  <script>
-    document.getElementById("userDisplay").innerText = localStorage.getItem("userEmail") || "Khách";
+    function show(p) {
+        let v = document.getElementById("view");
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        event.currentTarget.classList.add('active');
 
-    function showPage(pageName) {
-        // Cập nhật màu đỏ khi click
-        document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-        document.getElementById('btn-' + pageName).classList.add('active');
-
-        const view = document.getElementById('main-view');
-        
-        // Nội dung từng trang
-        if (pageName === 'trangchu') {
-            view.innerHTML = `<h2>Trang chủ</h2><p>Chào mừng bạn quay trở lại hệ thống Fastraffic!</p>`;
-        } else if (pageName === 'quydinh') {
-            view.innerHTML = `<h2>Quy định</h2><p>Vui lòng tuân thủ các quy tắc để tránh bị khóa tài khoản.</p>`;
-        } else {
-            view.innerHTML = ""; // Trắng trơ cho Lịch sử và Rút tiền
-        }
+        if(p === 'trangchu') v.innerHTML = "<h2>Trang chủ</h2><p>Chào mừng bạn!</p>";
+        else if(p === 'quydinh') v.innerHTML = "<h2>Quy định</h2><p>Không gian lận.</p>";
+        else v.innerHTML = "<h2>" + p + "</h2><p>Đang cập nhật...</p>";
     }
-
-    // Tải Trang chủ ngay khi mở
-    showPage('trangchu');
 
     function logout() {
-      localStorage.removeItem("userEmail");
-      window.location.href = "index.html";
-    }
-<script>
-  document.getElementById("userDisplay").innerText =
-    localStorage.getItem("userEmail") || "Khách";
-
-  function showPage(pageName) {
-    // Active menu
-    document.querySelectorAll('.menu-item')
-      .forEach(item => item.classList.remove('active'));
-    document.getElementById('btn-' + pageName).classList.add('active');
-
-    const view = document.getElementById('main-view');
-
-    /* ================= TRANG CHỦ ================= */
-    if (pageName === 'trangchu') {
-      view.innerHTML = `
-        <h2>Trang chủ</h2>
-        <p>Chào mừng bạn quay trở lại hệ thống <b>Fastraffic</b>!</p>
-
-        <h3 style="margin-top:25px;">📌 Nhiệm vụ</h3>
-
-        <!-- TRAFFICTOT -->
-        <div class="task-section">
-          <h4 style="color:#e94560;">🚀 Nhiệm vụ TrafficTot</h4>
-
-          <div class="task-item">
-            <div>
-              <b>🔗 Vượt link TrafficTot</b><br>
-              <small>Thưởng: 300đ / lượt</small>
-            </div>
-            <button onclick="startTrafficTot()">Làm nhiệm vụ</button>
-          </div>
-        </div>
-
-        <!-- CLICK1S -->
-        <div class="task-section">
-          <h4 style="color:#e94560;">⚡ Nhiệm vụ Click1s</h4>
-
-          <div class="task-item">
-            <div>
-              <b>🖱 Click quảng cáo Click1s</b><br>
-              <small>Thưởng: 200đ / lượt</small>
-            </div>
-            <button onclick="startClick1s()">Làm nhiệm vụ</button>
-          </div>
-        </div>
-      `;
+        localStorage.removeItem("userEmail");
+        window.location.href = "index.html";
     }
 
-    /* ================= QUY ĐỊNH ================= */
-    else if (pageName === 'quydinh') {
-      view.innerHTML = `
-        <h2>Quy định</h2>
-        <ul>
-          <li>Không gian lận nhiệm vụ</li>
-          <li>Không tự vượt link</li>
-          <li>Vi phạm sẽ bị khóa tài khoản</li>
-        </ul>
-      `;
-    }
-
-    /* ================= CÁC TRANG KHÁC ================= */
-    else {
-      view.innerHTML = `
-        <h2>Đang phát triển</h2>
-        <p>Chức năng này sẽ được cập nhật sớm.</p>
-      `;
-    }
-  }
-
-  /* ===== HÀM NHIỆM VỤ ===== */
-  function startTrafficTot() {
-    // sau này đổi thành trang trung gian
-    window.open("https://traffictot.com", "_blank");
-  }
-
-  function startClick1s() {
-    window.open("https://click1s.com", "_blank");
-  }
-
-  // Load trang chủ khi mở
-  showPage('trangchu');
-
-  function logout() {
-    localStorage.removeItem("userEmail");
-    window.location.href = "index.html";
-  }
+    show('trangchu');
 </script>
+
+</body>
+</html>
