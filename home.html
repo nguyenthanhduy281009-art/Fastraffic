@@ -5,29 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fastraffic - Trang chủ</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-    
+
     <style>
         body { font-family: sans-serif; margin: 0; display: flex; background: #f4f7f6; }
-        .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
-        .sidebar-header { padding: 20px; font-weight: bold; color: #e94560; font-size: 20px; text-align: center; border-bottom: 1px solid #eee; }
-        .menu-item { padding: 15px 20px; display: flex; align-items: center; color: #333; cursor: pointer; text-decoration: none; }
+        .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; z-index: 100; }
+        .sidebar-header { padding: 25px; font-weight: bold; color: #e94560; font-size: 22px; text-align: center; border-bottom: 1px solid #eee; }
+        .menu-item { padding: 15px 20px; display: flex; align-items: center; color: #333; cursor: pointer; transition: 0.3s; }
         .menu-item:hover, .menu-item.active { background: #fff5f6; color: #e94560; border-left: 4px solid #e94560; }
-        .menu-item i { width: 30px; }
-        .main { margin-left: 250px; flex: 1; }
-        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        .content { padding: 30px; }
-        .logout { background: #ff4d4d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+        .menu-item i { width: 30px; font-size: 18px; }
         
-        /* Giao diện hiển thị tiền */
-        .money-card { background: #e94560; color: white; padding: 20px; border-radius: 10px; display: inline-block; min-width: 200px; margin-top: 20px; box-shadow: 0 4px 10px rgba(233, 69, 96, 0.3); }
-        .money-card h3 { margin: 0; font-size: 14px; opacity: 0.9; }
-        .money-card #userMoney { font-size: 28px; font-weight: bold; margin-top: 5px; }
+        .main { margin-left: 250px; flex: 1; min-height: 100vh; }
+        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
+        .content { padding: 30px; }
+        
+        .logout { background: #ff4d4d; color: white; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        /* Card hiển thị tiền */
+        .money-card { background: linear-gradient(135deg, #e94560, #ff6b81); color: white; padding: 25px; border-radius: 15px; display: inline-block; min-width: 280px; box-shadow: 0 8px 20px rgba(233, 69, 96, 0.2); }
+        .money-card h3 { margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
+        .money-card #userMoney { font-size: 32px; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
+
+<script>
+    if (!localStorage.getItem("userEmail")) { window.location.href = "index.html"; }
+</script>
 
 <div class="sidebar">
     <div class="sidebar-header">FASTRAFFIC</div>
@@ -43,13 +50,7 @@
         <button class="logout" onclick="logout()">Đăng xuất</button>
     </div>
     <div class="content" id="view">
-        <h2>Trang chủ</h2>
-        <div class="money-card">
-            <h3>Số dư khả dụng</h3>
-            <div id="userMoney">0 VNĐ</div>
         </div>
-        <p style="margin-top: 20px;">Chào mừng bạn quay trở lại!</p>
-    </div>
 </div>
 
 <script>
@@ -60,67 +61,82 @@
         projectId: "fastraffic-8b585",
         databaseURL: "https://fastraffic-8b585-default-rtdb.firebaseio.com"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 
-    // 2. Bảo mật & Theo dõi số tiền thực tế
+    // 2. Lắng nghe trạng thái người dùng & Lấy tiền
     firebase.auth().onAuthStateChanged((user) => {
         if (!user) {
-            localStorage.removeItem("userEmail");
-            window.location.href = "index.html";
+            logout();
         } else {
             document.getElementById("userMail").innerText = user.email;
-            
-            // Xử lý ID để khớp với Realtime Database (thay dấu chấm bằng gạch dưới)
-            const userId = user.email.replace(/\./g, '_');
-            
-            // Lắng nghe dữ liệu tiền
-            firebase.database().ref('users/' + userId).on('value', (snapshot) => {
-                const data = snapshot.val();
-                const money = (data && data.money) ? data.money : 0;
-                // Hiển thị số tiền có định dạng phân tách hàng nghìn
-                document.getElementById("userMoney").innerText = money.toLocaleString('vi-VN') + " VNĐ";
-            });
-
-            // Ép buộc kiểm tra trạng thái vô hiệu hóa (Ban)
+            loadMoneyData(user.email);
+            // Ép buộc kiểm tra nếu bị BAN
             user.getIdToken(true).catch(() => {
-                alert("Tài khoản của bạn đã bị vô hiệu hóa!");
+                alert("Tài khoản đã bị vô hiệu hóa!");
                 logout();
             });
         }
     });
 
-    function show(p) {
-        let v = document.getElementById("view");
-        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        if(event) event.currentTarget.classList.add('active');
-
-        if(p === 'trangchu') {
-            v.innerHTML = `<h2>Trang chủ</h2>
-                           <div class="money-card">
-                               <h3>Số dư khả dụng</h3>
-                               <div id="userMoney">0 VNĐ</div>
-                           </div>
-                           <p style="margin-top: 20px;">Chào mừng bạn quay trở lại!</p>`;
-            // Gọi lại hàm lấy tiền sau khi đổi trang để cập nhật UI
-            const user = firebase.auth().currentUser;
-            if(user) {
-                const userId = user.email.replace(/\./g, '_');
-                firebase.database().ref('users/' + userId).once('value', (s) => {
-                    const m = (s.val() && s.val().money) ? s.val().money : 0;
-                    document.getElementById("userMoney").innerText = m.toLocaleString('vi-VN') + " VNĐ";
-                });
+    // 3. Hàm lấy tiền từ Realtime Database
+    function loadMoneyData(email) {
+        const userId = email.replace(/\./g, '_');
+        const moneyRef = firebase.database().ref('users/' + userId + '/money');
+        
+        moneyRef.on('value', (snapshot) => {
+            const money = snapshot.val();
+            const display = document.getElementById("userMoney");
+            if (display) {
+                // Nếu chưa có tiền trong DB, tự tạo 0 VNĐ
+                if (money === null) {
+                    moneyRef.set(0);
+                    display.innerText = "0 VNĐ";
+                } else {
+                    display.innerText = money.toLocaleString('vi-VN') + " VNĐ";
+                }
             }
-        } 
-        else if(p === 'quydinh') v.innerHTML = "<h2>Quy định</h2><p>1. Không gian lận.<br>2. Một người dùng một tài khoản.</p>";
-        else v.innerHTML = "<h2>" + p.toUpperCase() + "</h2><p>Chức năng này đang được phát triển...</p>";
+        });
     }
 
+    // 4. Chuyển đổi giao diện menu
+    function show(p) {
+        let v = document.getElementById("view");
+        
+        // Cập nhật trạng thái Active của menu
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+        if(p === 'trangchu') {
+            v.innerHTML = `
+                <h2>Bảng điều khiển</h2>
+                <div class="money-card">
+                    <h3>Số dư tài khoản</h3>
+                    <div id="userMoney">Đang tải...</div>
+                </div>
+                <p style="margin-top: 25px; color: #555;">Hôm nay bạn muốn kiếm thêm bao nhiêu tiền nào?</p>
+            `;
+            // Gọi lại hàm load tiền để cập nhật vào ID "userMoney" mới vẽ
+            const user = firebase.auth().currentUser;
+            if(user) loadMoneyData(user.email);
+        } 
+        else if(p === 'quydinh') {
+            v.innerHTML = "<h2>Quy định</h2><p>1. Không sử dụng tool/cheat.<br>2. Một thiết bị chỉ được dùng 1 tài khoản.</p>";
+        }
+        else {
+            v.innerHTML = "<h2>" + p.toUpperCase() + "</h2><p>Chức năng đang được hoàn thiện...</p>";
+        }
+    }
+
+    // 5. Đăng xuất
     function logout() {
         firebase.auth().signOut().then(() => {
             localStorage.removeItem("userEmail");
             window.location.href = "index.html";
         });
     }
+
+    // Tự động mở trang chủ khi mới vào
+    show('trangchu');
 </script>
 
 </body>
