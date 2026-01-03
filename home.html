@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bảng điều khiển - Fastraffic</title>
+  <title>Fastraffic - Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; display: flex; background: #f4f7f6; color: #333; }
+    
+    /* Sidebar */
     .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
     .sidebar-header { padding: 20px; font-weight: bold; color: #e94560; font-size: 20px; border-bottom: 1px solid #eee; text-align: center; }
     
+    /* Menu Item & Hiệu ứng đỏ (Active) */
     .menu-item { 
       padding: 15px 20px; 
       display: flex; 
@@ -21,8 +24,6 @@
       border-left: 4px solid transparent;
     }
     .menu-item:hover { background: #fff5f6; color: #e94560; }
-    
-    /* Hiệu ứng Đỏ khi đang chọn */
     .menu-item.active {
       color: #e94560 !important;
       background: #fff5f6;
@@ -31,6 +32,7 @@
     }
     .menu-item i { width: 35px; font-size: 18px; }
 
+    /* Vùng nội dung */
     .main { margin-left: 250px; flex: 1; }
     .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
     .content-box { padding: 30px; }
@@ -40,6 +42,7 @@
 <body>
 
   <script>
+    // Bảo mật: Chặn người chưa đăng nhập
     if (!localStorage.getItem("userEmail")) { window.location.href = "index.html"; }
   </script>
 
@@ -74,21 +77,24 @@
     document.getElementById("userDisplay").innerText = localStorage.getItem("userEmail") || "Khách";
 
     function showPage(pageName) {
-        // Đổi màu đỏ menu
+        // Cập nhật trạng thái đỏ (Active) cho menu
         document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
         document.getElementById('btn-' + pageName).classList.add('active');
 
         const view = document.getElementById('main-view');
+        
+        // Cấu trúc nội dung nguyên bản
         if (pageName === 'trangchu') {
-            view.innerHTML = `<h2>Trang chủ</h2><p>Chào mừng bạn quay trở lại với hệ thống Fastraffic.</p>`;
+            view.innerHTML = `<h2>Trang chủ</h2><p>Chào mừng bạn quay trở lại hệ thống Fastraffic!</p>`;
         } else if (pageName === 'quydinh') {
-            view.innerHTML = `<h2>Quy định</h2><p>Vui lòng tuân thủ các quy định để bảo vệ tài khoản của bạn.</p>`;
+            view.innerHTML = `<h2>Quy định hệ thống</h2><p>Vui lòng không gian lận để tránh bị khóa tài khoản.</p>`;
         } else {
-            view.innerHTML = ""; // Trang trắng cho Lịch sử và Rút tiền
+            // Lịch sử nhiệm vụ và Rút tiền hiện trang trắng
+            view.innerHTML = ""; 
         }
     }
 
-    // Tự động load trang chủ
+    // Hiển thị Trang chủ ngay khi load xong
     showPage('trangchu');
 
     function logout() {
@@ -98,6 +104,7 @@
   </script>
 </body>
 </html>
+
 
 
 
