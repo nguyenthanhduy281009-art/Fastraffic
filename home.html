@@ -9,38 +9,41 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; display: flex; background: #f4f7f6; overflow-x: hidden; }
-        .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; z-index: 100; }
+        body { font-family: sans-serif; margin: 0; display: flex; background: #f4f7f6; }
+        .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
         .sidebar-header { padding: 25px; font-weight: bold; color: #e94560; font-size: 22px; text-align: center; border-bottom: 1px solid #eee; }
-        .menu-item { padding: 15px 20px; display: flex; align-items: center; color: #333; cursor: pointer; transition: 0.2s; }
-        .menu-item:hover, .menu-item.active { background: #fff5f6; color: #e94560; border-left: 4px solid #e94560; }
-        .menu-item i { width: 30px; font-size: 18px; }
-        .main { margin-left: 250px; flex: 1; min-height: 100vh; width: calc(100% - 250px); }
-        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 90; }
+        .menu-item { padding: 15px 20px; display: flex; align-items: center; color: #333; cursor: pointer; }
+        .menu-item.active { background: #fff5f6; color: #e94560; border-left: 4px solid #e94560; }
+        .main { margin-left: 250px; flex: 1; }
+        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
         .content { padding: 40px; }
         .logout { background: #ff4d4d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .money-card { background: linear-gradient(135deg, #e94560, #ff6b81); color: white; padding: 30px; border-radius: 20px; display: inline-block; min-width: 320px; box-shadow: 0 10px 20px rgba(233, 69, 96, 0.2); }
-        .money-card h3 { margin: 0; font-size: 15px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.9; }
-        #userMoney { font-size: 38px; font-weight: bold; margin-top: 15px; }
-        #userMail { color: #e94560; font-weight: bold; }
+        .money-card { background: linear-gradient(135deg, #e94560, #ff6b81); color: white; padding: 30px; border-radius: 20px; display: inline-block; min-width: 300px; box-shadow: 0 10px 20px rgba(233, 69, 96, 0.2); }
+        #userMoney { font-size: 35px; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <div class="sidebar-header">FASTRAFFIC</div>
-    <div class="menu-item active" onclick="show('trangchu')"><i class="fas fa-home"></i> Trang chủ</div>
-    <div class="menu-item" onclick="show('lichsu')"><i class="fas fa-history"></i> Lịch sử</div>
-    <div class="menu-item" onclick="show('quydinh')"><i class="fas fa-gavel"></i> Quy định</div>
-    <div class="menu-item" onclick="show('ruttien')"><i class="fas fa-wallet"></i> Rút tiền</div>
+    <div class="menu-item active" onclick="show('trangchu')"><i class="fas fa-home" style="margin-right:10px"></i> Trang chủ</div>
+    <div class="menu-item" onclick="show('lichsu')"><i class="fas fa-history" style="margin-right:10px"></i> Lịch sử</div>
+    <div class="menu-item" onclick="show('quydinh')"><i class="fas fa-gavel" style="margin-right:10px"></i> Quy định</div>
+    <div class="menu-item" onclick="show('ruttien')"><i class="fas fa-wallet" style="margin-right:10px"></i> Rút tiền</div>
 </div>
 
 <div class="main">
     <div class="top-bar">
-        <span>Chào mừng, <span id="userMail">Đang xác thực...</span></span>
+        <span>Chào mừng, <b id="userMail" style="color:#e94560">Đang tải...</b></span>
         <button class="logout" onclick="logout()">Đăng xuất</button>
     </div>
-    <div class="content" id="view"></div>
+    <div class="content" id="view">
+        <h2 style="margin-top:0">Bảng điều khiển</h2>
+        <div class="money-card">
+            <div style="font-size:14px; opacity:0.9">SỐ DƯ TÀI KHOẢN</div>
+            <div id="userMoney">Đang kết nối...</div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -52,60 +55,39 @@
     };
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 
-    let currentEmail = "";
-
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
-            currentEmail = user.email;
-            document.getElementById("userMail").innerText = currentEmail;
-            show('trangchu'); // Vẽ giao diện ngay khi nhận diện được email
-            user.getIdToken(true).catch(() => logout());
+            document.getElementById("userMail").innerText = user.email;
+            loadMoney(user.email);
         } else {
             window.location.href = "index.html";
         }
     });
 
-    function loadMoneyData(email) {
-        // Firebase không cho phép dấu chấm trong key, nên phải thay bằng dấu gạch dưới
-        const userId = email.replace(/\./g, '_');
-        const dbRef = firebase.database().ref('users/' + userId + '/money');
-        
-        dbRef.on('value', (snapshot) => {
-            const money = snapshot.val();
-            const moneyDisplay = document.getElementById("userMoney");
-            
-            if (moneyDisplay) {
-                if (money === null) {
-                    // Nếu chưa có tiền trong DB, tự động đặt là 0
-                    dbRef.set(0);
-                    moneyDisplay.innerText = "0 VNĐ";
-                } else {
-                    moneyDisplay.innerText = Number(money).toLocaleString('vi-VN') + " VNĐ";
-                }
-            }
+    function loadMoney(email) {
+        const id = email.replace(/\./g, '_');
+        firebase.database().ref('users/' + id + '/money').on('value', (s) => {
+            const m = s.val();
+            const el = document.getElementById("userMoney");
+            if (el) el.innerText = (m !== null ? m.toLocaleString('vi-VN') : "0") + " VNĐ";
         });
     }
 
     function show(p) {
         let v = document.getElementById("view");
         document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        if(event) event.currentTarget.classList.add('active');
 
         if(p === 'trangchu') {
-            v.innerHTML = `
-                <h2 style="margin-top:0">Bảng điều khiển</h2>
-                <div class="money-card">
-                    <h3>SỐ DƯ TÀI KHOẢN</h3>
-                    <div id="userMoney">Đang kết nối...</div>
-                </div>
-            `;
-            if(currentEmail) loadMoneyData(currentEmail);
-        } 
-        else if(p === 'quydinh') {
-            v.innerHTML = "<h2>Quy định</h2><p>Vui lòng không gian lận để tránh bị khóa tài khoản.</p>";
-        }
-        else {
-            v.innerHTML = "<h2>" + p.toUpperCase() + "</h2><p>Chức năng đang được cập nhật...</p>";
+            v.innerHTML = `<h2 style="margin-top:0">Bảng điều khiển</h2>
+                           <div class="money-card">
+                               <div style="font-size:14px; opacity:0.9">SỐ DƯ TÀI KHOẢN</div>
+                               <div id="userMoney">Đang tải...</div>
+                           </div>`;
+            const u = firebase.auth().currentUser;
+            if(u) loadMoney(u.email);
+        } else {
+            v.innerHTML = "<h2>" + p.toUpperCase() + "</h2><p>Nội dung đang cập nhật...</p>";
         }
     }
 
