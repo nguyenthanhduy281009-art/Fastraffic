@@ -2,39 +2,28 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Fastraffic - Dashboard</title>
+  <title>Fastraffic - Trang chủ</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
     body { font-family: 'Segoe UI', Arial; margin: 0; display: flex; background: #f4f7f6; }
-    .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
-    .sidebar-header { padding: 20px; font-weight: bold; color: #e94560; font-size: 20px; border-bottom: 1px solid #eee; }
+    .sidebar { width: 260px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; overflow-y: auto; }
+    .sidebar-header { padding: 20px; font-weight: bold; color: #e94560; font-size: 22px; border-bottom: 1px solid #eee; text-align: center; }
     
-    .menu-item { 
-      padding: 15px 20px; 
-      display: flex; 
-      align-items: center; 
-      color: #333; 
-      cursor: pointer;
-      transition: 0.3s;
-      border-left: 4px solid transparent;
-    }
-
-    /* Khi di chuột qua */
+    .menu-item { padding: 15px 20px; display: flex; align-items: center; color: #333; cursor: pointer; transition: 0.3s; border-left: 4px solid transparent; }
     .menu-item:hover { background: #fff5f6; color: #e94560; }
+    .menu-item.active { color: #e94560 !important; background: #fff5f6; border-left-color: #e94560; font-weight: bold; }
+    .menu-item i { width: 35px; font-size: 18px; }
 
-    /* Khi đang ở trang đó (Màu Đỏ) */
-    .menu-item.active {
-      color: #e94560 !important;
-      background: #fff5f6;
-      border-left-color: #e94560;
-      font-weight: bold;
-    }
+    /* Mục con (Submenu) */
+    .submenu { background: #fafafa; display: block; padding-left: 10px; }
+    .submenu-item { padding: 12px 20px 12px 55px; display: flex; align-items: center; color: #666; cursor: pointer; font-size: 14px; transition: 0.2s; }
+    .submenu-item:hover { color: #e94560; background: #f0f0f0; }
+    .submenu-item.active { color: #e94560; font-weight: bold; background: #fff5f6; }
 
-    .menu-item i { width: 35px; font-size: 18px; } /* Khoảng cách icon */
-
-    .main { margin-left: 250px; flex: 1; }
-    .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
+    .main { margin-left: 260px; flex: 1; }
+    .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
     .content-box { padding: 30px; }
+    .logout-btn { background: #ff4d4d; color: white; border: none; padding: 7px 15px; border-radius: 4px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -44,6 +33,18 @@
     
     <div class="menu-item active" id="btn-trangchu" onclick="showPage('trangchu')">
         <i class="fas fa-home"></i> <span>Trang chủ</span>
+    </div>
+
+    <div class="menu-item" style="cursor: default; background: #fdfdfd;">
+        <i class="fas fa-tasks"></i> <span>Vượt link rút gọn</span>
+    </div>
+    <div class="submenu">
+        <div class="submenu-item" id="btn-traffictot" onclick="showPage('traffictot')">
+            <i class="fas fa-angle-right" style="width: 20px;"></i> Traffictot
+        </div>
+        <div class="submenu-item" id="btn-click1s" onclick="showPage('click1s')">
+            <i class="fas fa-angle-right" style="width: 20px;"></i> Click1s
+        </div>
     </div>
 
     <div class="menu-item" id="btn-lichsu" onclick="showPage('lichsu')">
@@ -61,12 +62,12 @@
 
   <div class="main">
     <div class="top-bar">
-      <span>Tài khoản: <b id="userDisplay"></b></span>
-      <button onclick="logout()">Đăng xuất</button>
+      <span>Chào mừng, <b id="userDisplay"></b></span>
+      <button class="logout-btn" onclick="logout()">Đăng xuất</button>
     </div>
     <div class="content-box" id="main-view">
         <h2>Trang chủ</h2>
-        <p>Chào mừng bạn quay trở lại.</p>
+        <p>Chọn một nhiệm vụ để bắt đầu.</p>
     </div>
   </div>
 
@@ -74,18 +75,26 @@
     document.getElementById("userDisplay").innerText = localStorage.getItem("userEmail") || "Khách";
 
     function showPage(pageName) {
-        // Đổi màu đỏ cho menu
-        document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-        document.getElementById('btn-' + pageName).classList.add('active');
+        // Reset màu đỏ cho cả menu chính và menu con
+        document.querySelectorAll('.menu-item, .submenu-item').forEach(item => item.classList.remove('active'));
+        
+        // Bật màu đỏ cho mục vừa chọn
+        const activeBtn = document.getElementById('btn-' + pageName);
+        if (activeBtn) activeBtn.classList.add('active');
 
         const view = document.getElementById('main-view');
-        // Hiển thị nội dung
+        
+        // Điều hướng nội dung
         if (pageName === 'trangchu') {
-            view.innerHTML = `<h2>Trang chủ</h2><p>Nội dung trang chủ của bạn.</p>`;
+            view.innerHTML = `<h2>Trang chủ</h2><p>Đây là giao diện chính của Fastraffic.</p>`;
+        } else if (pageName === 'traffictot') {
+            view.innerHTML = `<h2>Nhiệm vụ Traffictot</h2><p>Danh sách các link Traffictot đang chờ bạn vượt...</p>`;
+        } else if (pageName === 'click1s') {
+            view.innerHTML = `<h2>Nhiệm vụ Click1s</h2><p>Danh sách các link Click1s đang chờ bạn vượt...</p>`;
         } else if (pageName === 'quydinh') {
-            view.innerHTML = `<h2>Quy định hệ thống</h2><p>1. Không gian lận.<br>2. Mỗi người 1 tài khoản.</p>`;
+            view.innerHTML = `<h2>Quy định hệ thống</h2><p>Vui lòng tuân thủ các quy tắc để tránh bị khóa tài khoản.</p>`;
         } else {
-            view.innerHTML = ""; // Trang trắng cho các mục khác
+            view.innerHTML = ""; // Các trang khác để trắng
         }
     }
 
@@ -96,6 +105,7 @@
   </script>
 </body>
 </html>
+
 
 
 
