@@ -2,46 +2,89 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Login</title>
+<title>Fastraffic - Login</title>
 
 <!-- Firebase v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 
 <style>
-body{font-family:sans-serif;background:#f0f2f5;height:100vh;display:flex;justify-content:center;align-items:center}
-.box{background:#fff;padding:25px;border-radius:10px;width:320px;text-align:center}
-input{width:100%;padding:10px;margin-bottom:10px}
-button{width:100%;padding:10px;background:#e94560;color:#fff;border:none;cursor:pointer}
-#error{color:red;font-size:13px}
+body{
+  font-family:sans-serif;
+  background:#f0f2f5;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center
+}
+.box{
+  background:#fff;
+  padding:25px;
+  border-radius:10px;
+  width:320px;
+  text-align:center
+}
+input{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px
+}
+button{
+  width:100%;
+  padding:10px;
+  background:#e94560;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-weight:bold
+}
+.switch{
+  margin-top:10px;
+  font-size:14px;
+  color:#e94560;
+  cursor:pointer
+}
+#error{
+  color:red;
+  font-size:13px
+}
 </style>
 </head>
+
 <body>
 
 <div class="box">
-<h2>ĐĂNG NHẬP</h2>
+  <h2 id="title">ĐĂNG NHẬP</h2>
 
-<input id="email" type="email" placeholder="Email">
-<input id="pass" type="password" placeholder="Mật khẩu">
+  <input id="email" type="email" placeholder="Email">
+  <input id="pass" type="password" placeholder="Mật khẩu">
 
-<button onclick="login()">ĐĂNG NHẬP</button>
-<div id="error"></div>
+  <button onclick="submitForm()" id="btn">ĐĂNG NHẬP</button>
+  <div class="switch" onclick="toggle()">Chưa có tài khoản? Đăng ký</div>
+  <div id="error"></div>
 </div>
 
 <script>
-// 🔥 KHỞI TẠO FIREBASE (BẮT BUỘC)
 firebase.initializeApp({
   apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
   authDomain: "fastraffic-8b585.firebaseapp.com",
-  projectId: "fastraffic-8b585",
+  projectId: "fastraffic-8b585"
 });
 
-// 🔥 HÀM LOGIN
-function login(){
-  const email = document.getElementById("email").value;
-  const pass  = document.getElementById("pass").value;
-  const err   = document.getElementById("error");
+let isLogin = true;
 
+function toggle(){
+  isLogin = !isLogin;
+  document.getElementById("title").innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
+  document.getElementById("btn").innerText   = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
+  document.querySelector(".switch").innerText =
+    isLogin ? "Chưa có tài khoản? Đăng ký" : "Đã có tài khoản? Đăng nhập";
+}
+
+function submitForm(){
+  const email = emailInput();
+  const pass  = passInput();
+  const err   = document.getElementById("error");
   err.innerText = "";
 
   if(!email || !pass){
@@ -49,15 +92,25 @@ function login(){
     return;
   }
 
-  firebase.auth().signInWithEmailAndPassword(email, pass)
-    .then(()=>{
-      alert("Đăng nhập thành công!");
-    })
-    .catch(e=>{
-      err.innerText = e.message;
-    });
+  const auth = firebase.auth();
+  const action = isLogin
+    ? auth.signInWithEmailAndPassword(email, pass)
+    : auth.createUserWithEmailAndPassword(email, pass);
+
+  action
+    .then(()=> location.href = "home.html")
+    .catch(e => err.innerText = e.message);
 }
+
+function emailInput(){ return document.getElementById("email").value.trim(); }
+function passInput(){ return document.getElementById("pass").value.trim(); }
+
+// Nếu đã login → vào thẳng home
+firebase.auth().onAuthStateChanged(u=>{
+  if(u) location.href = "home.html";
+});
 </script>
 
 </body>
 </html>
+
