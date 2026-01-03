@@ -7,45 +7,47 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     body { font-family: 'Segoe UI', Arial; margin: 0; display: flex; background: #f4f7f6; }
-    
-    /* Sidebar - Bạn có thể đổi màu hoặc độ rộng tại đây */
     .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
     .sidebar-header { padding: 20px; font-weight: bold; color: #e94560; font-size: 20px; border-bottom: 1px solid #eee; }
     
-    /* Các mục menu */
+    /* Menu Item */
     .menu-item { 
       padding: 15px 20px; 
       display: flex; 
       align-items: center; 
       color: #333; 
       text-decoration: none; 
+      cursor: pointer;
       transition: 0.3s;
       border-left: 4px solid transparent;
     }
     .menu-item:hover { background: #fff5f6; color: #e94560; border-left-color: #e94560; }
     .menu-item i { width: 30px; font-size: 18px; }
 
-    /* Vùng hiển thị nội dung */
+    /* Main Area */
     .main { margin-left: 250px; flex: 1; }
     .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
     .content-box { padding: 30px; }
     .logout-btn { background: #ff4d4d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    
+    /* Lớp ẩn nội dung */
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
   <script>
-    // Kiểm tra đăng nhập
+    // Bảo mật
     if (!localStorage.getItem("userEmail")) { window.location.href = "index.html"; }
   </script>
 
   <div class="sidebar">
     <div class="sidebar-header">FASTRAFFIC</div>
     
-    <a href="#" class="menu-item"><i class="fa-solid fa-house"></i> <span>Trang chủ</span></a>
-    <a href="#" class="menu-item"><i class="fa-solid fa-list-check"></i> <span>Lịch sử nhiệm vụ</span></a>
-    <a href="#" class="menu-item"><i class="fa-solid fa-file-shield"></i> <span>Quy định</span></a>
-    <a href="#" class="menu-item"><i class="fa-solid fa-wallet"></i> <span>Rút tiền</span></a>
+    <div class="menu-item" onclick="showPage('trangchu')"><i class="fa-solid fa-house"></i> <span>Trang chủ</span></div>
+    <div class="menu-item" onclick="showPage('lichsu')"><i class="fa-solid fa-clock-rotate-left"></i> <span>Lịch sử nhiệm vụ</span></div>
+    <div class="menu-item" onclick="showPage('quydinh')"><i class="fa-solid fa-book-shield"></i> <span>Quy định</span></div>
+    <div class="menu-item" onclick="showPage('ruttien')"><i class="fa-solid fa-wallet"></i> <span>Rút tiền</span></div>
   </div>
 
   <div class="main">
@@ -54,16 +56,29 @@
       <button class="logout-btn" onclick="logout()">Đăng xuất</button>
     </div>
 
-    <div class="content-box">
-      <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <h2>Chào mừng quay trở lại!</h2>
-        <p>Chọn một mục bên trái để bắt đầu quản lý.</p>
-      </div>
+    <div class="content-box" id="main-view">
+        <div id="default-msg">
+            <h2>Chào mừng quay trở lại!</h2>
+            <p>Vui lòng chọn tính năng ở menu bên trái.</p>
+        </div>
     </div>
   </div>
 
   <script>
     document.getElementById("userDisplay").innerText = localStorage.getItem("userEmail");
+
+    // Hàm xử lý khi bấm vào các mục menu
+    function showPage(pageName) {
+        const view = document.getElementById('main-view');
+        
+        if (pageName === 'trangchu') {
+            view.innerHTML = `<h2>Trang chủ</h2><p>Nội dung trang chủ của bạn ở đây.</p>`;
+        } else {
+            // Các trang chưa cài đặt sẽ hiện trắng tinh
+            view.innerHTML = ""; 
+        }
+    }
+
     function logout() {
       localStorage.removeItem("userEmail");
       window.location.href = "index.html";
@@ -71,6 +86,7 @@
   </script>
 </body>
 </html>
+
 
 
 
