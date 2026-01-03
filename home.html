@@ -1,28 +1,3 @@
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
-<script>
-    // Khởi tạo Firebase giống index.html
-    firebase.initializeApp({
-        apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
-        authDomain: "fastraffic-8b585.firebaseapp.com",
-        projectId: "fastraffic-8b585",
-    });
-
-    // Kiểm tra trạng thái đăng nhập liên tục
-    firebase.auth().onAuthStateChanged((user) => {
-        if (!user) {
-            // Nếu không có user hoặc tài khoản bị vô hiệu hóa/xóa
-            localStorage.removeItem("userEmail");
-            window.location.href = "index.html";
-        } else {
-            // Ép buộc làm mới token để kiểm tra trạng thái Disable ngay lập tức
-            user.getIdToken(true).catch(() => {
-                alert("Tài khoản của bạn đã bị vô hiệu hóa!");
-                window.location.href = "index.html";
-            });
-        }
-    });
-</script>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -30,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fastraffic - Trang chủ</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    
     <style>
         body { font-family: sans-serif; margin: 0; display: flex; background: #f4f7f6; }
         .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
@@ -38,16 +17,17 @@
         .menu-item:hover, .menu-item.active { background: #fff5f6; color: #e94560; border-left: 4px solid #e94560; }
         .menu-item i { width: 30px; }
         .main { margin-left: 250px; flex: 1; }
-        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
+        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
         .content { padding: 30px; }
         .logout { background: #ff4d4d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+        
+        /* Giao diện hiển thị tiền */
+        .money-card { background: #e94560; color: white; padding: 20px; border-radius: 10px; display: inline-block; min-width: 200px; margin-top: 20px; box-shadow: 0 4px 10px rgba(233, 69, 96, 0.3); }
+        .money-card h3 { margin: 0; font-size: 14px; opacity: 0.9; }
+        .money-card #userMoney { font-size: 28px; font-weight: bold; margin-top: 5px; }
     </style>
 </head>
 <body>
-
-<script>
-    if (!localStorage.getItem("userEmail")) { window.location.href = "index.html"; }
-</script>
 
 <div class="sidebar">
     <div class="sidebar-header">FASTRAFFIC</div>
@@ -59,33 +39,89 @@
 
 <div class="main">
     <div class="top-bar">
-        <span>Chào, <b id="userMail"></b></span>
+        <span>Chào, <b id="userMail">Đang tải...</b></span>
         <button class="logout" onclick="logout()">Đăng xuất</button>
     </div>
-    <div class="content" id="view"></div>
+    <div class="content" id="view">
+        <h2>Trang chủ</h2>
+        <div class="money-card">
+            <h3>Số dư khả dụng</h3>
+            <div id="userMoney">0 VNĐ</div>
+        </div>
+        <p style="margin-top: 20px;">Chào mừng bạn quay trở lại!</p>
+    </div>
 </div>
 
 <script>
-    document.getElementById("userMail").innerText = localStorage.getItem("userEmail");
+    // 1. Cấu hình Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
+        authDomain: "fastraffic-8b585.firebaseapp.com",
+        projectId: "fastraffic-8b585",
+        databaseURL: "https://fastraffic-8b585-default-rtdb.firebaseio.com"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    // 2. Bảo mật & Theo dõi số tiền thực tế
+    firebase.auth().onAuthStateChanged((user) => {
+        if (!user) {
+            localStorage.removeItem("userEmail");
+            window.location.href = "index.html";
+        } else {
+            document.getElementById("userMail").innerText = user.email;
+            
+            // Xử lý ID để khớp với Realtime Database (thay dấu chấm bằng gạch dưới)
+            const userId = user.email.replace(/\./g, '_');
+            
+            // Lắng nghe dữ liệu tiền
+            firebase.database().ref('users/' + userId).on('value', (snapshot) => {
+                const data = snapshot.val();
+                const money = (data && data.money) ? data.money : 0;
+                // Hiển thị số tiền có định dạng phân tách hàng nghìn
+                document.getElementById("userMoney").innerText = money.toLocaleString('vi-VN') + " VNĐ";
+            });
+
+            // Ép buộc kiểm tra trạng thái vô hiệu hóa (Ban)
+            user.getIdToken(true).catch(() => {
+                alert("Tài khoản của bạn đã bị vô hiệu hóa!");
+                logout();
+            });
+        }
+    });
 
     function show(p) {
         let v = document.getElementById("view");
         document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        if(event) event.currentTarget.classList.add('active');
 
-        if(p === 'trangchu') v.innerHTML = "<h2>Trang chủ</h2><p>Chào mừng bạn!</p>";
-        else if(p === 'quydinh') v.innerHTML = "<h2>Quy định</h2><p>Không gian lận.</p>";
-        else v.innerHTML = "<h2>" + p + "</h2><p>Đang cập nhật...</p>";
+        if(p === 'trangchu') {
+            v.innerHTML = `<h2>Trang chủ</h2>
+                           <div class="money-card">
+                               <h3>Số dư khả dụng</h3>
+                               <div id="userMoney">0 VNĐ</div>
+                           </div>
+                           <p style="margin-top: 20px;">Chào mừng bạn quay trở lại!</p>`;
+            // Gọi lại hàm lấy tiền sau khi đổi trang để cập nhật UI
+            const user = firebase.auth().currentUser;
+            if(user) {
+                const userId = user.email.replace(/\./g, '_');
+                firebase.database().ref('users/' + userId).once('value', (s) => {
+                    const m = (s.val() && s.val().money) ? s.val().money : 0;
+                    document.getElementById("userMoney").innerText = m.toLocaleString('vi-VN') + " VNĐ";
+                });
+            }
+        } 
+        else if(p === 'quydinh') v.innerHTML = "<h2>Quy định</h2><p>1. Không gian lận.<br>2. Một người dùng một tài khoản.</p>";
+        else v.innerHTML = "<h2>" + p.toUpperCase() + "</h2><p>Chức năng này đang được phát triển...</p>";
     }
 
     function logout() {
-        localStorage.removeItem("userEmail");
-        window.location.href = "index.html";
+        firebase.auth().signOut().then(() => {
+            localStorage.removeItem("userEmail");
+            window.location.href = "index.html";
+        });
     }
-
-    show('trangchu');
 </script>
 
 </body>
 </html>
-
