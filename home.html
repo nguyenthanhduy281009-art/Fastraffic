@@ -2,76 +2,40 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Fastraffic - Đăng nhập</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <title>Trang Chủ - Fastraffic</title>
   <style>
-    body { font-family: Arial; background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-    .box { background: white; padding: 25px; width: 320px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; }
-    input { width: 100%; margin: 10px 0; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-    button { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-    .btn-reg { background: #f2f2f2; color: #333; }
-    .btn-login { background: #e94560; color: white; }
-    #msg { font-size: 13px; margin-top: 10px; }
+    body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0f2f5; }
+    .container { background: white; padding: 40px; display: inline-block; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    button { padding: 10px 20px; cursor: pointer; background: #ff4d4d; color: white; border: none; border-radius: 5px; }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h3 style="color: #1a1a2e">ĐĂNG NHẬP / ĐĂNG KÝ</h3>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Mật khẩu">
-    <button class="btn-login" onclick="login()">ĐĂNG NHẬP</button>
-    <button class="btn-reg" onclick="register()">ĐĂNG KÝ TÀI KHOẢN</button>
-    <p id="msg"></p>
+  <script>
+    // Kiểm tra bảo mật ngay khi tải trang
+    if (!localStorage.getItem("userEmail")) {
+        window.location.href = "index.html"; 
+    }
+  </script>
+
+  <div class="container">
+    <h1>CHÚC MỪNG!</h1>
+    <p>Bạn đã đăng nhập thành công vào hệ thống Fastraffic.</p>
+    <p>Tài khoản: <b id="userDisplay"></b></p>
+    <br>
+    <button onclick="logout()">ĐĂNG XUẤT</button>
   </div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
-      authDomain: "fastraffic-8b585.firebaseapp.com",
-      databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app", // Phải có dòng này
-      projectId: "fastraffic-8b585",
-      storageBucket: "fastraffic-8b585.firebasestorage.app",
-      messagingSenderId: "124682318080",
-      appId: "1:124682318080:web:f536eacba0881a078683e5"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
-
-    function register() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      if(!email || !password) return alert("Nhập đủ thông tin");
-
-      auth.createUserWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          // Lưu thêm vào database để quản lý
-          const safePath = email.replace(/[@.]/g, "_");
-          db.ref('users/' + safePath).set({ email: email, role: "member" });
-          document.getElementById("msg").innerHTML = "<span style='color:green'>✅ Đăng ký thành công!</span>";
-        })
-        .catch(err => document.getElementById("msg").innerText = "Lỗi: " + err.message);
-    }
-
-    function login() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          // Lưu trạng thái đăng nhập vào máy
-          localStorage.setItem("userEmail", email);
-          window.location.href = "trangvuot.html"; 
-        })
-        .catch(err => document.getElementById("msg").innerText = "Sai tài khoản/mật khẩu");
+    document.getElementById("userDisplay").innerText = localStorage.getItem("userEmail");
+    
+    function logout() {
+        localStorage.removeItem("userEmail");
+        window.location.href = "index.html";
     }
   </script>
 </body>
 </html>
+
 
 
 
