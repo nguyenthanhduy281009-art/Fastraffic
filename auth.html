@@ -1,41 +1,67 @@
-async function handleAuth() {
-    const u = document.getElementById('user').value.trim();
-    const p = document.getElementById('pass').value.trim();
-    if (!u || !p) return alert("Điền đủ thông tin!");
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập hệ thống</title>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial; background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #16213e; padding: 30px; border-radius: 12px; width: 320px; text-align: center; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #0f3460; background: #1a1a2e; color: white; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #ff4d6d; }
+        .toggle { color: #8892b0; cursor: pointer; font-size: 13px; margin-top: 15px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2 id="title">ĐĂNG KÝ</h2>
+        <input type="text" id="user" placeholder="Tên tài khoản">
+        <input type="password" id="pass" placeholder="Mật khẩu">
+        <button id="btn" onclick="handleAuth()">XÁC NHẬN</button>
+        <span class="toggle" onclick="toggle()">Đã có tài khoản? Đăng nhập</span>
+    </div>
 
-    const btn = document.getElementById('btn');
-    btn.innerText = "Chờ tí...";
+    <script>
+        // Cấu hình chuẩn từ Firebase của bạn
+        const firebaseConfig = {
+            apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
+            authDomain: "fastraffic-8b585.firebaseapp.com",
+            databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "fastraffic-8b585",
+            storageBucket: "fastraffic-8b585.firebasestorage.app",
+            messagingSenderId: "124682318080",
+            appId: "1:124682318080:web:f536eacba0881a078683e5",
+            measurementId: "G-5FBQ8W5Z7G"
+        };
 
-    try {
-        await fetch(scriptURL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({
-                action: isLogin ? "login" : "register",
-                username: u,
-                password: p
-            })
-        });
+        // Khởi tạo
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let isLogin = false;
 
-        if (isLogin) {
-            localStorage.setItem("user_logged", "true");
-            localStorage.setItem("username", u);
-
-            // 👉 DÒNG QUAN TRỌNG
-            window.location.href = "./index.html";
-        } else {
-            alert("Đăng ký thành công! Giờ hãy đăng nhập.");
-            location.reload();
+        function toggle() {
+            isLogin = !isLogin;
+            document.getElementById('title').innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
+            document.querySelector('.toggle').innerText = isLogin ? "Chưa có tài khoản? Đăng ký" : "Đã có tài khoản? Đăng nhập";
         }
-    } catch (e) {
-        alert("Lỗi kết nối!");
-    }
 
-    btn.innerText = "XÁC NHẬN";
-}
+        async function handleAuth() {
+            const u = document.getElementById('user').value.trim().toLowerCase();
+            const p = document.getElementById('pass').value.trim();
+            const btn = document.getElementById('btn');
 
+            if(!u || !p) return alert("Vui lòng nhập đủ!");
+            btn.disabled = true;
+            btn.innerText = "Đang xử lý...";
 
+            const userRef = db.ref('users/' + u);
 
+            if (isLogin) {
+                // Kiểm tra đăng nhập
+                userRef.once('value',
 
 
 
