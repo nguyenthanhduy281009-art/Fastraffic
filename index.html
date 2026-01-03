@@ -8,95 +8,87 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .login-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
-        .logo { width: 60px; height: 60px; background: #e94560; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 25px; font-weight: bold; }
-        h1 { font-size: 22px; color: #333; margin-bottom: 25px; }
-        .input-group { position: relative; margin-bottom: 15px; text-align: left; }
-        .input-group i { position: absolute; top: 14px; color: #aaa; }
-        .fa-envelope, .fa-lock { left: 15px; }
-        .toggle-password { right: 15px; cursor: pointer; z-index: 100; padding: 5px; } /* Đảm bảo nút này có thể bấm */
-        input { width: 100%; padding: 12px 40px 12px 45px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
-        button { width: 100%; padding: 13px; background: #e94560; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        .footer-links { margin-top: 20px; font-size: 14px; color: #666; line-height: 1.8; }
-        .footer-links a { color: #e94560; text-decoration: none; font-weight: bold; cursor: pointer; display: inline-block; }
-        .error { color: #ff4d4d; font-size: 13px; margin-top: 15px; }
+        body { font-family: sans-serif; background: #eee; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #fff; padding: 30px; border-radius: 10px; width: 320px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .logo { background: #e94560; color: #fff; width: 50px; height: 50px; line-height: 50px; border-radius: 50%; margin: 0 auto 10px; font-weight: bold; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; display: block; }
+        button { width: 100%; padding: 12px; background: #e94560; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; display: block; }
+        .link-group { margin-top: 15px; font-size: 14px; }
+        .link-group span { color: #e94560; cursor: pointer; font-weight: bold; text-decoration: underline; padding: 5px; display: inline-block; }
+        #error { color: red; font-size: 12px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="login-box">
-        <div class="logo">F</div>
-        <h1 id="title">ĐĂNG NHẬP</h1>
-        
-        <div class="input-group">
-            <i class="fas fa-envelope"></i>
-            <input type="email" id="email" placeholder="Email">
-        </div>
-        
-        <div class="input-group">
-            <i class="fas fa-lock"></i>
-            <input type="password" id="password" placeholder="Mật khẩu">
-            <i class="fas fa-eye toggle-password" id="eye-icon" onclick="togglePass()"></i>
-        </div>
-
-        <button id="btn-auth" onclick="handleAuth()">ĐĂNG NHẬP</button>
-        
-        <div class="footer-links" id="switch-area">
-            <a onclick="resetPassword()">Quên mật khẩu?</a><br>
-            Chưa có tài khoản? <a onclick="switchForm(false)">Đăng ký ngay</a>
-        </div>
-
-        <p id="error-msg" class="error"></p>
+<div class="box">
+    <div class="logo">F</div>
+    <h2 id="txt-title">ĐĂNG NHẬP</h2>
+    
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="pass" placeholder="Mật khẩu">
+    
+    <button id="btn-submit">ĐĂNG NHẬP</button>
+    
+    <div class="link-group">
+        <span onclick="resetPass()">Quên mật khẩu?</span><br><br>
+        <div id="toggle-text">Chưa có tài khoản? <span onclick="toRegister()">Đăng ký</span></div>
     </div>
+    
+    <div id="error"></div>
+</div>
 
-    <script src="firebase-config.js"></script>
-    <script>
-        let isLogin = true;
+<script src="firebase-config.js"></script>
+<script>
+    let mode = "login";
 
-        function togglePass() {
-            const pass = document.getElementById('password');
-            const icon = document.getElementById('eye-icon');
-            pass.type = (pass.type === "password") ? "text" : "password";
-            icon.classList.toggle('fa-eye');
-            icon.classList.toggle('fa-eye-slash');
+    // Chuyển sang Đăng ký
+    function toRegister() {
+        mode = "register";
+        document.getElementById('txt-title').innerText = "ĐĂNG KÝ";
+        document.getElementById('btn-submit').innerText = "ĐĂNG KÝ";
+        document.getElementById('toggle-text').innerHTML = 'Đã có tài khoản? <span onclick="toLogin()">Đăng nhập</span>';
+    }
+
+    // Chuyển sang Đăng nhập
+    function toLogin() {
+        mode = "login";
+        document.getElementById('txt-title').innerText = "ĐĂNG NHẬP";
+        document.getElementById('btn-submit').innerText = "ĐĂNG NHẬP";
+        document.getElementById('toggle-text').innerHTML = 'Chưa có tài khoản? <span onclick="toRegister()">Đăng ký</span>';
+    }
+
+    // Xử lý nút bấm chính
+    document.getElementById('btn-submit').addEventListener('click', function() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('pass').value;
+        const err = document.getElementById('error');
+        err.innerText = "";
+
+        if (!email || !pass) { err.innerText = "Vui lòng nhập đủ tin!"; return; }
+
+        if (mode === "login") {
+            firebase.auth().signInWithEmailAndPassword(email, pass)
+                .then(() => { localStorage.setItem("userEmail", email); window.location.href = "home.html"; })
+                .catch(e => { err.innerText = "Lỗi: " + e.message; });
+        } else {
+            firebase.auth().createUserWithEmailAndPassword(email, pass)
+                .then(() => { localStorage.setItem("userEmail", email); window.location.href = "home.html"; })
+                .catch(e => { err.innerText = "Lỗi: " + e.message; });
         }
+    });
 
-        function switchForm(toLogin) {
-            isLogin = toLogin;
-            document.getElementById('title').innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
-            document.getElementById('btn-auth').innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
-            document.getElementById('switch-area').innerHTML = isLogin ? 
-                `<a onclick="resetPassword()">Quên mật khẩu?</a><br>Chưa có tài khoản? <a onclick="switchForm(false)">Đăng ký ngay</a>` :
-                `Đã có tài khoản? <a onclick="switchForm(true)">Đăng nhập</a>`;
-        }
+    // Quên mật khẩu
+    function resetPass() {
+        const email = document.getElementById('email').value;
+        if (!email) { alert("Hãy nhập email trước!"); return; }
+        firebase.auth().sendPasswordResetEmail(email)
+            .then(() => alert("Đã gửi email đổi mật khẩu!"))
+            .catch(e => alert("Lỗi: " + e.message));
+    }
 
-        function handleAuth() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            const err = document.getElementById('error-msg');
+    if (localStorage.getItem("userEmail")) window.location.href = "home.html";
+</script>
 
-            if (!email || !pass) { err.innerText = "Vui lòng nhập đủ thông tin!"; return; }
-
-            const authAction = isLogin ? 
-                firebase.auth().signInWithEmailAndPassword(email, pass) : 
-                firebase.auth().createUserWithEmailAndPassword(email, pass);
-
-            authAction.then(() => {
-                localStorage.setItem("userEmail", email);
-                window.location.href = "home.html";
-            }).catch(e => { err.innerText = "Lỗi: " + e.message; });
-        }
-
-        function resetPassword() {
-            const email = document.getElementById('email').value;
-            if (!email) { alert("Nhập email để lấy lại mật khẩu!"); return; }
-            firebase.auth().sendPasswordResetEmail(email)
-                .then(() => alert("Đã gửi email khôi phục!"))
-                .catch(e => alert("Lỗi: " + e.message));
-        }
-
-        if (localStorage.getItem("userEmail")) window.location.href = "home.html";
-    </script>
 </body>
 </html>
+
