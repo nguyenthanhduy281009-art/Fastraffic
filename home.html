@@ -4,91 +4,70 @@
   <meta charset="UTF-8">
   <title>Fastraffic - Đăng nhập</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Firebase SDK (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .box {
-      background: white;
-      padding: 20px;
-      width: 300px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input, button {
-      width: 100%;
-      margin: 6px 0;
-      padding: 8px;
-    }
-    button {
-      cursor: pointer;
-    }
+    body { font-family: Arial; background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .box { background: white; padding: 25px; width: 320px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; }
+    input { width: 100%; margin: 10px 0; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    .btn-reg { background: #f2f2f2; color: #333; }
+    .btn-login { background: #e94560; color: white; }
+    #msg { font-size: 13px; margin-top: 10px; }
   </style>
 </head>
-
 <body>
   <div class="box">
-    <h3>Đăng nhập / Đăng ký</h3>
-
+    <h3 style="color: #1a1a2e">ĐĂNG NHẬP / ĐĂNG KÝ</h3>
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Mật khẩu">
-
-    <button onclick="register()">Đăng ký</button>
-    <button onclick="login()">Đăng nhập</button>
-
+    <button class="btn-login" onclick="login()">ĐĂNG NHẬP</button>
+    <button class="btn-reg" onclick="register()">ĐĂNG KÝ TÀI KHOẢN</button>
     <p id="msg"></p>
   </div>
 
   <script>
-    // ✅ DÁN FIREBASE CONFIG VÀO ĐÂY (KHÔNG SCRIPT KHÁC)
     const firebaseConfig = {
       apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
       authDomain: "fastraffic-8b585.firebaseapp.com",
+      databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app", // Phải có dòng này
       projectId: "fastraffic-8b585",
       storageBucket: "fastraffic-8b585.firebasestorage.app",
       messagingSenderId: "124682318080",
       appId: "1:124682318080:web:f536eacba0881a078683e5"
     };
 
-    // Khởi tạo Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.database();
 
     function register() {
-      const email = document.getElementById("email").value;
+      const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
+      if(!email || !password) return alert("Nhập đủ thông tin");
 
       auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          document.getElementById("msg").innerText = "✅ Đăng ký thành công";
+        .then((userCredential) => {
+          // Lưu thêm vào database để quản lý
+          const safePath = email.replace(/[@.]/g, "_");
+          db.ref('users/' + safePath).set({ email: email, role: "member" });
+          document.getElementById("msg").innerHTML = "<span style='color:green'>✅ Đăng ký thành công!</span>";
         })
-        .catch(err => {
-          document.getElementById("msg").innerText = err.message;
-        });
+        .catch(err => document.getElementById("msg").innerText = "Lỗi: " + err.message);
     }
 
     function login() {
-      const email = document.getElementById("email").value;
+      const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
       auth.signInWithEmailAndPassword(email, password)
         .then(() => {
-          document.getElementById("msg").innerText = "✅ Đăng nhập thành công";
-           window.location.href = "trangvuot.html";
+          // Lưu trạng thái đăng nhập vào máy
+          localStorage.setItem("userEmail", email);
+          window.location.href = "trangvuot.html"; 
         })
-        .catch(err => {
-          document.getElementById("msg").innerText = err.message;
-        });
+        .catch(err => document.getElementById("msg").innerText = "Sai tài khoản/mật khẩu");
     }
   </script>
 </body>
