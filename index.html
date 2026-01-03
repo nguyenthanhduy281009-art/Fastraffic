@@ -2,28 +2,30 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Fastraffic - Login</title>
+    <title>Fastraffic - Đăng nhập & Đăng ký</title>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <style>
         body { font-family: sans-serif; background: #f0f2f5; height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; }
         .box { background: #fff; padding: 40px; border-radius: 10px; width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        h2 { margin-bottom: 25px; color: #000; font-size: 28px; }
+        h2 { margin-bottom: 25px; color: #000; font-size: 28px; text-transform: uppercase; }
         input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; background: #eef4ff; }
         
-        /* Phần hiện mật khẩu */
         .pass-group { position: relative; width: 100%; }
         .show-btn { position: absolute; right: 10px; top: 12px; background: none; border: none; color: #e94560; font-weight: bold; cursor: pointer; font-size: 12px; }
         
-        button.login-btn { width: 100%; padding: 12px; background: #e94560; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 5px; }
-        button.login-btn:hover { background: #d13851; }
-        #error { color: red; font-size: 13px; margin-top: 15px; text-align: left; }
+        button.main-btn { width: 100%; padding: 12px; background: #e94560; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 5px; }
+        button.main-btn:hover { background: #d13851; }
+        
+        .toggle-text { margin-top: 20px; font-size: 14px; color: #666; }
+        .toggle-text span { color: #e94560; cursor: pointer; font-weight: bold; text-decoration: underline; }
+        #error { color: red; font-size: 13px; margin-top: 15px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>ĐĂNG NHẬP</h2>
+    <h2 id="form-title">ĐĂNG NHẬP</h2>
     
     <input id="email" type="email" placeholder="Email của bạn">
     
@@ -32,12 +34,17 @@
         <button type="button" class="show-btn" onclick="togglePass()">HIỆN</button>
     </div>
 
-    <button class="login-btn" onclick="login()">ĐĂNG NHẬP</button>
+    <button class="main-btn" id="submit-btn" onclick="handleAuth()">ĐĂNG NHẬP</button>
+    
     <div id="error"></div>
+
+    <div class="toggle-text" id="toggle-area">
+        Chưa có tài khoản? <span onclick="switchForm(false)">Đăng ký ngay</span>
+    </div>
 </div>
 
 <script>
-    // 🔥 Cấu hình Firebase
+    // 🔥 Khởi tạo Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
         authDomain: "fastraffic-8b585.firebaseapp.com",
@@ -47,6 +54,8 @@
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
+
+    let isLoginMode = true;
 
     // Hiện/Ẩn mật khẩu
     function togglePass() {
@@ -59,8 +68,28 @@
         }
     }
 
-    // Xử lý Đăng nhập
-    function login() {
+    // Chuyển đổi giữa Đăng nhập và Đăng ký
+    function switchForm(isLogin) {
+        isLoginMode = isLogin;
+        const title = document.getElementById("form-title");
+        const btn = document.getElementById("submit-btn");
+        const area = document.getElementById("toggle-area");
+        const err = document.getElementById("error");
+
+        err.innerText = "";
+        if (isLogin) {
+            title.innerText = "ĐĂNG NHẬP";
+            btn.innerText = "ĐĂNG NHẬP";
+            area.innerHTML = 'Chưa có tài khoản? <span onclick="switchForm(false)">Đăng ký ngay</span>';
+        } else {
+            title.innerText = "ĐĂNG KÝ";
+            btn.innerText = "ĐĂNG KÝ TÀI KHOẢN";
+            area.innerHTML = 'Đã có tài khoản? <span onclick="switchForm(true)">Đăng nhập ngay</span>';
+        }
+    }
+
+    // Xử lý xác thực
+    function handleAuth() {
         const email = document.getElementById("email").value;
         const pass = document.getElementById("pass").value;
         const err = document.getElementById("error");
@@ -68,26 +97,31 @@
         err.innerText = "";
 
         if(!email || !pass) {
-            err.innerText = "Vui lòng nhập đầy đủ email và mật khẩu!";
+            err.innerText = "Vui lòng nhập đầy đủ thông tin!";
             return;
         }
 
-        firebase.auth().signInWithEmailAndPassword(email, pass)
-            .then((userCredential) => {
-                localStorage.setItem("userEmail", email);
-                window.location.href = "home.html";
-            })
-            .catch((e) => {
-                // Hiển thị lỗi chi tiết nếu sai tài khoản/mật khẩu
-                if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
-                    err.innerText = "Sai tài khoản hoặc mật khẩu. Vui lòng thử lại!";
-                } else {
-                    err.innerText = "Lỗi: " + e.message;
-                }
-            });
+        if (isLoginMode) {
+            // Đăng nhập
+            firebase.auth().signInWithEmailAndPassword(email, pass)
+                .then(() => {
+                    localStorage.setItem("userEmail", email);
+                    window.location.href = "home.html";
+                })
+                .catch((e) => { err.innerText = "Lỗi: " + e.message; });
+        } else {
+            // Đăng ký
+            firebase.auth().createUserWithEmailAndPassword(email, pass)
+                .then(() => {
+                    localStorage.setItem("userEmail", email);
+                    alert("Đăng ký thành công!");
+                    window.location.href = "home.html";
+                })
+                .catch((e) => { err.innerText = "Lỗi đăng ký: " + e.message; });
+        }
     }
 
-    // Tự động vào home nếu đã lưu session
+    // Kiểm tra session
     if(localStorage.getItem("userEmail")) {
         window.location.href = "home.html";
     }
@@ -95,4 +129,3 @@
 
 </body>
 </html>
-
