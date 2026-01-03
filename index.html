@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fastraffic - Auth System</title>
+    <title>Fastraffic - Auth</title>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <style>
@@ -13,14 +13,17 @@
         h2 { margin-bottom: 25px; color: #333; }
         .input-group { position: relative; margin-bottom: 15px; }
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; outline: none; background: #f9f9f9; }
-        input:focus { border-color: var(--primary); background: #fff; }
+        
         .show-btn { position: absolute; right: 10px; top: 10px; background: #eee; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
-        .btn-main { width: 100%; padding: 13px; background: var(--primary); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        #error { color: #ff4d4d; font-size: 13px; margin: 15px 0; font-weight: bold; min-height: 20px; }
+        
+        /* Nút Quên mật khẩu mới */
+        .forgot-link { display: block; text-align: right; margin-bottom: 15px; font-size: 13px; color: #888; cursor: pointer; text-decoration: none; }
+        .forgot-link:hover { color: var(--primary); text-decoration: underline; }
+
+        .btn-main { width: 100%; padding: 13px; background: var(--primary); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        #error { color: #ff4d4d; font-size: 13px; margin-top: 15px; font-weight: bold; min-height: 20px; }
         .footer { margin-top: 20px; font-size: 14px; color: #666; }
-        .footer span { color: var(--primary); cursor: pointer; font-weight: bold; text-decoration: underline; }
-        .forgot-pw { display: block; margin-top: 10px; color: #888; text-decoration: none; cursor: pointer; font-size: 13px; }
-        .forgot-pw:hover { color: var(--primary); }
+        .footer span { color: var(--primary); cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -29,23 +32,22 @@
     <h2 id="title">ĐĂNG NHẬP</h2>
     
     <div class="input-group">
-        <input type="email" id="email" placeholder="Email">
+        <input type="email" id="email" placeholder="Nhập Email">
     </div>
     
     <div class="input-group">
-        <input type="password" id="pass" placeholder="Mật khẩu">
+        <input type="password" id="pass" placeholder="Nhập Mật khẩu">
         <button type="button" class="show-btn" onclick="togglePass()">HIỆN</button>
     </div>
+
+    <a class="forgot-link" onclick="forgotPassword()">Quên mật khẩu?</a>
     
     <button class="btn-main" onclick="handleAuth()" id="btnSubmit">ĐĂNG NHẬP</button>
     
     <div id="error"></div>
 
-    <div class="footer">
-        <a class="forgot-pw" onclick="forgotPassword()">Quên mật khẩu?</a>
-        <div id="toggleArea" style="margin-top: 15px;">
-            Chưa có tài khoản? <span onclick="switchMode(false)">Đăng ký ngay</span>
-        </div>
+    <div class="footer" id="toggleArea">
+        Chưa có tài khoản? <span onclick="switchMode(false)">Đăng ký ngay</span>
     </div>
 </div>
 
@@ -57,7 +59,7 @@
     };
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 
-    let isLoginMode = true;
+    let isLogin = true;
 
     function togglePass() {
         const p = document.getElementById("pass");
@@ -66,29 +68,25 @@
     }
 
     function switchMode(toLogin) {
-        isLoginMode = toLogin;
+        isLogin = toLogin;
         document.getElementById("title").innerText = toLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
         document.getElementById("btnSubmit").innerText = toLogin ? "ĐĂNG NHẬP" : "TẠO TÀI KHOẢN";
         document.getElementById("toggleArea").innerHTML = toLogin ? 
             'Chưa có tài khoản? <span onclick="switchMode(false)">Đăng ký ngay</span>' : 
             'Đã có tài khoản? <span onclick="switchMode(true)">Đăng nhập ngay</span>';
-        document.getElementById("error").innerText = "";
     }
 
-    // Chức năng Quên mật khẩu
+    // Hàm gửi email khôi phục mật khẩu
     async function forgotPassword() {
         const email = document.getElementById("email").value;
         const err = document.getElementById("error");
-        
         if (!email) {
-            err.innerText = "Vui lòng nhập Email để nhận link khôi phục!";
+            err.innerText = "Vui lòng nhập Email vào ô trên trước!";
             return;
         }
-
         try {
             await firebase.auth().sendPasswordResetEmail(email);
-            alert("Đã gửi email khôi phục mật khẩu. Vui lòng kiểm tra hộp thư!");
-            err.innerText = "";
+            alert("Đã gửi link đặt lại mật khẩu vào Email của bạn!");
         } catch (e) {
             err.innerText = "Lỗi: " + e.message;
         }
@@ -98,20 +96,16 @@
         const email = document.getElementById("email").value;
         const pass = document.getElementById("pass").value;
         const err = document.getElementById("error");
-        err.innerText = "Vui lòng đợi...";
-
-        if(!email || !pass) { err.innerText = "Hãy nhập đủ thông tin!"; return; }
+        err.innerText = "Đang xử lý...";
 
         try {
-            if (isLoginMode) {
+            if (isLogin) {
                 await firebase.auth().signInWithEmailAndPassword(email, pass);
                 localStorage.setItem("userEmail", email);
                 window.location.href = "home.html";
             } else {
                 await firebase.auth().createUserWithEmailAndPassword(email, pass);
                 await firebase.auth().signOut();
-                localStorage.removeItem("userEmail");
-                document.getElementById("pass").value = "";
                 alert("Đăng ký thành công! Hãy đăng nhập lại.");
                 switchMode(true);
             }
