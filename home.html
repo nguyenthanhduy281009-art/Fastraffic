@@ -3,27 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fastraffic - Dashboard</title>
+  <title>Bảng điều khiển - Fastraffic</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; display: flex; background: #f4f7f6; color: #333; }
     
-    /* Sidebar */
+    /* Sidebar nguyên bản */
     .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
-    .sidebar-header { 
-        padding: 15px 20px; 
-        font-weight: bold; 
-        color: #e94560; 
-        font-size: 20px; 
-        border-bottom: 1px solid #eee; 
-        text-align: center;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .sidebar-header img { max-width: 40px; height: auto; margin-right: 10px; } /* Kích thước logo trong sidebar */
+    .sidebar-header { padding: 20px; font-weight: bold; color: #e94560; font-size: 20px; border-bottom: 1px solid #eee; text-align: center; }
     
-    /* Menu Item & Hiệu ứng đỏ (Active) */
+    /* Menu Item & Active State */
     .menu-item { 
       padding: 15px 20px; 
       display: flex; 
@@ -43,7 +32,7 @@
     }
     .menu-item i { width: 35px; font-size: 18px; }
 
-    /* Vùng nội dung */
+    /* Main Area */
     .main { margin-left: 250px; flex: 1; }
     .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
     .content-box { padding: 30px; }
@@ -53,15 +42,12 @@
 <body>
 
   <script>
-    // Bảo mật: Chặn người chưa đăng nhập
+    // Kiểm tra bảo mật
     if (!localStorage.getItem("userEmail")) { window.location.href = "index.html"; }
   </script>
 
   <div class="sidebar">
-    <div class="sidebar-header">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Fast_traffic_logo_red.png" alt="Logo">
-        <span>Fastraffic</span>
-    </div>
+    <div class="sidebar-header">FASTRAFFIC</div>
     
     <div class="menu-item active" id="btn-trangchu" onclick="showPage('trangchu')">
         <i class="fas fa-home"></i> <span>Trang chủ</span>
@@ -91,24 +77,23 @@
     document.getElementById("userDisplay").innerText = localStorage.getItem("userEmail") || "Khách";
 
     function showPage(pageName) {
-        // Cập nhật trạng thái đỏ (Active) cho menu
+        // Cập nhật màu đỏ khi click
         document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
         document.getElementById('btn-' + pageName).classList.add('active');
 
         const view = document.getElementById('main-view');
         
-        // Cấu trúc nội dung nguyên bản
+        // Nội dung từng trang
         if (pageName === 'trangchu') {
             view.innerHTML = `<h2>Trang chủ</h2><p>Chào mừng bạn quay trở lại hệ thống Fastraffic!</p>`;
         } else if (pageName === 'quydinh') {
-            view.innerHTML = `<h2>Quy định hệ thống</h2><p>Vui lòng không gian lận để tránh bị khóa tài khoản.</p>`;
+            view.innerHTML = `<h2>Quy định</h2><p>Vui lòng tuân thủ các quy tắc để tránh bị khóa tài khoản.</p>`;
         } else {
-            // Lịch sử nhiệm vụ và Rút tiền hiện trang trắng
-            view.innerHTML = ""; 
+            view.innerHTML = ""; // Trắng trơ cho Lịch sử và Rút tiền
         }
     }
 
-    // Hiển thị Trang chủ ngay khi load xong
+    // Tải Trang chủ ngay khi mở
     showPage('trangchu');
 
     function logout() {
@@ -118,7 +103,4 @@
   </script>
 </body>
 </html>
-
-
-
 
