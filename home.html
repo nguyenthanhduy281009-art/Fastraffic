@@ -28,6 +28,8 @@
         .money-card { background: linear-gradient(135deg, #e94560, #ff6b81); color: white; padding: 25px; border-radius: 15px; display: inline-block; min-width: 280px; box-shadow: 0 8px 20px rgba(233, 69, 96, 0.2); }
         .money-card h3 { margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
         .money-card #userMoney { font-size: 32px; font-weight: bold; margin-top: 10px; }
+
+        #userMail { color: #e94560; }
     </style>
 </head>
 <body>
@@ -46,7 +48,7 @@
 
 <div class="main">
     <div class="top-bar">
-        <span>Chào, <b id="userMail">Đang tải...</b></span>
+        <span>Chào mừng, <b id="userMail">Đang tải...</b></span>
         <button class="logout" onclick="logout()">Đăng xuất</button>
     </div>
     <div class="content" id="view">
@@ -54,7 +56,6 @@
 </div>
 
 <script>
-    // 1. Cấu hình Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
         authDomain: "fastraffic-8b585.firebaseapp.com",
@@ -63,22 +64,16 @@
     };
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 
-    // 2. Lắng nghe trạng thái người dùng & Lấy tiền
     firebase.auth().onAuthStateChanged((user) => {
         if (!user) {
             logout();
         } else {
             document.getElementById("userMail").innerText = user.email;
             loadMoneyData(user.email);
-            // Ép buộc kiểm tra nếu bị BAN
-            user.getIdToken(true).catch(() => {
-                alert("Tài khoản đã bị vô hiệu hóa!");
-                logout();
-            });
+            user.getIdToken(true).catch(() => logout());
         }
     });
 
-    // 3. Hàm lấy tiền từ Realtime Database
     function loadMoneyData(email) {
         const userId = email.replace(/\./g, '_');
         const moneyRef = firebase.database().ref('users/' + userId + '/money');
@@ -87,7 +82,6 @@
             const money = snapshot.val();
             const display = document.getElementById("userMoney");
             if (display) {
-                // Nếu chưa có tiền trong DB, tự tạo 0 VNĐ
                 if (money === null) {
                     moneyRef.set(0);
                     display.innerText = "0 VNĐ";
@@ -98,11 +92,8 @@
         });
     }
 
-    // 4. Chuyển đổi giao diện menu
     function show(p) {
         let v = document.getElementById("view");
-        
-        // Cập nhật trạng thái Active của menu
         document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
         if (event && event.currentTarget) event.currentTarget.classList.add('active');
 
@@ -113,9 +104,7 @@
                     <h3>Số dư tài khoản</h3>
                     <div id="userMoney">Đang tải...</div>
                 </div>
-                <p style="margin-top: 25px; color: #555;">Hôm nay bạn muốn kiếm thêm bao nhiêu tiền nào?</p>
-            `;
-            // Gọi lại hàm load tiền để cập nhật vào ID "userMoney" mới vẽ
+            `; // Đã bỏ dòng chữ chào mừng ở dưới
             const user = firebase.auth().currentUser;
             if(user) loadMoneyData(user.email);
         } 
@@ -127,7 +116,6 @@
         }
     }
 
-    // 5. Đăng xuất
     function logout() {
         firebase.auth().signOut().then(() => {
             localStorage.removeItem("userEmail");
@@ -135,7 +123,6 @@
         });
     }
 
-    // Tự động mở trang chủ khi mới vào
     show('trangchu');
 </script>
 
