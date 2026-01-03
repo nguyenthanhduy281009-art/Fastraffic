@@ -1,3 +1,28 @@
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+<script>
+    // Khởi tạo Firebase giống index.html
+    firebase.initializeApp({
+        apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
+        authDomain: "fastraffic-8b585.firebaseapp.com",
+        projectId: "fastraffic-8b585",
+    });
+
+    // Kiểm tra trạng thái đăng nhập liên tục
+    firebase.auth().onAuthStateChanged((user) => {
+        if (!user) {
+            // Nếu không có user hoặc tài khoản bị vô hiệu hóa/xóa
+            localStorage.removeItem("userEmail");
+            window.location.href = "index.html";
+        } else {
+            // Ép buộc làm mới token để kiểm tra trạng thái Disable ngay lập tức
+            user.getIdToken(true).catch(() => {
+                alert("Tài khoản của bạn đã bị vô hiệu hóa!");
+                window.location.href = "index.html";
+            });
+        }
+    });
+</script>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -63,3 +88,4 @@
 
 </body>
 </html>
+
