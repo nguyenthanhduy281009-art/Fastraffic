@@ -2,35 +2,71 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Trang Chủ - Fastraffic</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng điều khiển - Fastraffic</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0f2f5; }
-    .container { background: white; padding: 40px; display: inline-block; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    button { padding: 10px 20px; cursor: pointer; background: #ff4d4d; color: white; border: none; border-radius: 5px; }
+    body { font-family: 'Segoe UI', Arial; margin: 0; display: flex; background: #f4f7f6; }
+    
+    /* Sidebar - Bạn có thể đổi màu hoặc độ rộng tại đây */
+    .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
+    .sidebar-header { padding: 20px; font-weight: bold; color: #e94560; font-size: 20px; border-bottom: 1px solid #eee; }
+    
+    /* Các mục menu */
+    .menu-item { 
+      padding: 15px 20px; 
+      display: flex; 
+      align-items: center; 
+      color: #333; 
+      text-decoration: none; 
+      transition: 0.3s;
+      border-left: 4px solid transparent;
+    }
+    .menu-item:hover { background: #fff5f6; color: #e94560; border-left-color: #e94560; }
+    .menu-item i { width: 30px; font-size: 18px; }
+
+    /* Vùng hiển thị nội dung */
+    .main { margin-left: 250px; flex: 1; }
+    .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+    .content-box { padding: 30px; }
+    .logout-btn { background: #ff4d4d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
+
   <script>
-    // Kiểm tra bảo mật ngay khi tải trang
-    if (!localStorage.getItem("userEmail")) {
-        window.location.href = "index.html"; 
-    }
+    // Kiểm tra đăng nhập
+    if (!localStorage.getItem("userEmail")) { window.location.href = "index.html"; }
   </script>
 
-  <div class="container">
-    <h1>CHÚC MỪNG!</h1>
-    <p>Bạn đã đăng nhập thành công vào hệ thống Fastraffic.</p>
-    <p>Tài khoản: <b id="userDisplay"></b></p>
-    <br>
-    <button onclick="logout()">ĐĂNG XUẤT</button>
+  <div class="sidebar">
+    <div class="sidebar-header">FASTRAFFIC</div>
+    
+    <a href="#" class="menu-item"><i class="fa-solid fa-house"></i> <span>Trang chủ</span></a>
+    <a href="#" class="menu-item"><i class="fa-solid fa-list-check"></i> <span>Lịch sử nhiệm vụ</span></a>
+    <a href="#" class="menu-item"><i class="fa-solid fa-file-shield"></i> <span>Quy định</span></a>
+    <a href="#" class="menu-item"><i class="fa-solid fa-wallet"></i> <span>Rút tiền</span></a>
+  </div>
+
+  <div class="main">
+    <div class="top-bar">
+      <span>Tài khoản: <b id="userDisplay"></b></span>
+      <button class="logout-btn" onclick="logout()">Đăng xuất</button>
+    </div>
+
+    <div class="content-box">
+      <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <h2>Chào mừng quay trở lại!</h2>
+        <p>Chọn một mục bên trái để bắt đầu quản lý.</p>
+      </div>
+    </div>
   </div>
 
   <script>
     document.getElementById("userDisplay").innerText = localStorage.getItem("userEmail");
-    
     function logout() {
-        localStorage.removeItem("userEmail");
-        window.location.href = "index.html";
+      localStorage.removeItem("userEmail");
+      window.location.href = "index.html";
     }
   </script>
 </body>
