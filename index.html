@@ -16,9 +16,11 @@
         input:focus { border-color: var(--primary); background: #fff; }
         .show-btn { position: absolute; right: 10px; top: 10px; background: #eee; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
         .btn-main { width: 100%; padding: 13px; background: var(--primary); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        #error { color: #ff4d4d; font-size: 13px; margin-top: 15px; font-weight: bold; min-height: 20px; }
+        #error { color: #ff4d4d; font-size: 13px; margin: 15px 0; font-weight: bold; min-height: 20px; }
         .footer { margin-top: 20px; font-size: 14px; color: #666; }
         .footer span { color: var(--primary); cursor: pointer; font-weight: bold; text-decoration: underline; }
+        .forgot-pw { display: block; margin-top: 10px; color: #888; text-decoration: none; cursor: pointer; font-size: 13px; }
+        .forgot-pw:hover { color: var(--primary); }
     </style>
 </head>
 <body>
@@ -39,13 +41,15 @@
     
     <div id="error"></div>
 
-    <div class="footer" id="toggleArea">
-        Chưa có tài khoản? <span onclick="switchMode(false)">Đăng ký ngay</span>
+    <div class="footer">
+        <a class="forgot-pw" onclick="forgotPassword()">Quên mật khẩu?</a>
+        <div id="toggleArea" style="margin-top: 15px;">
+            Chưa có tài khoản? <span onclick="switchMode(false)">Đăng ký ngay</span>
+        </div>
     </div>
 </div>
 
 <script>
-    // 1. Khởi tạo Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
         authDomain: "fastraffic-8b585.firebaseapp.com",
@@ -55,15 +59,12 @@
 
     let isLoginMode = true;
 
-    // 2. Hiện/Ẩn mật khẩu
     function togglePass() {
         const p = document.getElementById("pass");
-        const b = event.target;
         p.type = p.type === "password" ? "text" : "password";
-        b.innerText = p.type === "password" ? "HIỆN" : "ẨN";
+        event.target.innerText = p.type === "password" ? "HIỆN" : "ẨN";
     }
 
-    // 3. Chuyển đổi giao diện
     function switchMode(toLogin) {
         isLoginMode = toLogin;
         document.getElementById("title").innerText = toLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
@@ -74,7 +75,25 @@
         document.getElementById("error").innerText = "";
     }
 
-    // 4. Xử lý chính (QUAN TRỌNG NHẤT)
+    // Chức năng Quên mật khẩu
+    async function forgotPassword() {
+        const email = document.getElementById("email").value;
+        const err = document.getElementById("error");
+        
+        if (!email) {
+            err.innerText = "Vui lòng nhập Email để nhận link khôi phục!";
+            return;
+        }
+
+        try {
+            await firebase.auth().sendPasswordResetEmail(email);
+            alert("Đã gửi email khôi phục mật khẩu. Vui lòng kiểm tra hộp thư!");
+            err.innerText = "";
+        } catch (e) {
+            err.innerText = "Lỗi: " + e.message;
+        }
+    }
+
     async function handleAuth() {
         const email = document.getElementById("email").value;
         const pass = document.getElementById("pass").value;
@@ -85,28 +104,19 @@
 
         try {
             if (isLoginMode) {
-                // Đăng nhập bình thường
                 await firebase.auth().signInWithEmailAndPassword(email, pass);
                 localStorage.setItem("userEmail", email);
                 window.location.href = "home.html";
             } else {
-                // Đăng ký tài khoản mới
                 await firebase.auth().createUserWithEmailAndPassword(email, pass);
-                
-                // Lệnh then chốt: Thoát ngay để không cho tự đăng nhập
                 await firebase.auth().signOut();
                 localStorage.removeItem("userEmail");
-                
-                // Reset form và thông báo
                 document.getElementById("pass").value = "";
-                alert("Đăng ký thành công! Hãy đăng nhập bằng tài khoản vừa tạo.");
-                switchMode(true); // Quay lại màn hình đăng nhập
+                alert("Đăng ký thành công! Hãy đăng nhập lại.");
+                switchMode(true);
             }
         } catch (e) {
-            if (e.code === 'auth/email-already-in-use') err.innerText = "Email này đã tồn tại!";
-            else if (e.code === 'auth/weak-password') err.innerText = "Mật khẩu quá yếu (ít nhất 6 ký tự)!";
-            else if (e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found') err.innerText = "Sai tài khoản hoặc mật khẩu!";
-            else err.innerText = "Lỗi: " + e.message;
+            err.innerText = "Lỗi: " + e.message;
         }
     }
 </script>
