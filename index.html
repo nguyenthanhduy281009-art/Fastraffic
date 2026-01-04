@@ -3,21 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Nhập - FASTRAFFIC</title>
+    <title>FASTRAFFIC - Đăng nhập</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --primary: #e94560; --bg: #f0f2f5; }
-        body { font-family: sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #fff; padding: 30px; border-radius: 16px; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        h2 { color: #1a1a1a; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1.5px solid #eee; border-radius: 8px; box-sizing: border-box; outline: none; }
-        input:focus { border-color: var(--primary); }
-        .btn-main { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        #error { color: #ff4d4d; font-size: 13px; margin-top: 10px; min-height: 20px; }
-        .footer { margin-top: 20px; font-size: 14px; color: #666; }
-        .footer span { color: var(--primary); cursor: pointer; font-weight: bold; text-decoration: underline; }
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
+        .box { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #e94560; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .toggle { margin-top: 15px; font-size: 14px; color: #666; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -25,11 +20,9 @@
     <h2 id="title">ĐĂNG NHẬP</h2>
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="pass" placeholder="Mật khẩu">
-    <button class="btn-main" onclick="handleAuth()" id="btnSubmit">ĐĂNG NHẬP</button>
-    <div id="error"></div>
-    <div class="footer" id="toggleArea">
-        Chưa có tài khoản? <span onclick="switchMode(false)">Đăng ký ngay</span>
-    </div>
+    <button onclick="handleAuth()" id="btnSubmit">ĐĂNG NHẬP</button>
+    <div class="toggle" onclick="switchMode()" id="toggleTxt">Chưa có tài khoản? Đăng ký</div>
+    <div id="err" style="color: red; font-size: 12px; margin-top: 10px;"></div>
 </div>
 
 <script>
@@ -39,41 +32,32 @@
         databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "fastraffic-8b585"
     };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
 
-    let isLoginMode = true;
-
-    function switchMode(toLogin) {
-        isLoginMode = toLogin;
-        document.getElementById("title").innerText = toLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
-        document.getElementById("btnSubmit").innerText = toLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ NGAY";
-        document.getElementById("toggleArea").innerHTML = toLogin ? 
-            'Chưa có tài khoản? <span onclick="switchMode(false)">Đăng ký ngay</span>' : 
-            'Đã có tài khoản? <span onclick="switchMode(true)">Quay lại Đăng nhập</span>';
+    let isLogin = true;
+    function switchMode() {
+        isLogin = !isLogin;
+        document.getElementById("title").innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
+        document.getElementById("btnSubmit").innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
+        document.getElementById("toggleTxt").innerText = isLogin ? "Chưa có tài khoản? Đăng ký" : "Đã có tài khoản? Đăng nhập";
     }
 
     async function handleAuth() {
-        const email = document.getElementById("email").value;
-        const pass = document.getElementById("pass").value;
-        const err = document.getElementById("error");
-        if(!email || !pass) return err.innerText = "Vui lòng nhập đủ!";
-        err.innerText = "Đang xử lý...";
-
+        const e = document.getElementById("email").value;
+        const p = document.getElementById("pass").value;
+        const err = document.getElementById("err");
         try {
-            if (isLoginMode) {
-                await firebase.auth().signInWithEmailAndPassword(email, pass);
-                window.location.href = "home.html"; // Chuyển sang home.html sau khi login
+            if (isLogin) {
+                await firebase.auth().signInWithEmailAndPassword(e, p);
+                window.location.href = "home.html";
             } else {
-                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, pass);
-                // Tạo ví tiền 0đ cho tài khoản mới
-                await firebase.database().ref("users/" + userCredential.user.uid).set({ email: email, money: 0 });
-                await firebase.auth().signOut();
-                alert("Đăng ký thành công! Vui lòng đăng nhập.");
-                switchMode(true);
+                const res = await firebase.auth().createUserWithEmailAndPassword(e, p);
+                await firebase.database().ref("users/" + res.user.uid).set({ email: e, money: 0 });
+                alert("Đăng ký xong! Hãy đăng nhập.");
+                switchMode();
             }
-        } catch (e) { err.innerText = e.message; }
+        } catch (error) { err.innerText = error.message; }
     }
 </script>
 </body>
 </html>
-
