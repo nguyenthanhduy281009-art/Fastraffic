@@ -3,79 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FASTRAFFIC - Trang Chủ</title>
+    <title>FASTRAFFIC - Hệ thống nhiệm vụ</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 80px; }
-        .card { background: #fff; margin: 12px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .balance-box { text-align: center; padding: 20px; border-top: 4px solid #2ecc71; }
-        .balance-box h2 { color: #2ecc71; margin: 10px 0; font-size: 32px; }
-        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .btn-task { background: #e94560; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #ddd; z-index: 1000; }
-        .nav-item { flex: 1; text-align: center; padding: 12px 0; color: #777; font-size: 11px; cursor: pointer; }
-        .nav-item.active { color: #e94560; font-weight: bold; }
-        .nav-item i { display: block; font-size: 20px; margin-bottom: 3px; }
+        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding-bottom: 70px; }
+        .card { background: #fff; margin: 10px; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .balance-card { text-align: center; border-top: 5px solid #27ae60; }
+        .balance-card h2 { color: #27ae60; font-size: 28px; margin: 5px 0; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .btn { background: #e74c3c; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #ddd; }
+        .nav-item { flex: 1; text-align: center; padding: 10px 0; font-size: 12px; color: #666; cursor: pointer; }
+        .nav-item.active { color: #e74c3c; font-weight: bold; }
+        .nav-item i { display: block; font-size: 18px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .status-pending { color: orange; font-weight: bold; }
-        .status-success { color: green; font-weight: bold; }
-        .hist-title { font-weight: bold; border-left: 4px solid #e94560; padding-left: 8px; margin: 15px 0 10px 0; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .pending { color: #f39c12; font-weight: bold; }
+        .success { color: #27ae60; font-weight: bold; }
+        .history-section { font-weight: bold; color: #333; margin: 15px 0 5px 0; border-left: 4px solid #e74c3c; padding-left: 8px; }
     </style>
 </head>
 <body>
 
-    <div id="home-tab" class="tab-content active">
-        <div class="card" style="text-align: center;"><b><i class="fas fa-user"></i> <span id="user-email">...</span></b></div>
-        <div class="card balance-box">
-            <p style="margin:0; color:#666;">Số dư hiện tại</p>
-            <h2 id="user-balance">0đ</h2>
+    <div id="home" class="tab-content active">
+        <div class="card" style="text-align:center"><b>Chào: <span id="u-email">...</span></b></div>
+        <div class="card balance-card">
+            <p>Số dư tài khoản</p>
+            <h2 id="u-balance">0đ</h2>
         </div>
         <div class="card">
-            <h3 style="margin-top:0;"><i class="fas fa-tasks"></i> Nhiệm vụ mới</h3>
-            <div id="task-list-render">Đang tải...</div>
+            <h3 style="margin:0"><i class="fas fa-list"></i> Nhiệm vụ mới</h3>
+            <div id="render-tasks">Đang tìm nhiệm vụ...</div>
         </div>
     </div>
 
-    <div id="history-tab" class="tab-content">
+    <div id="history" class="tab-content">
         <div class="card">
-            <div class="hist-title">LỊCH SỬ NHIỆM VỤ</div>
-            <div id="task-history-list">Trống.</div>
-            <div class="hist-title" style="margin-top:25px;">LỊCH SỬ RÚT TIỀN</div>
-            <div id="withdraw-history-list">Trống.</div>
+            <div class="history-section">NHIỆM VỤ ĐÃ LÀM</div>
+            <div id="list-task-hist">Trống.</div>
+            <div class="history-section">LỊCH SỬ RÚT TIỀN</div>
+            <div id="list-withdraw-hist">Trống.</div>
         </div>
     </div>
 
-    <div id="rules-tab" class="tab-content">
+    <div id="rules" class="tab-content">
         <div class="card">
-            <h3><i class="fas fa-book"></i> Quy định</h3>
-            <p>- Làm đúng hướng dẫn nhiệm vụ.</p>
-            <p>- Rút tiền tối thiểu: 20,000đ.</p>
+            <h3><i class="fas fa-info-circle"></i> Quy định</h3>
+            <p>- Không dùng tool cheat.</p>
+            <p>- Mỗi nhiệm vụ chỉ tính 1 lần/ngày.</p>
+            <p>- Rút tiền tối thiểu 20.000đ.</p>
         </div>
     </div>
 
-    <div id="withdraw-tab" class="tab-content">
+    <div id="withdraw" class="tab-content">
         <div class="card">
             <h3><i class="fas fa-wallet"></i> Rút tiền</h3>
-            <input type="number" id="withdraw-amount" placeholder="Số tiền rút">
-            <input type="text" id="withdraw-info" placeholder="Ngân hàng - STK - Tên">
-            <button class="btn-task" style="width:100%; margin-top:10px;" onclick="requestWithdraw()">GỬI YÊU CẦU</button>
+            <input type="number" id="w-amount" placeholder="Số tiền cần rút">
+            <input type="text" id="w-info" placeholder="STK - Ngân hàng - Tên chủ thẻ">
+            <button class="btn" style="width:100%; margin-top:10px" onclick="sendWithdraw()">GỬI YÊU CẦU</button>
         </div>
     </div>
 
     <nav class="nav-bar">
-        <div class="nav-item active" onclick="showTab('home-tab', this)"><i class="fas fa-home"></i>Trang chủ</div>
-        <div class="nav-item" onclick="showTab('history-tab', this)"><i class="fas fa-history"></i>Lịch sử</div>
-        <div class="nav-item" onclick="showTab('rules-tab', this)"><i class="fas fa-file-alt"></i>Quy định</div>
-        <div class="nav-item" onclick="showTab('withdraw-tab', this)"><i class="fas fa-wallet"></i>Rút tiền</div>
+        <div class="nav-item active" onclick="tab('home',this)"><i class="fas fa-home"></i>Trang chủ</div>
+        <div class="nav-item" onclick="tab('history',this)"><i class="fas fa-history"></i>Lịch sử</div>
+        <div class="nav-item" onclick="tab('rules',this)"><i class="fas fa-book"></i>Quy định</div>
+        <div class="nav-item" onclick="tab('withdraw',this)"><i class="fas fa-money-bill-wave"></i>Rút tiền</div>
     </nav>
 
     <script>
-        // Cấu hình Firebase
         const firebaseConfig = {
             apiKey: "AIza...",
             authDomain: "fastraffic-8b585.firebaseapp.com",
@@ -87,79 +87,75 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const priceMap = { "Traffictot": 400, "Click1s": 600 };
+        const prices = { "Traffictot": 400, "Click1s": 600 };
 
-        function showTab(id, el) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        function tab(id, el) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
         }
 
         firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                const uid = user.email.replace(/\./g, '_');
-                document.getElementById('user-email').innerText = user.email;
+            if (!user) return window.location.href = "index.html";
+            const uid = user.email.replace(/\./g, '_');
+            document.getElementById('u-email').innerText = user.email;
 
-                db.ref(`users/${uid}/money`).on('value', s => {
-                    document.getElementById('user-balance').innerText = (s.val() || 0).toLocaleString() + "đ";
-                });
+            db.ref(`users/${uid}/money`).on('value', s => {
+                document.getElementById('u-balance').innerText = (s.val() || 0).toLocaleString() + "đ";
+            });
 
-                db.ref('Task').on('value', snapshot => {
-                    const container = document.getElementById('task-list-render');
-                    container.innerHTML = '';
-                    snapshot.forEach(child => {
-                        const name = child.key;
-                        const price = priceMap[name] || 0;
-                        child.forEach(linkSnap => {
-                            let link = linkSnap.val();
-                            if(typeof link === 'object') link = link.link;
-                            container.innerHTML += `<div class="task-item">
-                                <div><b>${name}</b><br><small>+${price}đ</small></div>
-                                <button class="btn-task" onclick="doTask('${name}', ${price}, '${link}')">Làm</button>
-                            </div>`;
-                        });
-                    });
-                });
-
-                db.ref(`history/${uid}`).on('value', s => {
-                    let tHtml = ''; let wHtml = '';
-                    s.forEach(child => {
-                        const d = child.val();
-                        const row = `<div class="task-item">
-                            <div><b>${d.task}</b><br><small>${d.time}</small></div>
-                            <div class="${d.status === 'pending' ? 'status-pending' : 'status-success'}">
-                                ${d.amount > 0 ? '+' : ''}${d.amount.toLocaleString()}đ<br><small>${d.status}</small>
-                            </div>
+            db.ref('Task').on('value', s => {
+                const div = document.getElementById('render-tasks');
+                div.innerHTML = '';
+                s.forEach(child => {
+                    const name = child.key;
+                    child.forEach(linkSnap => {
+                        let link = linkSnap.val();
+                        if(typeof link === 'object') link = link.link;
+                        div.innerHTML += `<div class="task-item">
+                            <div><b>${name}</b><br><small>+${prices[name] || 0}đ</small></div>
+                            <button class="btn" onclick="doTask('${name}',${prices[name]||0},'${link}')">Làm</button>
                         </div>`;
-                        if (d.amount > 0) tHtml += row; else wHtml += row;
                     });
-                    document.getElementById('task-history-list').innerHTML = tHtml || "Trống.";
-                    document.getElementById('withdraw-history-list').innerHTML = wHtml || "Trống.";
                 });
-            } else { window.location.href = "index.html"; }
+            });
+
+            db.ref(`history/${uid}`).on('value', s => {
+                let tH = ''; let wH = '';
+                s.forEach(c => {
+                    const d = c.val();
+                    const item = `<div class="task-item">
+                        <div><b>${d.task}</b><br><small>${d.time}</small></div>
+                        <div class="${d.status === 'pending' ? 'pending' : 'success'}">${d.amount > 0 ? '+' : ''}${d.amount}đ</div>
+                    </div>`;
+                    if (d.amount > 0) tH += item; else wH += item;
+                });
+                document.getElementById('list-task-hist').innerHTML = tH || "Trống.";
+                document.getElementById('list-withdraw-hist').innerHTML = wH || "Trống.";
+            });
         });
 
-        function doTask(name, price, link) {
-            window.open(link, '_blank');
+        function doTask(n, p, l) {
+            window.open(l, '_blank');
             const uid = firebase.auth().currentUser.email.replace(/\./g, '_');
-            db.ref(`history/${uid}/TASK_${Date.now()}`).set({
-                task: name, amount: price, status: 'pending', time: new Date().toLocaleString()
+            db.ref(`history/${uid}/T_${Date.now()}`).set({
+                task: n, amount: p, status: 'pending', time: new Date().toLocaleString()
             });
         }
 
-        function requestWithdraw() {
-            const amount = parseInt(document.getElementById('withdraw-amount').value);
-            const info = document.getElementById('withdraw-info').value;
-            if (amount < 20000 || !info) return alert("Kiểm tra lại tiền (>20k) và thông tin!");
+        function sendWithdraw() {
+            const a = parseInt(document.getElementById('w-amount').value);
+            const i = document.getElementById('w-info').value;
+            if (a < 20000 || !i) return alert("Min 20k và nhập STK!");
             const uid = firebase.auth().currentUser.email.replace(/\./g, '_');
             db.ref(`users/${uid}/money`).once('value', s => {
-                const cur = s.val() || 0;
-                if (cur < amount) return alert("Số dư không đủ!");
-                db.ref(`users/${uid}/money`).set(cur - amount);
-                db.ref(`history/${uid}/WITHDRAW_${Date.now()}`).set({
-                    task: "Rút tiền: " + info, amount: -amount, status: 'pending', time: new Date().toLocaleString()
-                }).then(() => alert("Đã gửi yêu cầu!"));
+                const m = s.val() || 0;
+                if (m < a) return alert("Không đủ tiền!");
+                db.ref(`users/${uid}/money`).set(m - a);
+                db.ref(`history/${uid}/W_${Date.now()}`).set({
+                    task: "Rút: " + i, amount: -a, status: 'pending', time: new Date().toLocaleString()
+                }).then(() => alert("Đã gửi!"));
             });
         }
     </script>
