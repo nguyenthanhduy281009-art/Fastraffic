@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - FASTRAFFIC</title>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; margin: 0; padding: 15px; }
+        .container { max-width: 1000px; margin: auto; }
+        h2 { color: #e94560; border-left: 5px solid #e94560; padding-left: 10px; margin-top: 30px; }
+        .card { background: white; padding: 0; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: #f1f3f5; color: #495057; }
+        .btn { border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-approve { background: #28a745; }
+        .btn-reject { background: #dc3545; margin-left: 5px; }
+        .status-pending { color: #fd7e14; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 style="text-align:center; color:#333;">QUẢN TRỊ VIÊN</h1>
+
+    <h2><i class="fas fa-tasks"></i> Duyệt Nhiệm Vụ</h2>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Nhiệm vụ</th>
+                    <th>Tiền</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="task-list">
+                <tr><td colspan="4">Đang tải dữ liệu...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2><i class="fas fa-university"></i> Duyệt Rút Tiền</h2>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Thông tin nhận</th>
+                    <th>Số tiền</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="withdraw-list">
+                <tr><td colspan="4">Chưa có yêu cầu rút tiền.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // 1. Cấu hình Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
+        authDomain: "fastraffic-8b585.firebaseapp.com",
+        projectId: "fastraffic-8b585",
+        databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 2. Kiểm tra quyền Admin (Sửa email của bạn ở đây)
+    firebase.auth().onAuthStateChanged(user => {
+        if (!user || user.email !== 'email-cua-ban@gmail.com') {
+            alert("Bạn không có quyền truy cập!");
+            window.location.href = "index.html";
+        } else {
+            loadTasks();
+            loadWithdraws();
+        }
+    });
+
+    // 3. Logic duyệt nhiệm vụ
+    function loadTasks() {
+        db.ref('history').on('value', snap => {
+            let html = '';
+            const data = snap.val();
+            if (data) {
+                Object.keys(data).forEach(uid => {
+                    Object.keys(data[uid]).forEach(tid => {
+                        const t = data[uid][tid];
+                        if (t.status === 'pending') {
+                            html += `<tr>
+                                <td>${uid.replace('_', '.')}</td>
+                                <td>${t.task}</td>
+                                <td><b>+${t.amount}đ</b></td>
+                                <td>
+                                    <button class="btn btn-approve" onclick="approveTask('${uid}','${tid}',${t.amount})">Duyệt</button>
+                                    <button class="btn btn-reject" onclick="deleteItem('history/${uid}/${tid}')">Xóa</button>
+                                </td>
+                            </tr>`;
+                        }
+                    });
+                });
+            }
+            document.getElementById('task-list').innerHTML = html || '<tr><td colspan="4">Hết nhiệm vụ chờ duyệt.</td></tr>';
+        });
+    }
+
+    function approveTask(uid, tid, amt) {
+        if(confirm("Cộng tiền cho User này?")) {
+            db.ref(`users/${uid}/money`).transaction(c => (c || 0) + amt).then(() => {
+                db.ref(`history/${uid}/${tid}`).update({ status: 'done' });
+            });
+        }
+    }
+
+    // 4. Logic duyệt rút tiền
+    function loadWithdraws() {
+        db.ref('withdraw_requests').on('value', snap => {
+            let html = '';
+            const data = snap.val();
+            if (data) {
+                Object.keys(data).forEach(id => {
+                    const r = data[id];
+                    if (r.status === 'pending') {
+                        html += `<tr>
+                            <td>${r.userId.replace('_', '.')}</td>
+                            <td>${r.info}</td>
+                            <td style="color:red"><b>-${r.amount}đ</b></td>
+                            <td>
+                                <button class="btn btn-approve" onclick="approveWithdraw('${id}','${r.userId}',${r.amount})">Đã Bank</button>
+                                <button class="btn btn-reject" onclick="deleteItem('withdraw_requests/${id}')">Hủy</button>
+                            </td>
+                        </tr>`;
+                    }
+                });
+            }
+            document.getElementById('withdraw-list').innerHTML = html || '<tr><td colspan="4">Không có yêu cầu.</td></tr>';
+        });
+    }
+
+    function approveWithdraw(id, uid, amt) {
+        if(confirm("Bạn đã chuyển khoản thật chưa? Bấm OK sẽ trừ tiền ví user.")) {
+            db.ref(`users/${uid}/money`).transaction(c => (c || 0) - amt).then(() => {
+                db.ref(`withdraw_requests/${id}`).update({ status: 'done' });
+            });
+        }
+    }
+
+    function deleteItem(path) {
+        if(confirm("Bạn muốn xóa yêu cầu này?")) db.ref(path).remove();
+    }
+</script>
+</body>
+</html>
