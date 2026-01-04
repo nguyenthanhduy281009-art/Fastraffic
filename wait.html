@@ -2,89 +2,86 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Xác thực người dùng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác thực an toàn - FASTRAFFIC</title>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f4f7f6; }
-        .box { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        input { padding: 10px; width: 60px; text-align: center; margin: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        button { padding: 10px 20px; background: #e94560; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        #status { color: #e94560; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
+        .box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 350px; }
+        #status { color: #e94560; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+        .cf-turnstile { margin: 25px 0; display: flex; justify-content: center; }
+        #timer-box { display: none; font-size: 22px; color: #333; font-weight: bold; margin-top: 20px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #e94560; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: inline-block; vertical-align: middle; margin-right: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h3 id="status">🔒 Xác thực bạn là con người</h3>
+    <div id="status">🔒 Xác thực bạn là con người</div>
     
-    <p id="question">2 + 5 = ?</p>
-    <input type="number" id="ans" placeholder="?">
-    <button onclick="verify()">Xác nhận</button>
+    <div class="cf-turnstile" 
+         data-sitekey="0x4AAAAAACJ58mUD1xXb3uHV" 
+         data-callback="onVerifySuccess"></div>
+
+    <div id="timer-box">
+        <div class="loader"></div>
+        ⏳ Chờ <span id="sec">5</span> giây...
+    </div>
 </div>
 
 <script>
-    // 1. Cấu hình Firebase của bạn
+    // 1. Cấu hình Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
         authDomain: "fastraffic-8b585.firebaseapp.com",
         projectId: "fastraffic-8b585",
         databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
-
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
 
-    // 2. Lấy link nhiệm vụ được truyền từ trang Home
+    // 2. Lấy link từ URL (đã được encode btoa từ home.html)
     const params = new URLSearchParams(window.location.search);
-    const targetEncoded = params.get("target");
+    const target = params.get("target");
     let finalLink = "";
-
-    if (targetEncoded) {
-        finalLink = atob(targetEncoded); // Giải mã link
+    if (target) {
+        try { finalLink = atob(target); } catch(e) { console.error("Link lỗi"); }
     }
 
-    // 3. Kiểm tra đăng nhập
-    auth.onAuthStateChanged(user => {
-        if (!user) {
-            window.location.href = "index.html"; // Quay về trang login nếu chưa đăng nhập
-        }
-    });
+    // 3. Khi xác thực Turnstile thành công
+    function onVerifySuccess(token) {
+        document.querySelector('.cf-turnstile').style.display = 'none';
+        document.getElementById('timer-box').style.display = 'block';
+        document.getElementById('status').innerText = "✅ Xác thực thành công";
+        startCountdown();
+    }
 
-    // 4. Hàm xác thực giống code cũ của bạn
-    function verify() {
-        const answer = document.getElementById("ans").value;
-        
-        // Kiểm tra kết quả (2 + 5 = 7)
-        if (answer !== "7") {
-            alert("Sai rồi! Vui lòng tính lại.");
-            return;
-        }
-
-        // Nếu đúng, bắt đầu đếm ngược
-        let time = 3; // Bạn có thể chỉnh 5 giây hoặc hơn
-        const status = document.getElementById("status");
-        const btn = document.querySelector("button");
-        
-        btn.disabled = true; // Khóa nút sau khi bấm đúng
-        status.innerText = "⏳ Vui lòng chờ " + time + " giây";
+    // 4. Hàm đếm ngược chuyển link
+    function startCountdown() {
+        let time = 5;
+        const secSpan = document.getElementById("sec");
 
         const interval = setInterval(() => {
             time--;
-            status.innerText = "⏳ Vui lòng chờ " + time + " giây";
+            secSpan.innerText = time;
 
             if (time <= 0) {
                 clearInterval(interval);
-                
-                // Chuyển hướng đến link nhiệm vụ
                 if (finalLink) {
                     window.location.href = finalLink;
                 } else {
-                    status.innerText = "❌ Lỗi: Không tìm thấy link nhiệm vụ!";
+                    alert("Không tìm thấy link nhiệm vụ!");
                 }
             }
         }, 1000);
     }
+
+    // Kiểm tra đăng nhập để bảo mật trang wait
+    firebase.auth().onAuthStateChanged(user => {
+        if (!user) window.location.href = "index.html";
+    });
 </script>
 </body>
 </html>
