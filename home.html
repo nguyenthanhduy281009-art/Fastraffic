@@ -9,19 +9,19 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding-bottom: 70px; }
+        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding-bottom: 80px; }
         .card { background: #fff; margin: 10px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .balance-val { text-align: center; color: #27ae60; font-size: 32px; font-weight: bold; margin: 10px 0; }
         .task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
         .btn-do { background: #e74c3c; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         
-        /* Navigation */
-        .nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #eee; height: 60px; }
-        .nav-link { flex: 1; text-align: center; padding-top: 10px; font-size: 11px; color: #888; cursor: pointer; }
+        /* Navigation chuẩn */
+        .nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #eee; height: 65px; z-index: 9999; }
+        .nav-link { flex: 1; text-align: center; padding-top: 12px; font-size: 11px; color: #888; cursor: pointer; }
         .nav-link.active { color: #e74c3c; font-weight: bold; }
         .nav-link i { display: block; font-size: 20px; margin-bottom: 3px; }
 
-        .tab-box { display: none; }
+        .tab-box { display: none; padding: 5px; }
         .tab-box.active { display: block; }
 
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 8px; box-sizing: border-box; }
@@ -89,11 +89,21 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function goTab(id, el) {
-        document.querySelectorAll('.tab-box').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        el.classList.add('active');
+    // Hàm chuyển Tab
+    function goTab(tabId, element) {
+        // Ẩn tất cả tab
+        const tabs = document.getElementsByClassName('tab-box');
+        for (let i = 0; i < tabs.length; i++) {
+            tabs[i].classList.remove('active');
+        }
+        // Bỏ active tất cả menu
+        const links = document.getElementsByClassName('nav-link');
+        for (let i = 0; i < links.length; i++) {
+            links[i].classList.remove('active');
+        }
+        // Hiện tab được chọn
+        document.getElementById(tabId).classList.add('active');
+        element.classList.add('active');
     }
 
     firebase.auth().onAuthStateChanged(user => {
@@ -146,7 +156,7 @@
         const uid = firebase.auth().currentUser.uid;
         db.ref("history/" + uid + "/" + Date.now()).set({
             task: name,
-            amount: 500, // Thưởng mặc định
+            amount: 500,
             status: "pending",
             time: new Date().toLocaleString()
         });
@@ -156,13 +166,10 @@
         const amount = parseInt(document.getElementById("w-amount").value);
         const info = document.getElementById("w-info").value;
         const uid = firebase.auth().currentUser.uid;
-
         if (amount < 20000 || !info) return alert("Min 20k và nhập đầy đủ thông tin!");
-
         db.ref("users/" + uid + "/money").once("value", s => {
             const current = s.val() || 0;
             if (current < amount) return alert("Số dư không đủ!");
-            
             db.ref("users/" + uid + "/money").set(current - amount);
             db.ref("history/" + uid + "/" + Date.now()).set({
                 task: "Rút tiền: " + info,
