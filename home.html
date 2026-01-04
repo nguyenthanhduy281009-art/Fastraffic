@@ -3,45 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang chủ - FASTRAFFIC</title>
+    <title>Admin Panel - FASTRAFFIC</title>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
-        .container { max-width: 600px; margin: auto; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { font-size: 18px; color: #333; margin-bottom: 15px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-        .status-pending { color: #f39c12; font-weight: bold; }
-        .status-done { color: #27ae60; font-weight: bold; }
-        .status-cancelled { color: #e74c3c; font-weight: bold; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
+        .container { max-width: 1100px; margin: auto; }
+        .header { text-align: center; padding: 20px; background: white; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { color: #e94560; font-size: 18px; display: flex; align-items: center; gap: 10px; margin-top: 25px; }
+        .card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-approve { background: #28a745; }
+        .btn-reject { background: #dc3545; margin-left: 5px; }
+        .btn-blue { background: #007bff; width: 100%; margin-top: 10px; padding: 12px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .bank-box { background: #fff3f3; padding: 5px; border-radius: 4px; color: #d63031; font-weight: bold; border: 1px dashed #fab1a0; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="card" style="text-align: center;">
-        <h1 style="color: #e94560;">FASTRAFFIC</h1>
-        <p>Số dư: <span id="user-money" style="font-weight: bold; color: #2ecc71;">0đ</span></p>
+    <div class="header"><h1>QUẢN TRỊ VIÊN</h1><p>Duyệt nhiệm vụ & Quản lý hệ thống</p></div>
+
+    <h2><i class="fas fa-university"></i> Yêu cầu rút tiền</h2>
+    <div class="card">
+        <table>
+            <thead><tr><th>Thời gian</th><th>Người dùng</th><th>Thông tin Bank</th><th>Số tiền</th><th>Hành động</th></tr></thead>
+            <tbody id="withdraw-list"></tbody>
+        </table>
     </div>
 
+    <h2><i class="fas fa-tasks"></i> Danh sách chờ duyệt</h2>
     <div class="card">
-        <h2><i class="fas fa-history"></i> Lịch sử giao dịch</h2>
         <table>
-            <thead>
-                <tr>
-                    <th>Thời gian</th>
-                    <th>Số tiền</th>
-                    <th>Trạng thái</th>
-                </tr>
-            </thead>
-            <tbody id="history-list">
-                <tr><td colspan="3" style="text-align:center">Đang tải lịch sử...</td></tr>
-            </tbody>
+            <thead><tr><th>Người dùng</th><th>Nhiệm vụ</th><th>Tiền thưởng</th><th>Hành động</th></tr></thead>
+            <tbody id="task-list"></tbody>
         </table>
+    </div>
+
+    <h2><i class="fas fa-user-cog"></i> Tùy chỉnh số dư người dùng</h2>
+    <div class="card" style="padding: 20px; border: 2px solid #007bff;">
+        <input type="text" id="target-email" placeholder="Nhập Email người dùng...">
+        <button class="btn btn-blue" onclick="manualUpdate()">CẬP NHẬT SỐ DƯ</button>
     </div>
 </div>
 
@@ -55,48 +62,77 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // CHỈ CHO PHÉP EMAIL CỦA BẠN VÀO TRANG NÀY
     firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-            const uid = user.email.replace(/\./g, '_');
-            
-            // Lấy số dư thực tế
-            db.ref(`users/${uid}/money`).on('value', snap => {
-                document.getElementById('user-money').innerText = (snap.val() || 0).toLocaleString() + "đ";
-            });
-
-            // Lấy lịch sử giao dịch
-            db.ref(`history/${uid}`).on('value', snap => {
-                const list = document.getElementById('history-list');
-                list.innerHTML = '';
-                const data = snap.val();
-                
-                if (data) {
-                    // Sắp xếp mới nhất lên đầu
-                    const items = Object.values(data).reverse();
-                    items.forEach(item => {
-                        let statusText = "";
-                        let statusClass = "";
-                        
-                        // Chuyển đổi trạng thái hiển thị
-                        if(item.status === 'pending') { statusText = "Chờ duyệt"; statusClass = "status-pending"; }
-                        else if(item.status === 'done') { statusText = "Thành công"; statusClass = "status-done"; }
-                        else { statusText = "Đã hủy"; statusClass = "status-cancelled"; }
-
-                        list.innerHTML += `
-                            <tr>
-                                <td><small>${item.time || 'N/A'}</small></td>
-                                <td style="font-weight:bold">${item.amount.toLocaleString()}đ</td>
-                                <td class="${statusClass}">${statusText}</td>
-                            </tr>`;
-                    });
-                } else {
-                    list.innerHTML = '<tr><td colspan="3" style="text-align:center">Chưa có giao dịch nào.</td></tr>';
-                }
-            });
+        if (!user || user.email !== "nguyenthanhduy281009@gmail.com") {
+            window.location.href = "home.html"; // Nếu không phải admin thì đẩy về trang home người dùng
         } else {
-            window.location.href = "login.html";
+            loadAll();
         }
     });
+
+    function loadAll() {
+        // Load Rút tiền
+        db.ref('withdraw_requests').on('value', snap => {
+            const list = document.getElementById('withdraw-list');
+            list.innerHTML = '';
+            snap.forEach(child => {
+                const r = child.val();
+                if (r.status === 'pending') {
+                    list.innerHTML += `<tr>
+                        <td><small>${r.time || ''}</small></td>
+                        <td>${r.userId.replace(/_/g, '.')}</td>
+                        <td><div class="bank-box">${r.bankAcc} - ${r.bankName}</div></td>
+                        <td style="color:red">-${r.amount.toLocaleString()}đ</td>
+                        <td>
+                            <button class="btn btn-approve" onclick="handleWithdraw('${child.key}','${r.userId}',${r.amount},'done')">Đã Bank</button>
+                            <button class="btn btn-reject" onclick="handleWithdraw('${child.key}','${r.userId}',0,'cancelled')">Hủy</button>
+                        </td>
+                    </tr>`;
+                }
+            });
+        });
+
+        // Load Nhiệm vụ
+        db.ref('history').on('value', snap => {
+            const list = document.getElementById('task-list');
+            list.innerHTML = '';
+            snap.forEach(userSnap => {
+                userSnap.forEach(taskSnap => {
+                    const t = taskSnap.val();
+                    if (t.status === 'pending' && !t.withdrawId) {
+                        list.innerHTML += `<tr>
+                            <td>${userSnap.key.replace(/_/g, '.')}</td>
+                            <td><small>${t.task}</small></td>
+                            <td style="color:green">+${t.amount.toLocaleString()}đ</td>
+                            <td><button class="btn btn-approve" onclick="handleTask('${userSnap.key}','${taskSnap.key}',${t.amount})">Duyệt</button></td>
+                        </tr>`;
+                    }
+                });
+            });
+        });
+    }
+
+    function manualUpdate() {
+        const email = document.getElementById('target-email').value.trim();
+        const uid = email.replace(/\./g, '_');
+        const val = prompt("Nhập số dư mới:");
+        if (val) db.ref(`users/${uid}/money`).set(parseInt(val)).then(() => alert("Xong!"));
+    }
+
+    function handleWithdraw(id, uid, amt, status) {
+        if (status === 'done') db.ref(`users/${uid}/money`).transaction(c => (c || 0) - amt);
+        db.ref(`withdraw_requests/${id}`).update({ status: status });
+        // Cập nhật trạng thái trong history để người dùng thấy
+        db.ref(`history/${uid}`).once('value', s => {
+            s.forEach(c => { if(c.val().withdrawId === id) c.ref.update({ status: status }); });
+        });
+    }
+
+    function handleTask(uid, tid, amt) {
+        db.ref(`users/${uid}/money`).transaction(c => (c || 0) + amt);
+        db.ref(`history/${uid}/${tid}`).update({ status: 'done' });
+    }
 </script>
 </body>
 </html>
