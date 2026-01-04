@@ -23,7 +23,8 @@
         .task-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-bottom: 40px; }
         .task-card { background: white; border-radius: 12px; padding: 20px; border: 1px dashed #ccc; position: relative; transition: 0.3s; }
         .btn-do { width: 100%; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin: 15px 0; font-size: 14px; }
-        .task-info { display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 12px; font-size: 11px; text-align: center; }
+        /* Tinh chỉnh phần Info: Chỉ hiện Tiền và Trạng thái, bỏ Exp */
+        .task-info { display: flex; justify-content: space-around; border-top: 1px solid #eee; padding-top: 12px; font-size: 11px; text-align: center; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
         th, td { padding: 12px; border: 1px solid #eee; text-align: center; }
         th { background: #f8f9fa; color: #666; font-size: 13px; }
@@ -49,7 +50,6 @@
 </div>
 
 <script>
-    // 1. Cấu hình Firebase (Dùng Database của bạn)
     const firebaseConfig = {
         apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
         authDomain: "fastraffic-8b585.firebaseapp.com",
@@ -61,7 +61,6 @@
     let currentUserId = "";
     let currentBalance = 0;
 
-    // 2. Tự động kiểm tra Login và nạp Trang chủ
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
             currentUserId = user.email.replace(/\./g, '_');
@@ -122,9 +121,10 @@
     }
 
     function renderTasks() {
-        // Khớp với chữ "Task" viết hoa trên Firebase của bạn
+        // BẠN SỬA SỐ TIỀN THƯỞNG TẠI ĐÂY
         firebase.database().ref('Task/Traffictot').on('value', (s) => {
             let h = ''; const d = s.val();
+            // Thay đổi số 250 thành số tiền bạn muốn cho Traffictot
             if(d) Object.keys(d).forEach(k => h += createTaskUI('Traffictot', k, d[k], 250, '#e94560'));
             const el = document.getElementById('list-traffictot');
             if(el) el.innerHTML = h || 'Hết nhiệm vụ.';
@@ -132,21 +132,22 @@
 
         firebase.database().ref('Task/Click1s').on('value', (s) => {
             let h = ''; const d = s.val();
+            // Thay đổi số 500 thành số tiền bạn muốn cho Click1s
             if(d) Object.keys(d).forEach(k => h += createTaskUI('Click1s', k, d[k], 500, '#28a745'));
             const el = document.getElementById('list-click1s');
             if(el) el.innerHTML = h || 'Hết nhiệm vụ.';
         });
     }
 
+    // HÀM HIỂN THỊ GIAO DIỆN: ĐÃ BỎ EXP
     function createTaskUI(sys, id, url, cash, col) {
         return `
             <div class="task-card" style="border-color:${col}">
                 <div style="font-weight:bold; color:${col}">${sys} - ${id}</div>
                 <button class="btn-do" style="background:${col}" onclick="goTask('${url}','${sys}',${cash})">Thực hiện</button>
                 <div class="task-info">
-                    <div><b>${cash}</b><br>Tiền</div>
-                    <div><b>10 Exp</b><br>Exp</div>
-                    <div><b>Sẵn sàng</b><br>Status</div>
+                    <div><b>${cash.toLocaleString()}</b><br>Tiền thưởng</div>
+                    <div style="color:green"><b>Sẵn sàng</b><br>Trạng thái</div>
                 </div>
             </div>`;
     }
@@ -156,7 +157,6 @@
         firebase.database().ref('history/' + currentUserId + '/' + historyId).set({
             task: sys, amount: amt, status: "pending", time: new Date().toLocaleString('vi-VN')
         }).then(() => {
-            // Chuyển sang trang wait.html kèm link nhiệm vụ đã mã hóa
             window.open(`wait.html?target=${btoa(url)}`, '_blank');
         });
     }
