@@ -3,29 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FASTRAFFIC - Home</title>
+    <title>FASTRAFFIC - Hệ thống</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 60px; }
+        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 70px; }
         .card { background: #fff; margin: 10px; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .balance { text-align: center; color: #27ae60; font-size: 28px; font-weight: bold; }
+        .balance { text-align: center; color: #27ae60; font-size: 28px; font-weight: bold; margin: 10px 0; }
         .task-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .btn { background: #e74c3c; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn { background: #e74c3c; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        /* Menu điều hướng */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #ddd; z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; padding: 10px 0; font-size: 12px; color: #666; cursor: pointer; }
+        .nav-item.active { color: #e74c3c; font-weight: bold; }
+        .nav-item i { display: block; font-size: 18px; margin-bottom: 2px; }
+
+        /* Nội dung các Tab */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .status-pending { color: #f39c12; font-weight: bold; }
+        .status-success { color: #27ae60; font-weight: bold; }
+        .rules-list { text-align: left; line-height: 1.6; color: #444; }
     </style>
 </head>
 <body>
 
-<div class="card">Chào: <b id="u-email">...</b></div>
-<div class="card">
-    <p style="text-align:center; margin:0;">Số dư hiện tại</p>
-    <div class="balance" id="u-balance">0đ</div>
+<div id="home" class="tab-content active">
+    <div class="card">Chào: <b id="u-email">...</b></div>
+    <div class="card">
+        <p style="text-align:center; margin:0;">Số dư hiện tại</p>
+        <div class="balance" id="u-balance">0đ</div>
+    </div>
+    <div class="card">
+        <h3><i class="fas fa-tasks"></i> Nhiệm vụ hôm nay</h3>
+        <div id="list-task">Đang tải nhiệm vụ...</div>
+    </div>
 </div>
-<div class="card">
-    <h3>Nhiệm vụ mới</h3>
-    <div id="list-task">Đang tải...</div>
+
+<div id="history" class="tab-content">
+    <div class="card">
+        <h3><i class="fas fa-history"></i> Lịch sử hoạt động</h3>
+        <div id="list-history">Chưa có dữ liệu.</div>
+    </div>
 </div>
+
+<div id="rules" class="tab-content">
+    <div class="card">
+        <h3><i class="fas fa-gavel"></i> Quy định hệ thống</h3>
+        <div class="rules-list">
+            <p>1. Không sử dụng phần mềm can thiệp kết quả.</p>
+            <p>2. Mỗi người dùng chỉ được sử dụng một tài khoản duy nhất.</p>
+            <p>3. Rút tiền tối thiểu (Min rút) là 20.000đ.</p>
+            <p>4. Nhiệm vụ sẽ được duyệt trong vòng 24h làm việc.</p>
+            <p>5. Mọi hành vi gian lận sẽ bị khóa tài khoản vĩnh viễn.</p>
+        </div>
+    </div>
+</div>
+
+<div id="withdraw" class="tab-content">
+    <div class="card">
+        <h3><i class="fas fa-wallet"></i> Rút tiền về ngân hàng</h3>
+        <input type="number" id="w-amount" placeholder="Nhập số tiền (Min 20,000)">
+        <input type="text" id="w-info" placeholder="STK - Ngân hàng - Tên chủ tài khoản">
+        <button class="btn" style="width:100%; margin-top:10px;" onclick="sendWithdraw()">GỬI YÊU CẦU RÚT</button>
+    </div>
+</div>
+
+<nav class="nav-bar">
+    <div class="nav-item active" onclick="showTab('home', this)"><i class="fas fa-home"></i>Trang chủ</div>
+    <div class="nav-item" onclick="showTab('history', this)"><i class="fas fa-history"></i>Lịch sử</div>
+    <div class="nav-item" onclick="showTab('rules', this)"><i class="fas fa-book"></i>Quy định</div>
+    <div class="nav-item" onclick="showTab('withdraw', this)"><i class="fas fa-money-bill-wave"></i>Rút tiền</div>
+</nav>
 
 <script>
     const firebaseConfig = {
@@ -34,39 +88,96 @@
         databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "fastraffic-8b585"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // Hàm chuyển đổi Tab
+    function showTab(id, el) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        el.classList.add('active');
+    }
 
     firebase.auth().onAuthStateChanged(user => {
         if (!user) {
             window.location.href = "index.html";
             return;
         }
+        const uid = user.uid;
         document.getElementById("u-email").innerText = user.email;
 
-        // Lấy tiền
-        db.ref("users/" + user.uid + "/money").on("value", s => {
+        // Theo dõi số dư
+        db.ref("users/" + uid + "/money").on("value", s => {
             document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
         });
 
-        // Lấy nhiệm vụ
+        // Tải nhiệm vụ
         db.ref("Task").on("value", snap => {
             let html = "";
             snap.forEach(task => {
-                const name = task.key;
+                const type = task.key;
                 task.forEach(l => {
                     let link = l.val();
                     if(typeof link === 'object') link = link.link;
-                    html += `
-                    <div class="task-item">
-                        <span><b>${name}</b></span>
-                        <button class="btn" onclick="window.open('${link}')">Làm</button>
+                    html += `<div class="task-item">
+                        <span><b>${type}</b></span>
+                        <button class="btn" onclick="doTask('${type}', '${link}')">Làm</button>
                     </div>`;
                 });
             });
-            document.getElementById("list-task").innerHTML = html || "Hết nhiệm vụ.";
+            document.getElementById("list-task").innerHTML = html || "Đã hết nhiệm vụ.";
+        });
+
+        // Tải lịch sử
+        db.ref("history/" + uid).on("value", s => {
+            let h = "";
+            s.forEach(c => {
+                const d = c.val();
+                h = `<div class="task-item">
+                    <div style="text-align:left;"><b>${d.task}</b><br><small>${d.time}</small></div>
+                    <div class="${d.status === 'pending' ? 'status-pending' : 'status-success'}">
+                        ${d.amount > 0 ? '+' : ''}${d.amount.toLocaleString()}đ
+                    </div>
+                </div>` + h;
+            });
+            document.getElementById("list-history").innerHTML = h || "Chưa có lịch sử.";
         });
     });
+
+    function doTask(name, link) {
+        window.open(link, "_blank");
+        const uid = firebase.auth().currentUser.uid;
+        db.ref("history/" + uid + "/" + Date.now()).set({
+            task: name,
+            amount: 500, // Số tiền mặc định cho mỗi nhiệm vụ
+            status: "pending",
+            time: new Date().toLocaleString()
+        });
+    }
+
+    function sendWithdraw() {
+        const amount = parseInt(document.getElementById("w-amount").value);
+        const info = document.getElementById("w-info").value;
+        const uid = firebase.auth().currentUser.uid;
+
+        if (amount < 20000 || !info) return alert("Min rút 20,000đ và điền đủ thông tin!");
+
+        db.ref("users/" + uid + "/money").once("value", s => {
+            const current = s.val() || 0;
+            if (current < amount) return alert("Số dư không đủ!");
+
+            // Trừ tiền và tạo lệnh rút
+            db.ref("users/" + uid + "/money").set(current - amount);
+            db.ref("history/" + uid + "/" + Date.now()).set({
+                task: "Rút tiền: " + info,
+                amount: -amount,
+                status: "pending",
+                time: new Date().toLocaleString()
+            });
+            alert("Đã gửi yêu cầu rút tiền!");
+        });
+    }
 </script>
 </body>
 </html>
