@@ -22,7 +22,7 @@
         #userMoney { font-size: 32px; font-weight: bold; margin-top: 5px; }
         .withdraw-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         .btn-do { width: 100%; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 20px; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 20px; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         th, td { padding: 12px; border: 1px solid #eee; text-align: center; }
         th { background: #f8f9fa; color: #666; }
     </style>
@@ -72,27 +72,31 @@
         if(document.getElementById('m-' + page)) document.getElementById('m-' + page).classList.add('active');
 
         if (page === 'trangchu') {
-            view.innerHTML = `<div class="money-card"><div id="userMoney">0 VNĐ</div></div><h3>Nhiệm vụ hôm nay</h3><div id="taskList">Đang tải...</div>`;
+            view.innerHTML = `<div class="money-card"><div id="userMoney">0 VNĐ</div></div><h3>Hệ thống nhiệm vụ</h3><div id="taskList">Đang tải...</div>`;
             loadMoney();
         } 
         else if (page === 'ruttien') {
             view.innerHTML = `
                 <h2>Rút tiền</h2>
                 <div style="background:white; padding:25px; border-radius:15px; max-width:500px; box-shadow:0 4px 10px rgba(0,0,0,0.05)">
-                    <p>Số dư: <b id="drawBalance" style="color:#e94560">0 VNĐ</b></p>
-                    <input type="number" id="amount" class="withdraw-input" placeholder="Số tiền cần rút (Tối thiểu 20.000)">
-                    <input type="text" id="bankName" class="withdraw-input" placeholder="Tên ngân hàng hoặc Ví điện tử">
-                    <input type="text" id="bankAcc" class="withdraw-input" placeholder="Số tài khoản">
+                    <p>Số dư hiện tại: <b id="drawBalance" style="color:#e94560">0 VNĐ</b></p>
+                    
+                    <label><b>Số tiền rút:</b></label>
+                    <input type="number" id="amount" class="withdraw-input" placeholder="Tối thiểu 20.000">
+                    
+                    <label><b>Ngân hàng hoặc Ví điện tử:</b></label>
+                    <input type="text" id="bankName" class="withdraw-input" placeholder="Ví dụ: MB Bank, MoMo...">
+                    
+                    <label><b>Số tài khoản nhận tiền:</b></label>
+                    <input type="text" id="bankAcc" class="withdraw-input" placeholder="Nhập số tài khoản chính xác">
+                    
                     <button onclick="requestWithdraw()" class="btn-do" style="background:#e94560">Gửi yêu cầu rút tiền</button>
                 </div>
+
                 <h3 style="margin-top:40px">Lịch sử rút tiền</h3>
                 <div id="withdrawHistory">Đang tải...</div>`;
             loadMoney();
             loadWithdrawHistory();
-        }
-        else if (page === 'lichsu') {
-            view.innerHTML = `<h2>Lịch sử làm nhiệm vụ</h2><div id="historyData">Đang tải...</div>`;
-            loadTaskHistory();
         }
     }
 
@@ -111,26 +115,27 @@
         const acc = document.getElementById('bankAcc').value;
 
         if (isNaN(amt) || amt < 20000) return alert("Số tiền rút tối thiểu là 20.000 VNĐ!");
-        if (amt > currentBalance) return alert("Số dư không đủ!");
-        if (!name || !acc) return alert("Vui lòng nhập đầy đủ thông tin thanh toán!");
+        if (amt > currentBalance) return alert("Số dư khả dụng không đủ!");
+        if (!name || !acc) return alert("Vui lòng nhập đầy đủ thông tin ngân hàng!");
 
         const timestamp = Date.now();
-        db.ref('withdraw_requests/' + timestamp).set({
-            userId: currentUserId,
+        const withdrawData = {
             amount: amt,
             bankName: name,
             bankAcc: acc,
             status: "pending",
             time: new Date().toLocaleString('vi-VN')
+        };
+
+        // 1. Lưu vào nhánh tổng cho Admin duyệt
+        db.ref('withdraw_requests/' + timestamp).set({
+            ...withdrawData,
+            userId: currentUserId
         });
 
-        // Ghi thêm vào lịch sử riêng của user để dễ quản lý
-        db.ref('user_withdrawals/' + currentUserId + '/' + timestamp).set({
-            amount: amt,
-            status: "pending",
-            time: new Date().toLocaleString('vi-VN')
-        }).then(() => {
-            alert("Đã gửi yêu cầu rút tiền!");
+        // 2. Lưu vào lịch sử riêng của User để hiển thị bảng
+        db.ref('user_withdrawals/' + currentUserId + '/' + timestamp).set(withdrawData).then(() => {
+            alert("Đã gửi yêu cầu rút tiền thành công!");
             document.getElementById('amount').value = '';
             document.getElementById('bankName').value = '';
             document.getElementById('bankAcc').value = '';
@@ -139,13 +144,14 @@
 
     function loadWithdrawHistory() {
         db.ref('user_withdrawals/' + currentUserId).on('value', (s) => {
-            let h = `<table><tr><th>Thời gian</th><th>Số tiền</th><th>Trạng thái</th></tr>`;
+            let h = `<table><tr><th>Thời gian</th><th>Số tiền</th><th>Ngân hàng</th><th>Trạng thái</th></tr>`;
             const d = s.val();
-            if(!d) { h += `<tr><td colspan="3">Chưa có yêu cầu nào.</td></tr>`; }
-            else {
+            if(!d) {
+                h += `<tr><td colspan="4">Bạn chưa thực hiện lệnh rút nào.</td></tr>`;
+            } else {
                 Object.values(d).reverse().forEach(i => {
-                    let st = i.status === 'pending' ? '<span style="color:orange">Đang duyệt</span>' : '<span style="color:green">Thành công</span>';
-                    h += `<tr><td>${i.time}</td><td>${i.amount.toLocaleString()}đ</td><td>${st}</td></tr>`;
+                    let st = i.status === 'pending' ? '<span style="color:orange">Chờ duyệt</span>' : '<span style="color:green">Đã chuyển</span>';
+                    h += `<tr><td>${i.time}</td><td>${i.amount.toLocaleString()}đ</td><td>${i.bankName}</td><td>${st}</td></tr>`;
                 });
             }
             document.getElementById("withdrawHistory").innerHTML = h + `</table>`;
