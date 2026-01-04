@@ -1,84 +1,149 @@
-<div id="withdraw" class="content-section">
-    <h3><i class="fas fa-wallet"></i> Rút tiền</h3>
-    
-    <div style="background:white; padding:20px; border-radius:15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;">
-        <div class="form-group">
-            <label>Ngân hàng / Ví</label>
-            <select id="bank-name">
-                <option value="MBBank">MBBank</option>
-                <option value="Momo">Momo</option>
-                <option value="Vietcombank">Vietcombank</option>
-            </select>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FASTRAFFIC - Trang chủ</title>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 80px; }
+        .header { background: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .balance-card { background: white; margin: 15px; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .balance-amount { font-size: 28px; color: #2ecc71; font-weight: bold; margin: 10px 0; }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 1000; }
+        .nav-item { text-align: center; color: #666; text-decoration: none; font-size: 12px; flex: 1; border: none; background: none; cursor: pointer; }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
+        .nav-item.active { color: #e94560; }
+
+        .content-section { padding: 15px; display: none; }
+        .content-section.active { display: block; }
+        
+        .form-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-withdraw { width: 100%; padding: 12px; background: #e94560; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
+        .status-done { color: #27ae60; font-weight: bold; }
+        .status-pending { color: #f39c12; font-weight: bold; }
+        .status-cancelled { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header"><h2 style="margin:0; color:#e94560;">FASTRAFFIC</h2></div>
+
+    <div id="home" class="content-section active">
+        <div class="balance-card">
+            <p style="margin:0; color:#666;">Số dư hiện tại</p>
+            <div class="balance-amount" id="user-money">0đ</div>
         </div>
-        <div class="form-group">
-            <label>Số tài khoản / Số điện thoại</label>
-            <input type="text" id="bank-acc" placeholder="Nhập STK nhận tiền">
+        <div style="padding:15px; background:white; border-radius:10px;">
+            <p>👋 Chào mừng bạn! Chúc bạn một ngày tốt lành.</p>
         </div>
-        <div class="form-group">
-            <label>Số tiền rút (VNĐ)</label>
-            <input type="number" id="withdraw-amount" placeholder="Tối thiểu 20.000">
-        </div>
-        <button class="btn-withdraw" onclick="requestWithdraw()">GỬI YÊU CẦU RÚT TIỀN</button>
     </div>
 
-    <h3 style="font-size: 16px;"><i class="fas fa-clock"></i> Lịch sử rút tiền</h3>
-    <div style="background:white; border-radius:10px; overflow:hidden;">
-        <table>
-            <thead>
-                <tr>
-                    <th>Thời gian</th>
-                    <th>Số tiền</th>
-                    <th>Ngân hàng</th>
-                    <th>Trạng thái</th>
-                </tr>
-            </thead>
-            <tbody id="withdraw-history-list">
-                <tr><td colspan="4" style="text-align:center; padding:20px;">Chưa có yêu cầu nào.</td></tr>
-            </tbody>
+    <div id="history" class="content-section">
+        <h3><i class="fas fa-history"></i> Lịch sử nhiệm vụ</h3>
+        <table id="task-table">
+            <thead><tr><th>Thời gian</th><th>Số tiền</th><th>Trạng thái</th></tr></thead>
+            <tbody id="history-list"></tbody>
         </table>
     </div>
-</div>
+
+    <div id="rules" class="content-section">
+        <h3><i class="fas fa-book"></i> Quy định</h3>
+        <div style="background:white; padding:15px; border-radius:10px;">
+            <p>1. Rút tiền tối thiểu: <b>20.000đ</b>.</p>
+            <p>2. Duyệt tiền từ 5-30 phút.</p>
+            <p>3. Nghiêm cấm gian lận.</p>
+        </div>
+    </div>
+
+    <div id="withdraw" class="content-section">
+        <h3><i class="fas fa-wallet"></i> Rút tiền</h3>
+        <div style="background:white; padding:15px; border-radius:15px; margin-bottom: 20px;">
+            <div class="form-group">
+                <label>Ngân hàng / Ví</label>
+                <select id="bank-name">
+                    <option value="MBBank">MBBank</option>
+                    <option value="Momo">Momo</option>
+                    <option value="Vietcombank">Vietcombank</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Số tài khoản</label>
+                <input type="text" id="bank-acc" placeholder="STK nhận tiền">
+            </div>
+            <div class="form-group">
+                <label>Số tiền rút</label>
+                <input type="number" id="withdraw-amount" placeholder="Tối thiểu 20.000">
+            </div>
+            <button class="btn-withdraw" onclick="requestWithdraw()">GỬI YÊU CẦU</button>
+        </div>
+
+        <h4><i class="fas fa-clock"></i> Lịch sử rút tiền</h4>
+        <table>
+            <thead><tr><th>Thời gian</th><th>Số tiền</th><th>Trạng thái</th></tr></thead>
+            <tbody id="withdraw-history-list"></tbody>
+        </table>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="showTab('home', this)"><i class="fas fa-home"></i>Trang chủ</button>
+        <button class="nav-item" onclick="showTab('history', this)"><i class="fas fa-history"></i>Lịch sử</button>
+        <button class="nav-item" onclick="showTab('rules', this)"><i class="fas fa-book"></i>Quy định</button>
+        <button class="nav-item" onclick="showTab('withdraw', this)"><i class="fas fa-wallet"></i>Rút tiền</button>
+    </div>
 
 <script>
-    // Trong phần Firebase Auth onAuthStateChanged, thêm đoạn code này:
-    
+    const firebaseConfig = {
+        apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
+        authDomain: "fastraffic-8b585.firebaseapp.com",
+        projectId: "fastraffic-8b585",
+        databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function showTab(tabId, el) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        el.classList.add('active');
+    }
+
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
             const uid = user.email.replace(/\./g, '_');
+            db.ref(`users/${uid}/money`).on('value', s => {
+                document.getElementById('user-money').innerText = (s.val() || 0).toLocaleString() + "đ";
+            });
 
-            // Load riêng lịch sử rút tiền cho Tab Rút tiền
             db.ref(`history/${uid}`).on('value', s => {
-                const list = document.getElementById('withdraw-history-list');
-                list.innerHTML = '';
+                const historyList = document.getElementById('history-list');
+                const withdrawList = document.getElementById('withdraw-history-list');
+                historyList.innerHTML = ''; withdrawList.innerHTML = '';
+                
                 if(s.exists()){
-                    const data = Object.values(s.val()).reverse();
-                    // Chỉ lọc ra các giao dịch là Rút tiền (có withdrawId hoặc amount âm)
-                    const withdraws = data.filter(item => item.withdrawId || item.amount < 0);
-                    
-                    if(withdraws.length > 0) {
-                        withdraws.forEach(item => {
-                            let st = item.status === 'done' ? 'Thành công' : (item.status === 'pending' ? 'Chờ duyệt' : 'Đã hủy');
-                            let cl = item.status === 'done' ? 'status-done' : (item.status === 'pending' ? 'status-pending' : 'status-cancelled');
-                            
-                            // Lấy tên ngân hàng từ dữ liệu nếu có, không thì để mặc định
-                            let bank = item.bank || "N/A"; 
-
-                            list.innerHTML += `<tr>
-                                <td><small>${item.time || ''}</small></td>
-                                <td style="color:red"><b>${item.amount.toLocaleString()}đ</b></td>
-                                <td>${bank}</td>
-                                <td class="${cl}">${st}</td>
-                            </tr>`;
-                        });
-                    } else {
-                        list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Chưa có yêu cầu nào.</td></tr>';
-                    }
+                    Object.values(s.val()).reverse().forEach(item => {
+                        let st = item.status === 'done' ? 'Thành công' : (item.status === 'pending' ? 'Chờ duyệt' : 'Đã hủy');
+                        let row = `<tr><td><small>${item.time||''}</small></td><td>${item.amount.toLocaleString()}đ</td><td class="status-${item.status}">${st}</td></tr>`;
+                        
+                        // Phân loại: Nếu tiền dương là nhiệm vụ, tiền âm là rút tiền
+                        if(item.amount > 0) historyList.innerHTML += row;
+                        else withdrawList.innerHTML += row;
+                    });
                 }
             });
-        }
+        } else { location.href = 'login.html'; }
     });
 
-    // Cập nhật lại hàm requestWithdraw để lưu thêm tên ngân hàng vào history
     function requestWithdraw() {
         const user = firebase.auth().currentUser;
         const uid = user.email.replace(/\./g, '_');
@@ -88,28 +153,17 @@
 
         db.ref(`users/${uid}/money`).once('value', s => {
             const current = s.val() || 0;
-            if(!acc || !amt) return alert("Vui lòng nhập đầy đủ!");
-            if(amt < 20000) return alert("Rút tối thiểu 20.000đ!");
+            if(!acc || !amt || amt < 20000) return alert("Kiểm tra lại thông tin và số tiền (tối thiểu 20.000đ)!");
             if(amt > current) return alert("Số dư không đủ!");
 
-            const time = new Date().toLocaleString();
             const wId = "WD" + Date.now();
+            const time = new Date().toLocaleString();
 
-            db.ref(`withdraw_requests/${wId}`).set({
-                userId: uid, bankName: bank, bankAcc: acc, amount: amt, status: 'pending', time: time
-            });
-
-            db.ref(`history/${uid}/${wId}`).set({
-                amount: -amt, 
-                status: 'pending', 
-                time: time, 
-                withdrawId: wId,
-                bank: bank // Lưu thêm tên ngân hàng để hiển thị
-            }).then(() => {
-                alert("Đã gửi yêu cầu!");
-                document.getElementById('bank-acc').value = "";
-                document.getElementById('withdraw-amount').value = "";
-            });
+            db.ref(`withdraw_requests/${wId}`).set({ userId: uid, bankName: bank, bankAcc: acc, amount: amt, status: 'pending', time: time });
+            db.ref(`history/${uid}/${wId}`).set({ amount: -amt, status: 'pending', time: time, withdrawId: wId })
+            .then(() => { alert("Đã gửi yêu cầu!"); document.getElementById('bank-acc').value = ""; document.getElementById('withdraw-amount').value = ""; });
         });
     }
 </script>
+</body>
+</html>
