@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FASTRAFFIC - Đăng nhập</title>
+    <title>Đăng nhập - FASTRAFFIC</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
-        .box { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #e94560; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .toggle { margin-top: 15px; font-size: 14px; color: #666; cursor: pointer; }
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #e94560; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .footer { margin-top: 15px; font-size: 14px; color: #666; cursor: pointer; }
     </style>
 </head>
 <body>
 <div class="box">
     <h2 id="title">ĐĂNG NHẬP</h2>
-    <input type="email" id="email" placeholder="Email">
+    <input type="email" id="email" placeholder="Email của bạn">
     <input type="password" id="pass" placeholder="Mật khẩu">
     <button onclick="handleAuth()" id="btnSubmit">ĐĂNG NHẬP</button>
-    <div class="toggle" onclick="switchMode()" id="toggleTxt">Chưa có tài khoản? Đăng ký</div>
-    <div id="err" style="color: red; font-size: 12px; margin-top: 10px;"></div>
+    <div class="footer" onclick="switchMode()" id="toggleTxt">Chưa có tài khoản? Đăng ký ngay</div>
+    <div id="error" style="color: red; margin-top: 10px; font-size: 13px;"></div>
 </div>
 
 <script>
@@ -39,24 +39,25 @@
         isLogin = !isLogin;
         document.getElementById("title").innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
         document.getElementById("btnSubmit").innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
-        document.getElementById("toggleTxt").innerText = isLogin ? "Chưa có tài khoản? Đăng ký" : "Đã có tài khoản? Đăng nhập";
+        document.getElementById("toggleTxt").innerText = isLogin ? "Chưa có tài khoản? Đăng ký ngay" : "Đã có tài khoản? Đăng nhập";
     }
 
     async function handleAuth() {
-        const e = document.getElementById("email").value;
-        const p = document.getElementById("pass").value;
-        const err = document.getElementById("err");
+        const email = document.getElementById("email").value;
+        const pass = document.getElementById("pass").value;
+        const err = document.getElementById("error");
+        err.innerText = "Đang xử lý...";
         try {
             if (isLogin) {
-                await firebase.auth().signInWithEmailAndPassword(e, p);
+                await firebase.auth().signInWithEmailAndPassword(email, pass);
                 window.location.href = "home.html";
             } else {
-                const res = await firebase.auth().createUserWithEmailAndPassword(e, p);
-                await firebase.database().ref("users/" + res.user.uid).set({ email: e, money: 0 });
-                alert("Đăng ký xong! Hãy đăng nhập.");
+                const res = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+                await firebase.database().ref("users/" + res.user.uid).set({ email: email, money: 0 });
+                alert("Đăng ký thành công! Hãy đăng nhập.");
                 switchMode();
             }
-        } catch (error) { err.innerText = error.message; }
+        } catch (e) { err.innerText = e.message; }
     }
 </script>
 </body>
