@@ -82,7 +82,7 @@
     const db = firebase.database();
 
     // KIỂM TRA QUYỀN ADMIN (Thay bằng email của bạn)
-    const ADMIN_EMAIL = "nguyenthanhduy281009-art@gmail.com";
+    const ADMIN_EMAIL = "nguyenthanhduy281009@gmail.com";
 
     firebase.auth().onAuthStateChanged(user => {
         if (!user || user.email !== ADMIN_EMAIL) {
@@ -202,3 +202,4 @@
 </script>
 </body>
 </html>
+
