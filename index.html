@@ -119,7 +119,7 @@
                 // ĐĂNG NHẬP: Lưu session và vào Home
                 await firebase.auth().signInWithEmailAndPassword(email, pass);
                 localStorage.setItem("userEmail", email);
-                window.location.href = "home.html";
+                window.location.href = "./home.html";
             } else {
                 // ĐĂNG KÝ: Tạo xong thì thoát ra ngay
                 await firebase.auth().createUserWithEmailAndPassword(email, pass);
@@ -140,3 +140,4 @@
 </script>
 </body>
 </html>
+
