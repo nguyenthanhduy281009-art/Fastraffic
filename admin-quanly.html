@@ -60,7 +60,8 @@
                     <th>Người dùng</th>
                     <th>Thông tin nhận</th>
                     <th>Số tiền rút</th>
-                    <th>Thời gian</th> <th>Hành động</th>
+                    <th>Thời gian</th>
+                    <th>Hành động</th>
                 </tr>
             </thead>
             <tbody id="withdraw-list">
@@ -97,14 +98,17 @@
             const taskList = document.getElementById('task-list');
             taskList.innerHTML = '';
             const data = snap.val();
+            
             if (!data) {
                 taskList.innerHTML = '<tr><td colspan="6" style="text-align:center">Hết nhiệm vụ chờ duyệt.</td></tr>';
                 return;
             }
+
             Object.keys(data).forEach(uid => {
                 db.ref(`users/${uid}/money`).on('value', moneySnap => {
                     const currentMoney = moneySnap.val() || 0;
                     const tasks = data[uid];
+                    
                     Object.keys(tasks).forEach(tid => {
                         const t = tasks[tid];
                         if (t.status === 'pending') {
@@ -121,7 +125,8 @@
                                 <td>
                                     <button class="btn btn-approve" onclick="approveTask('${uid}','${tid}',${t.amount})">Duyệt</button>
                                     <button class="btn btn-reject" onclick="deleteItem('history/${uid}/${tid}')">Xóa</button>
-                                </td>`;
+                                </td>
+                            `;
                             taskList.appendChild(row);
                         }
                     });
@@ -142,7 +147,7 @@
                         withdrawList.innerHTML += `
                             <tr>
                                 <td><b>${r.userId.replace(/_/g, '.')}</b></td>
-                                <td><small>${r.info || r.bankName + ' - ' + r.bankAcc}</small></td>
+                                <td><small>${r.info}</small></td>
                                 <td style="color:red; font-weight:bold">-${r.amount.toLocaleString()}đ</td>
                                 <td class="time-col">${r.time || 'N/A'}</td>
                                 <td>
@@ -158,6 +163,7 @@
         });
     }
 
+    // ĐÂY LÀ CHỨC NĂNG TÙY CHỈNH SỐ DƯ BẠN CẦN
     function editBalance(uid) {
         const val = prompt("Nhập số tiền mới cho người dùng này (Ví dụ: 0 để xóa sạch):");
         if (val !== null) {
