@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FASTRAFFIC - Hệ thống nhiệm vụ</title>
+    <title>Hệ thống Nhiệm vụ</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -15,7 +15,7 @@
         .balance-card h2{color:#27ae60;font-size:28px}
         .task-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee}
         .btn{background:#e74c3c;color:#fff;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;font-weight:bold}
-        .nav-bar{position:fixed;bottom:0;width:100%;background:#fff;display:flex;border-top:1px solid #ddd;z-index:999}
+        .nav-bar{position:fixed;bottom:0;width:100%;background:#fff;display:flex;border-top:1px solid #ddd;z-index:1000}
         .nav-item{flex:1;text-align:center;padding:10px 0;font-size:12px;color:#666;cursor:pointer}
         .nav-item.active{color:#e74c3c;font-weight:bold}
         .nav-item i{display:block;font-size:18px;margin-bottom:2px}
@@ -30,14 +30,14 @@
 <body>
 
 <div id="home" class="tab-content active">
-    <div class="card" style="text-align:center"><b>Chào: <span id="u-email">...</span></b></div>
+    <div class="card" style="text-align:center"><b>Xin chào: <span id="u-email">...</span></b></div>
     <div class="card balance-card">
         <p style="margin:0">Số dư hiện tại</p>
         <h2 id="u-balance">0đ</h2>
     </div>
     <div class="card">
         <h3><i class="fas fa-list"></i> Nhiệm vụ mới</h3>
-        <div id="render-tasks">Đang tải...</div>
+        <div id="render-tasks">Đang tải nhiệm vụ...</div>
     </div>
 </div>
 
@@ -48,14 +48,6 @@
         <div id="task-history">Trống.</div>
         <div class="hist-label">LỊCH SỬ RÚT TIỀN</div>
         <div id="withdraw-history">Trống.</div>
-    </div>
-</div>
-
-<div id="rules" class="tab-content">
-    <div class="card">
-        <h3><i class="fas fa-book"></i> Quy định</h3>
-        <p>1. Không gian lận, dùng Tool hoặc giả lập.</p>
-        <p>2. Rút tiền tối thiểu: 20.000đ.</p>
     </div>
 </div>
 
@@ -71,12 +63,10 @@
 <nav class="nav-bar">
     <div class="nav-item active" onclick="tab('home',this)"><i class="fas fa-home"></i>Trang chủ</div>
     <div class="nav-item" onclick="tab('history',this)"><i class="fas fa-history"></i>Lịch sử</div>
-    <div class="nav-item" onclick="tab('rules',this)"><i class="fas fa-file-alt"></i>Quy định</div>
     <div class="nav-item" onclick="tab('withdraw',this)"><i class="fas fa-money-bill-wave"></i>Rút tiền</div>
 </nav>
 
 <script>
-// DÙNG CẤU HÌNH FIREBASE CỦA BẠN
 firebase.initializeApp({
     apiKey: "AIza...",
     authDomain: "fastraffic-8b585.firebaseapp.com",
@@ -95,9 +85,13 @@ function tab(id, el){
 }
 
 firebase.auth().onAuthStateChanged(user=>{
-    if(!user){ window.location.href = "index.html"; return; } // Về trang đăng nhập nếu chưa login
+    if(!user){ 
+        // Đổi về index.html vì đó là trang login của bạn
+        window.location.href = "index.html"; 
+        return; 
+    }
     
-    const uid = user.uid; // Dùng UID chuẩn của Firebase
+    const uid = user.uid;
     document.getElementById("u-email").innerText = user.email;
 
     db.ref("users/"+uid+"/money").on("value",s=>{
@@ -112,7 +106,6 @@ firebase.auth().onAuthStateChanged(user=>{
             task.forEach(l=>{
                 let link = l.val();
                 if(typeof link === 'object') link = link.link;
-                if(!link) return;
                 div.innerHTML += `
                 <div class="task-item">
                     <div><b>${name}</b><br>+${prices[name]||0}đ</div>
@@ -132,8 +125,8 @@ firebase.auth().onAuthStateChanged(user=>{
             </div>`;
             if(d.amount > 0) taskH = row + taskH; else drawH = row + drawH;
         });
-        document.getElementById("task-history").innerHTML = taskH || "Trống.";
-        document.getElementById("withdraw-history").innerHTML = drawH || "Trống.";
+        document.getElementById("task-history").innerHTML = taskH || "Chưa có dữ liệu.";
+        document.getElementById("withdraw-history").innerHTML = drawH || "Chưa có dữ liệu.";
     });
 });
 
