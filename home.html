@@ -37,24 +37,16 @@
 <body>
 
     <div class="header"><h2 style="margin:0; color:#e94560;">FASTRAFFIC</h2></div>
+
     <div class="user-welcome" style="background: white; margin: 15px; padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-    <div style="background: #ffeef0; color: #e94560; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-        <i class="fas fa-user"></i>
+        <div style="background: #ffeef0; color: #e94560; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+            <i class="fas fa-user"></i>
+        </div>
+        <div>
+            <div style="font-size: 12px; color: #666;">Xin chào tài khoản:</div>
+            <div id="user-display-email" style="font-weight: bold; color: #333; font-size: 14px;">Đang tải...</div>
+        </div>
     </div>
-    <div>
-        <div style="font-size: 12px; color: #666;">Xin chào tài khoản:</div>
-        <div id="user-display-email" style="font-weight: bold; color: #333; font-size: 14px;">Đang tải...</div>
-    </div>
-</div>
-    <div class="user-welcome" style="background: white; margin: 15px; padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-    <div style="background: #ffeef0; color: #e94560; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-        <i class="fas fa-user"></i>
-    </div>
-    <div>
-        <div style="font-size: 12px; color: #666;">Xin chào:</div>
-        <div id="user-display-email" style="font-weight: bold; color: #333; font-size: 14px;">Đang tải...</div>
-    </div>
-</div>
 
     <div id="home" class="content-section active">
         <div class="balance-card">
@@ -124,26 +116,26 @@
 
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
+            // Dòng này giúp hiển thị Email người dùng thay vì chữ Đang tải
+            document.getElementById('user-display-email').innerText = user.email;
+
             const uid = user.email.replace(/\./g, '_');
             db.ref(`users/${uid}/money`).on('value', s => {
                 document.getElementById('user-money').innerText = (s.val() || 0).toLocaleString() + "đ";
             });
 
-            // Lấy dữ liệu lịch sử
             db.ref(`history/${uid}`).on('value', s => {
                 const historyList = document.getElementById('history-list');
                 const withdrawList = document.getElementById('withdraw-history-list');
                 historyList.innerHTML = ''; withdrawList.innerHTML = '';
                 
                 if(s.exists()){
-                    // Sắp xếp dữ liệu mới nhất lên đầu
                     const items = [];
                     s.forEach(child => { items.push(child.val()); });
                     items.reverse().forEach(item => {
                         let stText = item.status === 'done' ? 'Thành công' : (item.status === 'pending' ? 'Chờ duyệt' : 'Đã hủy');
                         let html = `<tr><td><small>${item.time||''}</small></td><td>${item.amount.toLocaleString()}đ</td><td class="status-${item.status}">${stText}</td></tr>`;
                         
-                        // Nếu amount âm ( < 0 ) là rút tiền, đẩy vào bảng rút tiền
                         if(item.amount < 0) {
                             withdrawList.innerHTML += html;
                         } else {
@@ -180,6 +172,3 @@
 </script>
 </body>
 </html>
-
-
-
