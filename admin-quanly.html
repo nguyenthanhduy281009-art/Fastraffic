@@ -18,8 +18,8 @@
         .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; margin-right: 5px; }
         .btn-approve { background: #28a745; }
         .btn-reject { background: #dc3545; }
-        .bank-info { background: #fff3f3; padding: 5px; border-radius: 4px; font-size: 13px; color: #d63031; border: 1px dashed #fab1a0; }
-        .edit-link { color: #007bff; cursor: pointer; text-decoration: underline; font-size: 12px; display: block; margin-top: 5px; }
+        .bank-info { background: #fff3f3; padding: 5px; border-radius: 4px; font-size: 13px; color: #d63031; border: 1px dashed #fab1a0; font-weight: bold; }
+        .edit-link { color: #007bff; cursor: pointer; text-decoration: underline; font-size: 12px; display: block; margin-top: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -44,11 +44,13 @@
     </div>
 
     <div class="card">
-        <h2><i class="fas fa-tasks"></i> Danh sách chờ duyệt</h2>
+        <h2><i class="fas fa-tasks"></i> Danh sách chờ duyệt & Quản lý số dư</h2>
         <table>
             <thead>
                 <tr>
                     <th>Người dùng</th>
+                    <th>Nhiệm vụ</th>
+                    <th>Tiền thưởng</th>
                     <th>Số dư hiện tại</th>
                     <th>Hành động</th>
                 </tr>
@@ -76,6 +78,38 @@
         }
     });
 
+    // LOAD DANH SÁCH NHIỆM VỤ & HIỆN NÚT TÙY CHỈNH SỐ DƯ
+    function loadTasks() {
+        db.ref('history').on('value', snap => {
+            const list = document.getElementById('task-list');
+            list.innerHTML = '';
+            const data = snap.val();
+            if (data) {
+                Object.keys(data).forEach(uid => {
+                    const tasks = data[uid];
+                    Object.keys(tasks).forEach(tid => {
+                        if (tasks[tid].status === 'pending') {
+                            db.ref(`users/${uid}/money`).once('value', mSnap => {
+                                const currentMoney = mSnap.val() || 0;
+                                list.innerHTML += `<tr>
+                                    <td><b>${uid.replace(/_/g, '.')}</b></td>
+                                    <td><small>${tasks[tid].task}</small></td>
+                                    <td style="color:green; font-weight:bold">+${tasks[tid].amount.toLocaleString()}đ</td>
+                                    <td>
+                                        <b style="color:#333">${currentMoney.toLocaleString()}đ</b>
+                                        <span class="edit-link" onclick="editBalance('${uid}')">Tùy chỉnh số dư</span>
+                                    </td>
+                                    <td><button class="btn btn-approve" onclick="approveTask('${uid}','${tid}',${tasks[tid].amount})">Duyệt</button></td>
+                                </tr>`;
+                            });
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    // LOAD DANH SÁCH RÚT TIỀN
     function loadWithdraws() {
         db.ref('withdraw_requests').on('value', snap => {
             const list = document.getElementById('withdraw-list');
@@ -85,11 +119,10 @@
                 Object.keys(data).forEach(id => {
                     const r = data[id];
                     if (r.status === 'pending') {
-                        // Hiển thị STK và Ngân hàng rõ ràng
                         list.innerHTML += `<tr>
                             <td><b>${r.userId.replace(/_/g, '.')}</b></td>
                             <td><div class="bank-info">${r.bankAcc} - ${r.bankName}</div></td>
-                            <td style="color:red; font-weight:bold">${(r.amount || 0).toLocaleString()}đ</td>
+                            <td style="color:red; font-weight:bold">-${(r.amount || 0).toLocaleString()}đ</td>
                             <td><small>${r.time || 'N/A'}</small></td>
                             <td>
                                 <button class="btn btn-approve" onclick="approveWithdraw('${id}','${r.userId}',${r.amount})">Đã Bank</button>
@@ -104,11 +137,23 @@
         });
     }
 
+    // CHỨC NĂNG TÙY CHỈNH SỐ DƯ
+    function editBalance(uid) {
+        const val = prompt("Nhập số tiền mới cho người dùng này (Số này sẽ ghi đè lên số dư cũ):");
+        if (val !== null && !isNaN(val)) {
+            db.ref(`users/${uid}/money`).set(parseInt(val)).then(() => alert("Đã cập nhật số dư thành công!"));
+        }
+    }
+
+    function approveTask(uid, tid, amt) {
+        db.ref(`users/${uid}/money`).transaction(c => (c || 0) + amt);
+        db.ref(`history/${uid}/${tid}`).update({ status: 'done' });
+    }
+
     function approveWithdraw(id, uid, amt) {
-        if(confirm("Bạn đã chuyển khoản " + amt.toLocaleString() + "đ chưa?")) {
+        if(confirm("Xác nhận đã chuyển khoản thành công?")) {
             db.ref(`users/${uid}/money`).transaction(c => (c || 0) - amt).then(() => {
                 db.ref(`withdraw_requests/${id}`).update({ status: 'done' });
-                alert("Đã duyệt thành công!");
             });
         }
     }
@@ -116,48 +161,9 @@
     function cancelWithdraw(id) {
         if(confirm("Hủy yêu cầu rút tiền này?")) {
             db.ref(`withdraw_requests/${id}`).update({ status: 'cancelled' }).then(() => {
-                alert("Đã hủy yêu cầu!");
+                alert("Đã hủy!");
             });
         }
-    }
-
-    function loadTasks() {
-        db.ref('history').on('value', snap => {
-            const list = document.getElementById('task-list');
-            list.innerHTML = '';
-            const data = snap.val();
-            if (data) {
-                Object.keys(data).forEach(uid => {
-                    const tasks = data[uid];
-                    Object.keys(tasks).forEach(tid => {
-                        if (tasks[tid].status === 'pending') {
-                            db.ref(`users/${uid}/money`).once('value', mSnap => {
-                                list.innerHTML += `<tr>
-                                    <td>${uid.replace(/_/g, '.')}</td>
-                                    <td>
-                                        <b>${(mSnap.val() || 0).toLocaleString()}đ</b>
-                                        <span class="edit-link" onclick="editBalance('${uid}')">Tùy chỉnh số dư</span>
-                                    </td>
-                                    <td><button class="btn btn-approve" onclick="approveTask('${uid}','${tid}',${tasks[tid].amount})">Duyệt</button></td>
-                                </tr>`;
-                            });
-                        }
-                    });
-                });
-            }
-        });
-    }
-
-    function editBalance(uid) {
-        const val = prompt("Nhập số dư mới (Số này sẽ thay thế hoàn toàn số cũ):");
-        if (val !== null && !isNaN(val)) {
-            db.ref(`users/${uid}/money`).set(parseInt(val)).then(() => alert("Đã cập nhật!"));
-        }
-    }
-
-    function approveTask(uid, tid, amt) {
-        db.ref(`users/${uid}/money`).transaction(c => (c || 0) + amt);
-        db.ref(`history/${uid}/${tid}`).update({ status: 'done' });
     }
 </script>
 </body>
