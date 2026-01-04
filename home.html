@@ -14,40 +14,44 @@
         .balance-card { background: white; margin: 15px; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .balance-amount { font-size: 28px; color: #2ecc71; font-weight: bold; margin: 10px 0; }
         
-        /* Menu điều hướng nguyên bản */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-top-left-radius: 20px; border-top-right-radius: 20px; }
-        .nav-item { text-align: center; color: #666; text-decoration: none; font-size: 12px; flex: 1; }
+        /* Menu điều hướng */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 1000; }
+        .nav-item { text-align: center; color: #666; text-decoration: none; font-size: 12px; flex: 1; border: none; background: none; cursor: pointer; }
         .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
         .nav-item.active { color: #e94560; }
 
         .content-section { padding: 15px; display: none; }
         .content-section.active { display: block; }
         
+        /* Style cho Form Rút tiền */
+        .form-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-withdraw { width: 100%; padding: 12px; background: #e94560; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
         .status-done { color: #27ae60; font-weight: bold; }
-        .status-pending { color: #f39c12; }
+        .status-pending { color: #f39c12; font-weight: bold; }
+        .status-cancelled { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2 style="margin:0; color:#e94560;">FASTRAFFIC</h2>
-    </div>
+    <div class="header"><h2 style="margin:0; color:#e94560;">FASTRAFFIC</h2></div>
 
     <div id="home" class="content-section active">
         <div class="balance-card">
             <p style="margin:0; color:#666;">Số dư hiện tại</p>
             <div class="balance-amount" id="user-money">0đ</div>
         </div>
-        <div style="padding:10px; background:white; border-radius:10px; margin:15px;">
-            <p>👋 Chào mừng bạn quay trở lại!</p>
-            <p style="font-size:13px; color:#666;">Hoàn thành nhiệm vụ để kiếm thêm thu nhập ngay nhé.</p>
+        <div style="padding:15px; background:white; border-radius:10px; margin-top:10px;">
+            <p><b>Thông báo:</b> Hệ thống đang hoạt động ổn định. Chúc bạn một ngày làm việc hiệu quả!</p>
         </div>
     </div>
 
     <div id="history" class="content-section">
-        <h3 style="margin-left:15px;">Lịch sử giao dịch</h3>
+        <h3><i class="fas fa-history"></i> Lịch sử giao dịch</h3>
         <table>
             <thead><tr><th>Thời gian</th><th>Số tiền</th><th>Trạng thái</th></tr></thead>
             <tbody id="history-list"></tbody>
@@ -55,26 +59,46 @@
     </div>
 
     <div id="rules" class="content-section">
-        <h3 style="margin-left:15px;">Quy định hệ thống</h3>
-        <div style="background:white; padding:15px; margin:15px; border-radius:10px;">
-            <p>1. Không gian lận nhiệm vụ.</p>
-            <p>2. Rút tiền tối thiểu 20.000đ.</p>
-            <p>3. Thời gian duyệt từ 5-30 phút.</p>
+        <h3><i class="fas fa-book"></i> Quy định</h3>
+        <div style="background:white; padding:15px; border-radius:10px; line-height: 1.6;">
+            <p>1. Rút tiền tối thiểu: <b>20.000đ</b>.</p>
+            <p>2. Thời gian duyệt: 5 phút - 24 giờ.</p>
+            <p>3. Tuyệt đối không gian lận dưới mọi hình thức.</p>
         </div>
     </div>
 
     <div id="withdraw" class="content-section">
-        <h3 style="margin-left:15px;">Rút tiền</h3>
-        <div style="background:white; padding:15px; margin:15px; border-radius:10px;">
-            <p>Tính năng rút tiền đang hoạt động bình thường.</p>
+        <h3><i class="fas fa-wallet"></i> Rút tiền</h3>
+        <div class="balance-card" style="margin:0 0 15px 0; padding:10px;">
+            Số dư khả dụng: <b id="withdraw-balance" style="color:#2ecc71;">0đ</b>
+        </div>
+        <div style="background:white; padding:20px; border-radius:15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div class="form-group">
+                <label>Ngân hàng / Ví</label>
+                <select id="bank-name">
+                    <option value="MBBank">MBBank</option>
+                    <option value="Momo">Momo</option>
+                    <option value="Vietcombank">Vietcombank</option>
+                    <option value="Agribank">Agribank</option>
+                </select>
             </div>
+            <div class="form-group">
+                <label>Số tài khoản / Số điện thoại</label>
+                <input type="text" id="bank-acc" placeholder="Nhập số tài khoản nhận tiền">
+            </div>
+            <div class="form-group">
+                <label>Số tiền rút (VNĐ)</label>
+                <input type="number" id="withdraw-amount" placeholder="Tối thiểu 20.000">
+            </div>
+            <button class="btn-withdraw" onclick="requestWithdraw()">GỬI YÊU CẦU RÚT TIỀN</button>
+        </div>
     </div>
 
     <div class="bottom-nav">
-        <a href="javascript:void(0)" class="nav-item active" onclick="showTab('home', this)"><i class="fas fa-home"></i>Trang chủ</a>
-        <a href="javascript:void(0)" class="nav-item" onclick="showTab('history', this)"><i class="fas fa-history"></i>Lịch sử</a>
-        <a href="javascript:void(0)" class="nav-item" onclick="showTab('rules', this)"><i class="fas fa-book"></i>Quy định</a>
-        <a href="javascript:void(0)" class="nav-item" onclick="showTab('withdraw', this)"><i class="fas fa-wallet"></i>Rút tiền</a>
+        <button class="nav-item active" onclick="showTab('home', this)"><i class="fas fa-home"></i>Trang chủ</button>
+        <button class="nav-item" onclick="showTab('history', this)"><i class="fas fa-history"></i>Lịch sử</button>
+        <button class="nav-item" onclick="showTab('rules', this)"><i class="fas fa-book"></i>Quy định</button>
+        <button class="nav-item" onclick="showTab('withdraw', this)"><i class="fas fa-wallet"></i>Rút tiền</button>
     </div>
 
 <script>
@@ -87,7 +111,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Hàm chuyển đổi Tab
     function showTab(tabId, el) {
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -98,11 +121,13 @@
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
             const uid = user.email.replace(/\./g, '_');
-            // Cập nhật số dư
+            // Cập nhật số dư realtime
             db.ref(`users/${uid}/money`).on('value', s => {
-                document.getElementById('user-money').innerText = (s.val() || 0).toLocaleString() + "đ";
+                const val = (s.val() || 0);
+                document.getElementById('user-money').innerText = val.toLocaleString() + "đ";
+                document.getElementById('withdraw-balance').innerText = val.toLocaleString() + "đ";
             });
-            // Lịch sử
+            // Cập nhật lịch sử realtime
             db.ref(`history/${uid}`).on('value', s => {
                 const list = document.getElementById('history-list');
                 list.innerHTML = '';
@@ -115,6 +140,40 @@
             });
         } else { location.href = 'login.html'; }
     });
+
+    // HÀM GỬI YÊU CẦU RÚT TIỀN
+    function requestWithdraw() {
+        const user = firebase.auth().currentUser;
+        const uid = user.email.replace(/\./g, '_');
+        const bank = document.getElementById('bank-name').value;
+        const acc = document.getElementById('bank-acc').value;
+        const amt = parseInt(document.getElementById('withdraw-amount').value);
+
+        db.ref(`users/${uid}/money`).once('value', s => {
+            const current = s.val() || 0;
+            if(!acc || !amt) return alert("Vui lòng nhập đầy đủ!");
+            if(amt < 20000) return alert("Rút tối thiểu 20.000đ!");
+            if(amt > current) return alert("Số dư không đủ!");
+
+            const time = new Date().toLocaleString();
+            const wId = "WD" + Date.now();
+
+            // 1. Lưu vào danh sách chờ duyệt cho Admin
+            db.ref(`withdraw_requests/${wId}`).set({
+                userId: uid, bankName: bank, bankAcc: acc, amount: amt, status: 'pending', time: time
+            });
+
+            // 2. Lưu vào lịch sử người dùng để hiện "Chờ duyệt"
+            db.ref(`history/${uid}/${wId}`).set({
+                amount: -amt, status: 'pending', time: time, withdrawId: wId
+            }).then(() => {
+                alert("Đã gửi yêu cầu! Vui lòng chờ duyệt.");
+                document.getElementById('bank-acc').value = "";
+                document.getElementById('withdraw-amount').value = "";
+                showTab('history', document.querySelectorAll('.nav-item')[1]);
+            });
+        });
+    }
 </script>
 </body>
 </html>
