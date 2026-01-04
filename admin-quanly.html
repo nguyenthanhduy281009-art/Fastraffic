@@ -80,7 +80,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const ADMIN_EMAIL = "nguyenthanhduy281009@gmail.com";
+    const ADMIN_EMAIL = "nguyenthanhduy281009-art@gmail.com";
 
     firebase.auth().onAuthStateChanged(user => {
         if (!user || user.email !== ADMIN_EMAIL) {
@@ -190,4 +190,5 @@
 </script>
 </body>
 </html>
+
 
