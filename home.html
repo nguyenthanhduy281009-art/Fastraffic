@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <title>Fastraffic - Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
-
     <style>
         body { font-family: sans-serif; margin: 0; display: flex; background: #f4f7f6; color: #333; }
         .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
@@ -23,11 +20,9 @@
         .logout { background: #ff4d4d; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .money-card { background: linear-gradient(135deg, #e94560, #ff6b81); color: white; padding: 25px; border-radius: 15px; display: inline-block; min-width: 280px; box-shadow: 0 8px 16px rgba(233, 69, 96, 0.2); margin-bottom: 30px; }
         #userMoney { font-size: 32px; font-weight: bold; margin-top: 5px; }
-        .task-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-bottom: 40px; }
-        .task-card { background: white; border-radius: 12px; padding: 20px; border: 1px dashed #ccc; transition: 0.3s; }
-        .btn-do { width: 100%; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin: 15px 0; font-size: 14px; }
-        .withdraw-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 15px; }
+        .withdraw-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-do { width: 100%; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 20px; font-size: 14px; }
         th, td { padding: 12px; border: 1px solid #eee; text-align: center; }
         th { background: #f8f9fa; color: #666; }
     </style>
@@ -55,7 +50,6 @@
         apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
         authDomain: "fastraffic-8b585.firebaseapp.com",
         projectId: "fastraffic-8b585",
-        storageBucket: "fastraffic-8b585.appspot.com",
         databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -66,54 +60,39 @@
 
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
-            // Đồng nhất ID người dùng cho "Phòng Firebase"
             currentUserId = user.email.replace(/\./g, '_');
             document.getElementById("userMail").innerText = user.email;
-            checkDailyReset();
             showPage('trangchu'); 
         } else { window.location.href = "index.html"; }
     });
 
-    function checkDailyReset() {
-        const today = new Date().toLocaleDateString();
-        if (localStorage.getItem('last_date') !== today) {
-            localStorage.setItem('done_tasks', '[]');
-            localStorage.setItem('last_date', today);
-        }
-    }
-
     function showPage(page) {
         const view = document.getElementById("view");
         document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        const activeMenu = document.getElementById('m-' + page);
-        if(activeMenu) activeMenu.classList.add('active');
+        if(document.getElementById('m-' + page)) document.getElementById('m-' + page).classList.add('active');
 
         if (page === 'trangchu') {
-            view.innerHTML = `
-                <div class="money-card"><div id="userMoney">0 VNĐ</div></div>
-                <h3 style="color:#e94560">Hệ thống Nhiệm vụ</h3>
-                <div id="taskList" class="task-container">Đang tải...</div>`;
-            loadMoney(); renderTasks();
+            view.innerHTML = `<div class="money-card"><div id="userMoney">0 VNĐ</div></div><h3>Nhiệm vụ hôm nay</h3><div id="taskList">Đang tải...</div>`;
+            loadMoney();
         } 
-        else if (page === 'lichsu') {
-            view.innerHTML = `<h2>Lịch sử nhiệm vụ</h2><div id="historyData">Đang tải...</div>`;
-            loadHistory();
-        }
-        else if (page === 'quydinh') {
-            view.innerHTML = `<h2>Quy định</h2><p>Vượt link và lấy mã chính xác để được duyệt tiền.</p>`;
-        }
         else if (page === 'ruttien') {
             view.innerHTML = `
                 <h2>Rút tiền</h2>
                 <div style="background:white; padding:25px; border-radius:15px; max-width:500px; box-shadow:0 4px 10px rgba(0,0,0,0.05)">
-                    <p>Số dư khả dụng: <b id="drawBalance" style="color:#e94560">0 VNĐ</b></p>
-                    <label><b>Số tiền cần rút:</b></label>
-                    <input type="number" id="amount" class="withdraw-input" placeholder="Tối thiểu 20.000">
-                    <label><b>Tải lên mã QR:</b></label>
-                    <input type="file" id="qrFile" class="withdraw-input" accept="image/*" style="border:none">
-                    <button onclick="requestWithdraw()" class="btn-do" style="background:#e94560; margin-top:10px">Gửi yêu cầu rút tiền</button>
-                </div>`;
+                    <p>Số dư: <b id="drawBalance" style="color:#e94560">0 VNĐ</b></p>
+                    <input type="number" id="amount" class="withdraw-input" placeholder="Số tiền cần rút (Tối thiểu 20.000)">
+                    <input type="text" id="bankName" class="withdraw-input" placeholder="Tên ngân hàng hoặc Ví điện tử">
+                    <input type="text" id="bankAcc" class="withdraw-input" placeholder="Số tài khoản">
+                    <button onclick="requestWithdraw()" class="btn-do" style="background:#e94560">Gửi yêu cầu rút tiền</button>
+                </div>
+                <h3 style="margin-top:40px">Lịch sử rút tiền</h3>
+                <div id="withdrawHistory">Đang tải...</div>`;
             loadMoney();
+            loadWithdrawHistory();
+        }
+        else if (page === 'lichsu') {
+            view.innerHTML = `<h2>Lịch sử làm nhiệm vụ</h2><div id="historyData">Đang tải...</div>`;
+            loadTaskHistory();
         }
     }
 
@@ -126,78 +105,50 @@
         });
     }
 
-    async function requestWithdraw() {
-        const amtInput = document.getElementById('amount');
-        const fileInput = document.getElementById('qrFile');
-        const amt = parseInt(amtInput.value);
-        const file = fileInput.files[0];
+    function requestWithdraw() {
+        const amt = parseInt(document.getElementById('amount').value);
+        const name = document.getElementById('bankName').value;
+        const acc = document.getElementById('bankAcc').value;
 
         if (isNaN(amt) || amt < 20000) return alert("Số tiền rút tối thiểu là 20.000 VNĐ!");
         if (amt > currentBalance) return alert("Số dư không đủ!");
-        if (!file) return alert("Vui lòng tải ảnh mã QR!");
+        if (!name || !acc) return alert("Vui lòng nhập đầy đủ thông tin thanh toán!");
 
-        try {
-            const btn = document.querySelector(".btn-do");
-            btn.innerText = "Đang xử lý..."; btn.disabled = true;
+        const timestamp = Date.now();
+        db.ref('withdraw_requests/' + timestamp).set({
+            userId: currentUserId,
+            amount: amt,
+            bankName: name,
+            bankAcc: acc,
+            status: "pending",
+            time: new Date().toLocaleString('vi-VN')
+        });
 
-            // Tải ảnh lên Storage
-            const storageRef = firebase.storage().ref('qr_codes/' + currentUserId + '_' + Date.now());
-            const uploadTask = await storageRef.put(file);
-            const qrUrl = await uploadTask.ref.getDownloadURL();
-
-            // Ghi yêu cầu vào Database
-            await db.ref('withdraw_requests/' + Date.now()).set({
-                userId: currentUserId,
-                amount: amt,
-                qrCode: qrUrl,
-                status: "pending",
-                time: new Date().toLocaleString('vi-VN')
-            });
-
-            alert("Gửi yêu cầu thành công!");
-            showPage('trangchu');
-        } catch (e) { alert("Lỗi: " + e.message); }
-    }
-
-    function renderTasks() {
-        const doneTasks = JSON.parse(localStorage.getItem('done_tasks') || '[]');
-        db.ref('Task').on('value', (s) => {
-            let h = ''; const data = s.val();
-            if(data) {
-                Object.keys(data).forEach(sys => {
-                    Object.keys(data[sys]).forEach(id => {
-                        if (!doneTasks.includes(sys + '_' + id)) {
-                            h += `<div class="task-card">
-                                <div style="font-weight:bold">${sys}</div>
-                                <button class="btn-do" style="background:#e94560" onclick="goTask('${data[sys][id]}','${sys}','${id}',250)">Thực hiện</button>
-                                <div style="font-size:12px">Thưởng: 250đ</div>
-                            </div>`;
-                        }
-                    });
-                });
-            }
-            document.getElementById('taskList').innerHTML = h || 'Hết nhiệm vụ.';
+        // Ghi thêm vào lịch sử riêng của user để dễ quản lý
+        db.ref('user_withdrawals/' + currentUserId + '/' + timestamp).set({
+            amount: amt,
+            status: "pending",
+            time: new Date().toLocaleString('vi-VN')
+        }).then(() => {
+            alert("Đã gửi yêu cầu rút tiền!");
+            document.getElementById('amount').value = '';
+            document.getElementById('bankName').value = '';
+            document.getElementById('bankAcc').value = '';
         });
     }
 
-    function goTask(url, sys, id, amt) {
-        const doneTasks = JSON.parse(localStorage.getItem('done_tasks') || '[]');
-        doneTasks.push(sys + '_' + id);
-        localStorage.setItem('done_tasks', JSON.stringify(doneTasks));
-        
-        db.ref('history/' + currentUserId + '/' + Date.now()).set({
-            task: sys + " - " + id, amount: amt, status: "pending", time: new Date().toLocaleString('vi-VN')
-        }).then(() => { window.open(`wait.html?target=${btoa(url)}`, '_blank'); renderTasks(); });
-    }
-
-    function loadHistory() {
-        db.ref('history/' + currentUserId).on('value', (s) => {
-            let h = `<table><tr><th>Nhiệm vụ</th><th>Tiền</th><th>Trạng thái</th></tr>`;
+    function loadWithdrawHistory() {
+        db.ref('user_withdrawals/' + currentUserId).on('value', (s) => {
+            let h = `<table><tr><th>Thời gian</th><th>Số tiền</th><th>Trạng thái</th></tr>`;
             const d = s.val();
-            if(d) Object.values(d).reverse().forEach(i => {
-                h += `<tr><td>${i.task}</td><td>+${i.amount}</td><td>${i.status}</td></tr>`;
-            });
-            document.getElementById("historyData").innerHTML = h + `</table>`;
+            if(!d) { h += `<tr><td colspan="3">Chưa có yêu cầu nào.</td></tr>`; }
+            else {
+                Object.values(d).reverse().forEach(i => {
+                    let st = i.status === 'pending' ? '<span style="color:orange">Đang duyệt</span>' : '<span style="color:green">Thành công</span>';
+                    h += `<tr><td>${i.time}</td><td>${i.amount.toLocaleString()}đ</td><td>${st}</td></tr>`;
+                });
+            }
+            document.getElementById("withdrawHistory").innerHTML = h + `</table>`;
         });
     }
 
