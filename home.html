@@ -23,8 +23,8 @@
         .task-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-bottom: 40px; }
         .task-card { background: white; border-radius: 12px; padding: 20px; border: 1px dashed #ccc; transition: 0.3s; }
         .btn-do { width: 100%; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin: 15px 0; font-size: 14px; }
-        .task-info { display: flex; justify-content: space-around; border-top: 1px solid #eee; padding-top: 12px; font-size: 11px; text-align: center; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        .task-info { display: flex; justify-content: space-around; border-top: 1px solid #eee; padding-top: 12px; font-size: 12px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 10px; }
         th, td { padding: 12px; border: 1px solid #eee; text-align: center; }
         th { background: #f8f9fa; color: #666; font-size: 13px; }
     </style>
@@ -79,33 +79,27 @@
     function showPage(page) {
         const view = document.getElementById("view");
         document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        document.getElementById('m-' + page).classList.add('active');
+        const activeMenu = document.getElementById('m-' + page);
+        if(activeMenu) activeMenu.classList.add('active');
 
         if (page === 'trangchu') {
             view.innerHTML = `
                 <div class="money-card"><div id="userMoney">0 VNĐ</div></div>
                 <h3 style="color:#e94560">Hệ thống Traffictot</h3>
-                <div id="list-traffictot" class="task-container"></div>
+                <div id="list-traffictot" class="task-container">Đang tải...</div>
                 <h3 style="color:#28a745">Hệ thống Click1s</h3>
-                <div id="list-click1s" class="task-container"></div>`;
+                <div id="list-click1s" class="task-container">Đang tải...</div>`;
             loadMoney(); renderTasks();
         } 
         else if (page === 'lichsu') {
-            view.innerHTML = `<h2>Lịch sử chờ duyệt</h2><div id="historyData">Đang tải...</div>`;
+            view.innerHTML = `<h2>Lịch sử làm nhiệm vụ</h2><div id="historyData">Đang tải...</div>`;
             loadHistory();
         }
         else if (page === 'quydinh') {
-            view.innerHTML = `<h2>Quy định</h2><p>Vượt link và lấy mã chính xác để được duyệt tiền.</p>`;
+            view.innerHTML = `<h2>Quy định</h2><p>Lấy mã chính xác để được duyệt tiền. Tuyệt đối không gian lận.</p>`;
         }
         else if (page === 'ruttien') {
-            view.innerHTML = `
-                <h2>Rút tiền</h2>
-                <div style="background:white; padding:25px; border-radius:15px; max-width:500px">
-                    <p>Số dư: <b id="drawBalance" style="color:#e94560">0 VNĐ</b></p>
-                    <input type="number" id="amount" style="width:100%; padding:10px; margin:10px 0" placeholder="Số tiền rút">
-                    <textarea id="bankInfo" style="width:100%; padding:10px; margin-bottom:10px" rows="3" placeholder="Thông tin ngân hàng"></textarea>
-                    <button onclick="requestWithdraw()" class="btn-do" style="background:#e94560">Gửi yêu cầu</button>
-                </div>`;
+            view.innerHTML = `<h2>Rút tiền</h2><div style="background:white; padding:25px; border-radius:15px; max-width:450px"><p id="drawBalance">Số dư: 0 VNĐ</p><input type="number" id="amount" style="width:100%; padding:10px; margin:10px 0" placeholder="Số tiền rút"><textarea id="bankInfo" style="width:100%; padding:10px" placeholder="Thông tin bank"></textarea><button onclick="requestWithdraw()" class="btn-do" style="background:#e94560">Gửi yêu cầu</button></div>`;
             loadMoney();
         }
     }
@@ -117,23 +111,22 @@
             if(d) Object.keys(d).forEach(k => {
                 if (!doneTasks.includes('Traffictot_' + k)) h += createTaskUI('Traffictot', k, d[k], 250, '#e94560');
             });
-            document.getElementById('list-traffictot').innerHTML = h || 'Hết nhiệm vụ hôm nay.';
+            document.getElementById('list-traffictot').innerHTML = h || 'Hết nhiệm vụ.';
         });
         db.ref('Task/Click1s').on('value', (s) => {
             let h = ''; const d = s.val();
             if(d) Object.keys(d).forEach(k => {
                 if (!doneTasks.includes('Click1s_' + k)) h += createTaskUI('Click1s', k, d[k], 500, '#28a745');
             });
-            document.getElementById('list-click1s').innerHTML = h || 'Hết nhiệm vụ hôm nay.';
+            document.getElementById('list-click1s').innerHTML = h || 'Hết nhiệm vụ.';
         });
     }
 
     function createTaskUI(sys, id, url, cash, col) {
-        return `
-            <div class="task-card" style="border-color:${col}" id="card_${sys}_${id}">
+        return `<div class="task-card" style="border-color:${col}" id="card_${sys}_${id}">
                 <div style="font-weight:bold; color:${col}">${sys}</div>
                 <button class="btn-do" style="background:${col}" onclick="goTask('${url}','${sys}','${id}',${cash})">Thực hiện</button>
-                <div class="task-info"><div><b>${cash}đ</b></div><div style="color:green">Sẵn sàng</div></div>
+                <div class="task-info"><div><b>${cash}đ</b><br>Tiền thưởng</div><div><b>Sẵn sàng</b><br>Trạng thái</div></div>
             </div>`;
     }
 
@@ -166,7 +159,7 @@
             const m = s.val() ? s.val().money : 0;
             const str = m.toLocaleString() + " VNĐ";
             if(document.getElementById("userMoney")) document.getElementById("userMoney").innerText = str;
-            if(document.getElementById("drawBalance")) document.getElementById("drawBalance").innerText = str;
+            if(document.getElementById("drawBalance")) document.getElementById("drawBalance").innerText = "Số dư: " + str;
         });
     }
     function logout() { firebase.auth().signOut().then(() => window.location.href = "index.html"); }
