@@ -86,7 +86,7 @@
     const db = firebase.database();
 
     // 2. KIỂM TRA QUYỀN TRUY CẬP (THAY EMAIL CỦA BẠN VÀO ĐÂY)
-    const ADMIN_EMAIL = "nguyenthanhduy281009-art@gmail.com"; // <-- Hãy kiểm tra chính xác email này
+    const ADMIN_EMAIL = "nguyenthanhduy281009@gmail.com"; // <-- Hãy kiểm tra chính xác email này
 
     firebase.auth().onAuthStateChanged(user => {
         if (!user || user.email !== ADMIN_EMAIL) {
@@ -177,3 +177,4 @@
 </script>
 </body>
 </html>
+
