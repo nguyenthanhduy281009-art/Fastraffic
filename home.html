@@ -82,14 +82,25 @@
         el.classList.add('active');
     }
 
-    firebase.auth().onAuthStateChanged(user=>{
-        if(!user){ window.location.href = "index.html"; return; }
-        const uid = user.uid;
-        document.getElementById("u-email").innerText = user.email;
+    firebase.auth().onAuthStateChanged(user => {
+    if (!user) {
+        // Nếu không có user, quay lại index.html
+        window.location.replace("index.html"); 
+        return;
+    }
+    
+    const uid = user.uid;
+    document.getElementById("u-email").innerText = user.email;
 
-        db.ref("users/"+uid+"/money").on("value",s=>{
-            document.getElementById("u-balance").innerText = (s.val()||0).toLocaleString()+"đ";
-        });
+    // Lấy tiền (Phải khớp databaseURL ở config)
+    db.ref("users/" + uid + "/money").on("value", s => {
+        document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
+    }, (error) => {
+        console.error("Lỗi quyền truy cập Database:", error);
+    });
+    
+    // ... các đoạn db.ref("Task") giữ nguyên ...
+});
 
         db.ref("Task").on("value",snap=>{
             const div = document.getElementById("render-tasks");
@@ -148,3 +159,4 @@
 </script>
 </body>
 </html>
+
