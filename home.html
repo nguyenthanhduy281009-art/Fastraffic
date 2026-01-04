@@ -14,20 +14,15 @@
         .balance-val { text-align: center; color: #27ae60; font-size: 32px; font-weight: bold; margin: 10px 0; }
         .task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
         .btn-do { background: #e74c3c; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        
-        /* Navigation chuẩn */
         .nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #eee; height: 65px; z-index: 9999; }
         .nav-link { flex: 1; text-align: center; padding-top: 12px; font-size: 11px; color: #888; cursor: pointer; }
         .nav-link.active { color: #e74c3c; font-weight: bold; }
         .nav-link i { display: block; font-size: 20px; margin-bottom: 3px; }
-
         .tab-box { display: none; padding: 5px; }
         .tab-box.active { display: block; }
-
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 8px; box-sizing: border-box; }
         .hist-status { font-weight: bold; font-size: 13px; }
-        .pending { color: #f39c12; }
-        .success { color: #27ae60; }
+        .pending { color: #f39c12; } .success { color: #27ae60; } .rejected { color: #e74c3c; }
     </style>
 </head>
 <body>
@@ -46,7 +41,7 @@
 
 <div id="tab-history" class="tab-box">
     <div class="card">
-        <h3><i class="fas fa-history"></i> Lịch sử nhận thưởng</h3>
+        <h3><i class="fas fa-history"></i> Lịch sử nhiệm vụ</h3>
         <div id="render-history">Chưa có hoạt động nào.</div>
     </div>
 </div>
@@ -58,7 +53,6 @@
             <li>Không dùng công cụ auto, giả lập.</li>
             <li>Rút tiền tối thiểu từ 20.000đ.</li>
             <li>Duyệt rút tiền trong 24h - 48h.</li>
-            <li>Mỗi người chỉ dùng 1 tài khoản duy nhất.</li>
         </ul>
     </div>
 </div>
@@ -69,6 +63,10 @@
         <input type="number" id="w-amount" placeholder="Số tiền muốn rút (Min 20k)">
         <input type="text" id="w-info" placeholder="STK - Ngân hàng - Tên chủ tài khoản">
         <button class="btn-do" style="width: 100%; margin-top: 10px;" onclick="handleWithdraw()">XÁC NHẬN RÚT</button>
+    </div>
+    <div class="card">
+        <h3><i class="fas fa-list"></i> Lịch sử rút tiền</h3>
+        <div id="render-withdraw-history">Chưa có lệnh rút nào.</div>
     </div>
 </div>
 
@@ -89,35 +87,22 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Hàm chuyển Tab
     function goTab(tabId, element) {
-        // Ẩn tất cả tab
         const tabs = document.getElementsByClassName('tab-box');
-        for (let i = 0; i < tabs.length; i++) {
-            tabs[i].classList.remove('active');
-        }
-        // Bỏ active tất cả menu
+        for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
         const links = document.getElementsByClassName('nav-link');
-        for (let i = 0; i < links.length; i++) {
-            links[i].classList.remove('active');
-        }
-        // Hiện tab được chọn
+        for (let i = 0; i < links.length; i++) links[i].classList.remove('active');
         document.getElementById(tabId).classList.add('active');
         element.classList.add('active');
     }
 
     firebase.auth().onAuthStateChanged(user => {
-        if (!user) {
-            window.location.href = "index.html";
-            return;
-        }
+        if (!user) { window.location.href = "index.html"; return; }
         const uid = user.uid;
         document.getElementById("u-mail").innerText = user.email;
 
-        // Load Số dư
         db.ref("users/" + uid + "/money").on("value", s => {
-            const val = s.val() || 0;
-            document.getElementById("u-balance").innerText = val.toLocaleString() + "đ";
+            document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
         });
 
         // Load Nhiệm vụ
@@ -129,36 +114,34 @@
                 task.forEach(l => {
                     let link = l.val();
                     if(typeof link === 'object') link = link.link;
-                    div.innerHTML += `<div class="task-item">
-                        <span><b>${name}</b></span>
-                        <button class="btn-do" onclick="doTask('${name}', '${link}')">Làm ngay</button>
-                    </div>`;
+                    div.innerHTML += `<div class="task-item"><span><b>${name}</b></span><button class="btn-do" onclick="doTask('${name}', '${link}')">Làm</button></div>`;
                 });
             });
         });
 
-        // Load Lịch sử
+        // Load Lịch sử phân tách
         db.ref("history/" + uid).on("value", s => {
-            let h = "";
+            let histHtml = "";
+            let drawHtml = "";
             s.forEach(c => {
                 const d = c.val();
-                h = `<div class="task-item">
+                const item = `<div class="task-item">
                     <div style="text-align:left;"><b>${d.task}</b><br><small>${d.time}</small></div>
                     <div class="hist-status ${d.status}">${d.amount > 0 ? '+' : ''}${d.amount.toLocaleString()}đ</div>
-                </div>` + h;
+                </div>`;
+                
+                if (d.amount < 0) drawHtml = item + drawHtml; // Nếu số tiền âm -> Lịch sử rút tiền
+                else histHtml = item + histHtml; // Nếu số tiền dương -> Lịch sử nhiệm vụ
             });
-            document.getElementById("render-history").innerHTML = h || "Trống.";
+            document.getElementById("render-history").innerHTML = histHtml || "Trống.";
+            document.getElementById("render-withdraw-history").innerHTML = drawHtml || "Trống.";
         });
     });
 
     function doTask(name, link) {
         window.open(link, "_blank");
-        const uid = firebase.auth().currentUser.uid;
-        db.ref("history/" + uid + "/" + Date.now()).set({
-            task: name,
-            amount: 500,
-            status: "pending",
-            time: new Date().toLocaleString()
+        db.ref("history/" + firebase.auth().currentUser.uid + "/" + Date.now()).set({
+            task: name, amount: 500, status: "pending", time: new Date().toLocaleString()
         });
     }
 
@@ -166,18 +149,15 @@
         const amount = parseInt(document.getElementById("w-amount").value);
         const info = document.getElementById("w-info").value;
         const uid = firebase.auth().currentUser.uid;
-        if (amount < 20000 || !info) return alert("Min 20k và nhập đầy đủ thông tin!");
+        if (amount < 20000 || !info) return alert("Min 20k và nhập đủ thông tin!");
         db.ref("users/" + uid + "/money").once("value", s => {
             const current = s.val() || 0;
             if (current < amount) return alert("Số dư không đủ!");
             db.ref("users/" + uid + "/money").set(current - amount);
             db.ref("history/" + uid + "/" + Date.now()).set({
-                task: "Rút tiền: " + info,
-                amount: -amount,
-                status: "pending",
-                time: new Date().toLocaleString()
+                task: "Rút về: " + info, amount: -amount, status: "pending", time: new Date().toLocaleString()
             });
-            alert("Đã gửi yêu cầu rút tiền thành công!");
+            alert("Đã gửi yêu cầu rút tiền!");
         });
     }
 </script>
