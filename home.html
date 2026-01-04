@@ -64,6 +64,69 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        <script>
+    // 1. Cấu hình Firebase (Giữ nguyên của bạn)
+    const firebaseConfig = { ... };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 2. DÁN ĐOẠN CODE BẢNG GIÁ VÀ LOAD NHIỆM VỤ VÀO ĐÂY
+    const priceMap = {
+        "Traffictot": 250,
+        "Click1s": 300
+    };
+
+    db.ref('Task').on('value', snapshot => {
+        const taskContainer = document.getElementById('task-list-render');
+        if (!taskContainer) return;
+        taskContainer.innerHTML = ''; 
+
+        snapshot.forEach(child => {
+            const taskName = child.key; 
+            const taskLink = child.val(); 
+            const taskPrice = priceMap[taskName] || 0; 
+
+            taskContainer.innerHTML += `
+                <div style="background: white; padding: 15px; margin: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <div>
+                        <b style="color: #e94560;">${taskName}</b><br>
+                        <small>Tiền nhận: <b style="color: #27ae60;">${taskPrice.toLocaleString()}đ</b></small>
+                    </div>
+                    <button onclick="doTask('${taskName}', ${taskPrice}, '${taskLink}')" 
+                        style="background: #e94560; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        Làm ngay
+                    </button>
+                </div>`;
+        });
+    });
+
+    // 3. Hàm doTask (Cũng dán vào đây)
+    function doTask(name, price, link) {
+        if(!link || link === "undefined") return alert("Nhiệm vụ chưa có link!");
+        window.open(link, '_blank'); 
+        const user = firebase.auth().currentUser;
+        const uid = user.email.replace(/\./g, '_');
+        const taskId = "TASK_" + Date.now();
+        db.ref(`history/${uid}/${taskId}`).set({
+            task: name,
+            amount: price,
+            status: 'pending',
+            time: new Date().toLocaleString()
+        }).then(() => { alert("Đã mở link! Chờ Admin duyệt " + price + "đ"); });
+    }
+
+    // 4. Đoạn kiểm tra đăng nhập (Phải nằm TRƯỚC thẻ </script>)
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            document.getElementById('user-display-email').innerText = user.email;
+            // ... các lệnh lấy tiền và lịch sử khác ...
+        } else {
+            window.location.href = "login.html";
+        }
+    });
+
+</script> </body>
+</html>        
 
         // 2. Kiểm tra đăng nhập và tải dữ liệu
         firebase.auth().onAuthStateChanged(user => {
@@ -122,3 +185,4 @@
     </script>
 </body>
 </html>
+
