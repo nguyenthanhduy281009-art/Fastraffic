@@ -4,161 +4,141 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FASTRAFFIC - Hệ thống nhiệm vụ</title>
+
+    <!-- Firebase v8 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding-bottom: 70px; }
-        .card { background: #fff; margin: 10px; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .balance-card { text-align: center; border-top: 5px solid #27ae60; }
-        .balance-card h2 { color: #27ae60; font-size: 28px; margin: 5px 0; }
-        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .btn { background: #e74c3c; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #ddd; }
-        .nav-item { flex: 1; text-align: center; padding: 10px 0; font-size: 12px; color: #666; cursor: pointer; }
-        .nav-item.active { color: #e74c3c; font-weight: bold; }
-        .nav-item i { display: block; font-size: 18px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .pending { color: #f39c12; font-weight: bold; }
-        .success { color: #27ae60; font-weight: bold; }
-        .history-section { font-weight: bold; color: #333; margin: 15px 0 5px 0; border-left: 4px solid #e74c3c; padding-left: 8px; }
+        body{font-family:sans-serif;background:#f4f7f6;margin:0;padding-bottom:70px}
+        .card{background:#fff;margin:10px;padding:15px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+        .balance-card{text-align:center;border-top:5px solid #27ae60}
+        .balance-card h2{color:#27ae60;font-size:28px}
+        .task-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee}
+        .btn{background:#e74c3c;color:#fff;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;font-weight:bold}
+        .nav-bar{position:fixed;bottom:0;width:100%;background:#fff;display:flex;border-top:1px solid #ddd}
+        .nav-item{flex:1;text-align:center;padding:10px 0;font-size:12px;color:#666;cursor:pointer}
+        .nav-item.active{color:#e74c3c;font-weight:bold}
+        .nav-item i{display:block;font-size:18px}
+        .tab-content{display:none}
+        .tab-content.active{display:block}
+        input{width:100%;padding:10px;margin:5px 0;border:1px solid #ccc;border-radius:5px}
+        .pending{color:#f39c12;font-weight:bold}
+        .success{color:#27ae60;font-weight:bold}
     </style>
 </head>
 <body>
 
-    <div id="home" class="tab-content active">
-        <div class="card" style="text-align:center"><b>Chào: <span id="u-email">...</span></b></div>
-        <div class="card balance-card">
-            <p>Số dư tài khoản</p>
-            <h2 id="u-balance">0đ</h2>
-        </div>
-        <div class="card">
-            <h3 style="margin:0"><i class="fas fa-list"></i> Nhiệm vụ mới</h3>
-            <div id="render-tasks">Đang tìm nhiệm vụ...</div>
-        </div>
+<div id="home" class="tab-content active">
+    <div class="card" style="text-align:center"><b>Chào: <span id="u-email">...</span></b></div>
+    <div class="card balance-card">
+        <p>Số dư tài khoản</p>
+        <h2 id="u-balance">0đ</h2>
     </div>
-
-    <div id="history" class="tab-content">
-        <div class="card">
-            <div class="history-section">NHIỆM VỤ ĐÃ LÀM</div>
-            <div id="list-task-hist">Trống.</div>
-            <div class="history-section">LỊCH SỬ RÚT TIỀN</div>
-            <div id="list-withdraw-hist">Trống.</div>
-        </div>
+    <div class="card">
+        <h3><i class="fas fa-list"></i> Nhiệm vụ</h3>
+        <div id="render-tasks">Đang tải...</div>
     </div>
+</div>
 
-    <div id="rules" class="tab-content">
-        <div class="card">
-            <h3><i class="fas fa-info-circle"></i> Quy định</h3>
-            <p>- Không dùng tool cheat.</p>
-            <p>- Mỗi nhiệm vụ chỉ tính 1 lần/ngày.</p>
-            <p>- Rút tiền tối thiểu 20.000đ.</p>
-        </div>
+<div id="withdraw" class="tab-content">
+    <div class="card">
+        <h3><i class="fas fa-wallet"></i> Rút tiền</h3>
+        <input type="number" id="w-amount" placeholder="Số tiền cần rút">
+        <input type="text" id="w-info" placeholder="STK - Ngân hàng - Tên">
+        <button class="btn" style="width:100%" onclick="sendWithdraw()">GỬI</button>
     </div>
+</div>
 
-    <div id="withdraw" class="tab-content">
-        <div class="card">
-            <h3><i class="fas fa-wallet"></i> Rút tiền</h3>
-            <input type="number" id="w-amount" placeholder="Số tiền cần rút">
-            <input type="text" id="w-info" placeholder="STK - Ngân hàng - Tên chủ thẻ">
-            <button class="btn" style="width:100%; margin-top:10px" onclick="sendWithdraw()">GỬI YÊU CẦU</button>
-        </div>
-    </div>
+<nav class="nav-bar">
+    <div class="nav-item active" onclick="tab('home',this)"><i class="fas fa-home"></i>Home</div>
+    <div class="nav-item" onclick="tab('withdraw',this)"><i class="fas fa-money-bill"></i>Rút</div>
+</nav>
 
-    <nav class="nav-bar">
-        <div class="nav-item active" onclick="tab('home',this)"><i class="fas fa-home"></i>Trang chủ</div>
-        <div class="nav-item" onclick="tab('history',this)"><i class="fas fa-history"></i>Lịch sử</div>
-        <div class="nav-item" onclick="tab('rules',this)"><i class="fas fa-book"></i>Quy định</div>
-        <div class="nav-item" onclick="tab('withdraw',this)"><i class="fas fa-money-bill-wave"></i>Rút tiền</div>
-    </nav>
+<script>
+/* ========= FIREBASE CONFIG ========= */
+firebase.initializeApp({
+    apiKey: "AIza...",
+    authDomain: "fastraffic-8b585.firebaseapp.com",
+    databaseURL: "https://fastraffic-8b585-default-rtdb.firebaseio.com",
+    projectId: "fastraffic-8b585"
+});
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIza...",
-            authDomain: "fastraffic-8b585.firebaseapp.com",
-            databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "fastraffic-8b585",
-            storageBucket: "fastraffic-8b585.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const prices = { "Traffictot": 400, "Click1s": 600 };
+const db = firebase.database();
+const prices = { Traffictot: 400, Click1s: 600 };
 
-        function tab(id, el) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('active');
-        }
+/* ========= TAB ========= */
+function tab(id, el){
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    el.classList.add('active');
+}
 
-        firebase.auth().onAuthStateChanged(user => {
-            if (!user) return window.location.href = "/index.html";
-            const uid = user.email.replace(/\./g, '_');
-            document.getElementById('u-email').innerText = user.email;
+/* ========= AUTH ========= */
+firebase.auth().onAuthStateChanged(user=>{
+    if(!user){
+        window.location.href = "/login.html"; // ĐÚNG FILE LOGIN
+        return;
+    }
 
-            db.ref(`users/${uid}/money`).on('value', s => {
-                document.getElementById('u-balance').innerText = (s.val() || 0).toLocaleString() + "đ";
-            });
+    const uid = user.uid;
+    document.getElementById("u-email").innerText = user.email;
 
-            db.ref('Task').on('value', s => {
-                const div = document.getElementById('render-tasks');
-                div.innerHTML = '';
-                s.forEach(child => {
-                    const name = child.key;
-                    child.forEach(linkSnap => {
-                        let link = linkSnap.val();
-                        if(typeof link === 'object') link = link.link;
-                        div.innerHTML += `<div class="task-item">
-                            <div><b>${name}</b><br><small>+${prices[name] || 0}đ</small></div>
-                            <button class="btn" onclick="doTask('${name}',${prices[name]||0},'${link}')">Làm</button>
-                        </div>`;
-                    });
-                });
-            });
+    db.ref("users/"+uid+"/money").on("value",s=>{
+        document.getElementById("u-balance").innerText = (s.val()||0).toLocaleString()+"đ";
+    });
 
-            db.ref(`history/${uid}`).on('value', s => {
-                let tH = ''; let wH = '';
-                s.forEach(c => {
-                    const d = c.val();
-                    const item = `<div class="task-item">
-                        <div><b>${d.task}</b><br><small>${d.time}</small></div>
-                        <div class="${d.status === 'pending' ? 'pending' : 'success'}">${d.amount > 0 ? '+' : ''}${d.amount}đ</div>
-                    </div>`;
-                    if (d.amount > 0) tH += item; else wH += item;
-                });
-                document.getElementById('list-task-hist').innerHTML = tH || "Trống.";
-                document.getElementById('list-withdraw-hist').innerHTML = wH || "Trống.";
+    db.ref("Task").on("value",snap=>{
+        const div = document.getElementById("render-tasks");
+        div.innerHTML="";
+        snap.forEach(task=>{
+            const name = task.key;
+            task.forEach(l=>{
+                const link = l.val();
+                if(!link || !link.startsWith("http")) return;
+                div.innerHTML += `
+                <div class="task-item">
+                    <div><b>${name}</b><br>+${prices[name]||0}đ</div>
+                    <button class="btn" onclick="doTask('${name}',${prices[name]||0},'${link}')">Làm</button>
+                </div>`;
             });
         });
+    });
+});
 
-        function doTask(n, p, l) {
-            window.open(l, '_blank');
-            const uid = firebase.auth().currentUser.email.replace(/\./g, '_');
-            db.ref(`history/${uid}/T_${Date.now()}`).set({
-                task: n, amount: p, status: 'pending', time: new Date().toLocaleString()
-            });
-        }
+/* ========= TASK ========= */
+function doTask(name, price, link){
+    window.open(link,"_blank");
+    const uid = firebase.auth().currentUser.uid;
+    db.ref("history/"+uid+"/"+Date.now()).set({
+        task:name, amount:price, status:"pending", time:new Date().toLocaleString()
+    });
+}
 
-        function sendWithdraw() {
-            const a = parseInt(document.getElementById('w-amount').value);
-            const i = document.getElementById('w-info').value;
-            if (a < 20000 || !i) return alert("Min 20k và nhập STK!");
-            const uid = firebase.auth().currentUser.email.replace(/\./g, '_');
-            db.ref(`users/${uid}/money`).once('value', s => {
-                const m = s.val() || 0;
-                if (m < a) return alert("Không đủ tiền!");
-                db.ref(`users/${uid}/money`).set(m - a);
-                db.ref(`history/${uid}/W_${Date.now()}`).set({
-                    task: "Rút: " + i, amount: -a, status: 'pending', time: new Date().toLocaleString()
-                }).then(() => alert("Đã gửi!"));
-            });
-        }
-    </script>
+/* ========= WITHDRAW ========= */
+function sendWithdraw(){
+    const amount = parseInt(w-amount.value);
+    const info = w-info.value;
+    if(amount<20000 || !info) return alert("Min 20k + nhập thông tin");
+
+    const uid = firebase.auth().currentUser.uid;
+    db.ref("users/"+uid+"/money").once("value",s=>{
+        const money = s.val()||0;
+        if(money<amount) return alert("Không đủ tiền");
+        db.ref("users/"+uid+"/money").set(money-amount);
+        db.ref("history/"+uid+"/"+Date.now()).set({
+            task:"Rút tiền", amount:-amount, status:"pending", time:new Date().toLocaleString()
+        });
+        alert("Đã gửi yêu cầu");
+    });
+}
+</script>
 </body>
 </html>
+
+
 
