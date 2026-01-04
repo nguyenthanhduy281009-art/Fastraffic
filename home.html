@@ -101,21 +101,19 @@
         else if (page === 'quydinh') {
             view.innerHTML = `<h2>Quy định</h2><div style="background:white; padding:20px; border-radius:15px;"><p>Vượt link và lấy mã chính xác để được duyệt tiền.</p></div>`;
         }
-        else if (page === 'ruttien') {
+else if (page === 'ruttien') {
     view.innerHTML = `
         <h2>Rút tiền</h2>
         <div style="background:white; padding:25px; border-radius:15px; max-width:500px; box-shadow:0 4px 10px rgba(0,0,0,0.05)">
             <p>Số dư khả dụng: <b id="drawBalance" style="color:#e94560">0 VNĐ</b></p>
             
-            <label>Số tiền cần rút:</label>
+            <label><b>Số tiền cần rút:</b></label>
             <input type="number" id="amount" class="withdraw-input" placeholder="Tối thiểu 20.000">
             
-            <label>Tải lên mã QR ngân hàng/momo:</label>
-            <input type="file" id="qrFile" class="withdraw-input" accept="image/*">
+            <label><b>Tải lên mã QR (Ngân hàng/Momo):</b></label>
+            <input type="file" id="qrFile" class="withdraw-input" accept="image/*" style="border:none; padding:10px 0">
             
-            <textarea id="bankInfo" class="withdraw-input" rows="3" placeholder="Ghi chú thêm (Tên ngân hàng, số tài khoản...)"></textarea>
-            
-            <button onclick="requestWithdraw()" class="btn-do" style="background:#e94560">Gửi yêu cầu rút</button>
+            <button onclick="requestWithdraw()" class="btn-do" style="background:#e94560; margin-top:10px">Gửi yêu cầu rút tiền</button>
         </div>`;
     loadMoney();
 }
@@ -216,4 +214,5 @@
 </script>
 </body>
 </html>
+
 
