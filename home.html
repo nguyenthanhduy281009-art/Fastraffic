@@ -3,30 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang chủ - FASTRAFFIC</title>
+    <title>FASTRAFFIC - Home</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 15px; }
-        .card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; text-align: center; }
-        .balance { font-size: 32px; color: #27ae60; font-weight: bold; margin: 10px 0; }
-        .task-list { text-align: left; }
-        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        .btn-task { background: #e74c3c; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 60px; }
+        .card { background: #fff; margin: 10px; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .balance { text-align: center; color: #27ae60; font-size: 28px; font-weight: bold; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .btn { background: #e74c3c; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div>Xin chào: <b id="u-email">...</b></div>
-        <div style="margin-top:10px;">Số dư hiện tại</div>
-        <div class="balance" id="u-balance">0đ</div>
-    </div>
 
-    <div class="card">
-        <h3>Nhiệm vụ mới</h3>
-        <div id="list-task" class="task-list">Đang tải nhiệm vụ...</div>
-    </div>
+<div class="card">Chào: <b id="u-email">...</b></div>
+<div class="card">
+    <p style="text-align:center; margin:0;">Số dư hiện tại</p>
+    <div class="balance" id="u-balance">0đ</div>
+</div>
+<div class="card">
+    <h3>Nhiệm vụ mới</h3>
+    <div id="list-task">Đang tải...</div>
+</div>
 
 <script>
     const firebaseConfig = {
@@ -39,10 +38,13 @@
     const db = firebase.database();
 
     firebase.auth().onAuthStateChanged(user => {
-        if (!user) { window.location.href = "index.html"; return; }
+        if (!user) {
+            window.location.href = "index.html";
+            return;
+        }
         document.getElementById("u-email").innerText = user.email;
 
-        // Lấy số dư
+        // Lấy tiền
         db.ref("users/" + user.uid + "/money").on("value", s => {
             document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
         });
@@ -55,13 +57,14 @@
                 task.forEach(l => {
                     let link = l.val();
                     if(typeof link === 'object') link = link.link;
-                    html += `<div class="task-item">
+                    html += `
+                    <div class="task-item">
                         <span><b>${name}</b></span>
-                        <button class="btn-task" onclick="window.open('${link}')">Làm ngay</button>
+                        <button class="btn" onclick="window.open('${link}')">Làm</button>
                     </div>`;
                 });
             });
-            document.getElementById("list-task").innerHTML = html || "Hiện không có nhiệm vụ nào.";
+            document.getElementById("list-task").innerHTML = html || "Hết nhiệm vụ.";
         });
     });
 </script>
