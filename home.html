@@ -81,11 +81,17 @@
             document.getElementById(id).classList.add('active');
             el.classList.add('active');
         }
-
         firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                const uid = user.email.replace(/\./g, '_');
-                document.getElementById('user-email').innerText = user.email;
+    if (user) {
+        const uid = user.email.replace(/\./g, '_');
+        document.getElementById('user-email').innerText = user.email;
+    } 
+    // else {
+    //     window.location.href = "login.html";
+    // }
+});
+    
+
 
                 db.ref(`users/${uid}/money`).on('value', s => {
                     document.getElementById('user-balance').innerText = (s.val() || 0).toLocaleString() + "đ";
@@ -160,5 +166,6 @@
     </script>
 </body>
 </html>
+
 
 
