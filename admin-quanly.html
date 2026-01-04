@@ -2,86 +2,31 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - FASTRAFFIC</title>
+    <title>Admin - Duyệt Rút Tiền (Bảo mật)</title>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 15px; }
-        .container { max-width: 1100px; margin: auto; }
-        .header { text-align: center; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { color: #e94560; font-size: 18px; margin-top: 30px; border-left: 4px solid #e94560; padding-left: 10px; }
-        .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #fdfdfd; color: #888; font-size: 11px; text-transform: uppercase; }
-        .btn { border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: 600; color: #fff; }
-        .btn-approve { background: #2ecc71; }
-        .btn-reject { background: #e74c3c; margin-left: 5px; }
-        .btn-edit { background: #3498db; }
-        .money-text { font-weight: bold; color: #2c3e50; }
-        .user-email { font-weight: 600; color: #333; }
+        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #e94560; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: center; font-size: 14px; }
+        th { background: #e94560; color: white; }
+        .btn-approve { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #access-denied { display: none; text-align: center; color: red; margin-top: 50px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1 style="margin:0; font-size: 24px;">HỆ THỐNG QUẢN TRỊ</h1>
-    </div>
+<div id="access-denied">
+    <h1>QUYỀN TRUY CẬP BỊ TỪ CHỐI</h1>
+    <p>Chỉ Admin mới có quyền truy cập trang này.</p>
+</div>
 
-    <h2><i class="fas fa-users"></i> Quản Lý Số Dư Thành Viên</h2>
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Email Người Dùng</th>
-                    <th>Số Dư Hiện Tại</th>
-                    <th>Hành Động</th>
-                </tr>
-            </thead>
-            <tbody id="user-admin-list">
-                <tr><td colspan="3" style="text-align:center">Đang tải danh sách thành viên...</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <h2><i class="fas fa-check-circle"></i> Duyệt Nhiệm Vụ Đang Chờ</h2>
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Người Dùng</th>
-                    <th>Nhiệm Vụ</th>
-                    <th>Thưởng</th>
-                    <th>Thời Gian</th>
-                    <th>Hành Động</th>
-                </tr>
-            </thead>
-            <tbody id="task-list">
-                <tr><td colspan="5" style="text-align:center">Không có nhiệm vụ chờ duyệt.</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <h2><i class="fas fa-wallet"></i> Yêu Cầu Rút Tiền</h2>
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Người Dùng</th>
-                    <th>Thông Tin Nhận</th>
-                    <th>Số Tiền</th>
-                    <th>Hành Động</th>
-                </tr>
-            </thead>
-            <tbody id="withdraw-list">
-                <tr><td colspan="4" style="text-align:center">Không có yêu cầu rút tiền.</td></tr>
-            </tbody>
-        </table>
-    </div>
+<div id="admin-content" class="container" style="display: none;">
+    <h2>Yêu cầu rút tiền chờ duyệt</h2>
+    <div id="adminView">Đang tải dữ liệu...</div>
 </div>
 
 <script>
@@ -91,133 +36,67 @@
         projectId: "fastraffic-8b585",
         databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const ADMIN_EMAIL = "nguyenthanhduy281009@gmail.com";
 
-    firebase.auth().onAuthStateChanged(user => {
-        if (!user || user.email !== ADMIN_EMAIL) {
-            alert("Quyền truy cập bị từ chối!");
-            window.location.href = "index.html";
+    // Kiểm tra quyền Admin
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user && user.email === 'nguyenthanhduy281009@gmail.com') {
+            document.getElementById('admin-content').style.display = 'block';
+            loadWithdrawRequests();
         } else {
-            loadAllUsers(); // Tải danh sách thành viên
-            loadTasks();    // Tải nhiệm vụ
-            loadWithdraws();// Tải rút tiền
+            document.getElementById('access-denied').style.display = 'block';
         }
     });
 
-    // 1. Hàm Quản lý Thành viên & Tùy chỉnh số dư
-    function loadAllUsers() {
-        db.ref('users').on('value', snap => {
-            const list = document.getElementById('user-admin-list');
-            list.innerHTML = '';
-            const users = snap.val();
-            if (users) {
-                Object.keys(users).forEach(uid => {
-                    const u = users[uid];
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="user-email">${uid.replace(/_/g, '.')}</td>
-                        <td class="money-text">${(u.money || 0).toLocaleString()}đ</td>
-                        <td>
-                            <button class="btn btn-edit" onclick="setNewBalance('${uid}', '${u.money || 0}')">
-                                <i class="fas fa-edit"></i> Chỉnh số dư
-                            </button>
-                        </td>
-                    `;
-                    list.appendChild(row);
-                });
-            }
-        });
-    }
-
-    // Hàm thiết lập lại toàn bộ số dư
-    function setNewBalance(uid, oldMoney) {
-        const val = prompt(`Số dư hiện tại: ${oldMoney}đ\nNhập SỐ TIỀN MỚI bạn muốn thiết lập (Ví dụ nhập 0 để xóa sạch):`);
-        if (val !== null && val !== "") {
-            const newMoney = parseInt(val);
-            if (!isNaN(newMoney)) {
-                // Sử dụng .set() để thay thế hoàn toàn giá trị cũ
-                db.ref(`users/${uid}/money`).set(newMoney).then(() => {
-                    alert("Đã thiết lập số dư mới thành công!");
-                });
+    function loadWithdrawRequests() {
+        db.ref('withdraw_requests').on('value', (s) => {
+            let h = `<table><tr>
+                <th>Thời gian</th>
+                <th>Người dùng</th>
+                <th>Số tiền</th>
+                <th>Ngân hàng/Ví</th>
+                <th>Số tài khoản</th>
+                <th>Hành động</th>
+            </tr>`;
+            const data = s.val();
+            if(!data) {
+                h += `<tr><td colspan="6">Không có yêu cầu nào.</td></tr>`;
             } else {
-                alert("Vui lòng chỉ nhập số!");
-            }
-        }
-    }
-
-    // 2. Tải danh sách nhiệm vụ
-    function loadTasks() {
-        db.ref('history').on('value', snap => {
-            const list = document.getElementById('task-list');
-            list.innerHTML = '';
-            const data = snap.val();
-            if (data) {
-                Object.keys(data).forEach(uid => {
-                    Object.keys(data[uid]).forEach(tid => {
-                        const t = data[uid][tid];
-                        if (t.status === 'pending') {
-                            list.innerHTML += `<tr>
-                                <td>${uid.replace(/_/g, '.')}</td>
-                                <td><small>${t.task}</small></td>
-                                <td style="color:green">+${t.amount}đ</td>
-                                <td><small>${t.time || ''}</small></td>
-                                <td>
-                                    <button class="btn btn-approve" onclick="approveTask('${uid}','${tid}',${t.amount})">Duyệt</button>
-                                    <button class="btn btn-reject" onclick="deleteItem('history/${uid}/${tid}')">Xóa</button>
-                                </td>
-                            </tr>`;
-                        }
-                    });
-                });
-            }
-        });
-    }
-
-    // 3. Tải danh sách rút tiền
-    function loadWithdraws() {
-        db.ref('withdraw_requests').on('value', snap => {
-            const list = document.getElementById('withdraw-list');
-            list.innerHTML = '';
-            const data = snap.val();
-            if (data) {
-                Object.keys(data).forEach(id => {
-                    const r = data[id];
-                    if (r.status === 'pending') {
-                        list.innerHTML += `<tr>
-                            <td>${r.userId.replace(/_/g, '.')}</td>
-                            <td><small>${r.info}</small></td>
-                            <td style="color:red">-${r.amount}đ</td>
-                            <td>
-                                <button class="btn btn-approve" onclick="approveWithdraw('${id}','${r.userId}',${r.amount})">Đã Bank</button>
-                                <button class="btn btn-reject" onclick="deleteItem('withdraw_requests/${id}')">Hủy</button>
-                            </td>
+                const keys = Object.keys(data).reverse();
+                let hasPending = false;
+                keys.forEach(id => {
+                    const req = data[id];
+                    if(req.status === 'pending') {
+                        hasPending = true;
+                        h += `<tr>
+                            <td>${req.time}</td>
+                            <td>${req.userId.replace(/_/g, '.')}</td>
+                            <td style="color:red; font-weight:bold">${req.amount.toLocaleString()}đ</td>
+                            <td>${req.bankName}</td>
+                            <td><b>${req.bankAcc}</b></td>
+                            <td><button class="btn-approve" onclick="approveWithdraw('${id}', '${req.userId}', ${req.amount})">Duyệt & Trừ tiền</button></td>
                         </tr>`;
                     }
                 });
+                if(!hasPending) h += `<tr><td colspan="6">Tất cả đã xử lý xong.</td></tr>`;
             }
+            document.getElementById("adminView").innerHTML = h + `</table>`;
         });
     }
 
-    function approveTask(uid, tid, amt) {
-        if(confirm("Duyệt thưởng?")) {
-            db.ref(`users/${uid}/money`).transaction(c => (c || 0) + amt).then(() => {
-                db.ref(`history/${uid}/${tid}`).update({ status: 'done' });
+    function approveWithdraw(requestId, userId, amount) {
+        if(confirm(`Xác nhận đã chuyển ${amount.toLocaleString()}đ? Hệ thống sẽ tự động trừ tiền ví user.`)) {
+            // 1. Cập nhật trạng thái tổng
+            db.ref('withdraw_requests/' + requestId).update({ status: 'completed' });
+            // 2. Cập nhật lịch sử user
+            db.ref('user_withdrawals/' + userId + '/' + requestId).update({ status: 'completed' });
+            // 3. Trừ tiền ví user
+            db.ref('users/' + userId + '/money').transaction((current) => {
+                return (current || 0) - amount;
             });
+            alert("Đã duyệt thành công!");
         }
-    }
-
-    function approveWithdraw(id, uid, amt) {
-        if(confirm("Xác nhận đã chuyển tiền?")) {
-            db.ref(`users/${uid}/money`).transaction(c => (c || 0) - amt).then(() => {
-                db.ref(`withdraw_requests/${id}`).update({ status: 'done' });
-            });
-        }
-    }
-
-    function deleteItem(path) {
-        if(confirm("Xóa mục này?")) db.ref(path).remove();
     }
 </script>
 </body>
