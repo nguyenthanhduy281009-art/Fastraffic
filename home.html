@@ -28,7 +28,7 @@
         .btn-withdraw { width: 100%; padding: 12px; background: #e94560; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
         .status-done { color: #27ae60; font-weight: bold; }
         .status-pending { color: #f39c12; font-weight: bold; }
         .status-cancelled { color: #e74c3c; font-weight: bold; }
@@ -44,13 +44,13 @@
             <div class="balance-amount" id="user-money">0đ</div>
         </div>
         <div style="padding:15px; background:white; border-radius:10px;">
-            <p>👋 Chào mừng bạn! Chúc bạn một ngày tốt lành.</p>
+            <p>👋 Chào mừng bạn! Hãy hoàn thành nhiệm vụ để nhận thêm tiền.</p>
         </div>
     </div>
 
     <div id="history" class="content-section">
         <h3><i class="fas fa-history"></i> Lịch sử nhiệm vụ</h3>
-        <table id="task-table">
+        <table>
             <thead><tr><th>Thời gian</th><th>Số tiền</th><th>Trạng thái</th></tr></thead>
             <tbody id="history-list"></tbody>
         </table>
@@ -59,31 +59,17 @@
     <div id="rules" class="content-section">
         <h3><i class="fas fa-book"></i> Quy định</h3>
         <div style="background:white; padding:15px; border-radius:10px;">
-            <p>1. Rút tiền tối thiểu: <b>20.000đ</b>.</p>
-            <p>2. Duyệt tiền từ 5-30 phút.</p>
-            <p>3. Nghiêm cấm gian lận.</p>
+            <p>• Rút tiền tối thiểu: 20.000đ.</p>
+            <p>• Thời gian duyệt: 5-30 phút.</p>
         </div>
     </div>
 
     <div id="withdraw" class="content-section">
         <h3><i class="fas fa-wallet"></i> Rút tiền</h3>
         <div style="background:white; padding:15px; border-radius:15px; margin-bottom: 20px;">
-            <div class="form-group">
-                <label>Ngân hàng / Ví</label>
-                <select id="bank-name">
-                    <option value="MBBank">MBBank</option>
-                    <option value="Momo">Momo</option>
-                    <option value="Vietcombank">Vietcombank</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Số tài khoản</label>
-                <input type="text" id="bank-acc" placeholder="STK nhận tiền">
-            </div>
-            <div class="form-group">
-                <label>Số tiền rút</label>
-                <input type="number" id="withdraw-amount" placeholder="Tối thiểu 20.000">
-            </div>
+            <div class="form-group"><label>Ngân hàng</label><select id="bank-name"><option value="MBBank">MBBank</option><option value="Momo">Momo</option></select></div>
+            <div class="form-group"><label>Số tài khoản</label><input type="text" id="bank-acc" placeholder="Số tài khoản"></div>
+            <div class="form-group"><label>Số tiền rút</label><input type="number" id="withdraw-amount" placeholder="Từ 20.000"></div>
             <button class="btn-withdraw" onclick="requestWithdraw()">GỬI YÊU CẦU</button>
         </div>
 
@@ -125,21 +111,30 @@
                 document.getElementById('user-money').innerText = (s.val() || 0).toLocaleString() + "đ";
             });
 
+            // Lấy dữ liệu lịch sử
             db.ref(`history/${uid}`).on('value', s => {
                 const historyList = document.getElementById('history-list');
                 const withdrawList = document.getElementById('withdraw-history-list');
                 historyList.innerHTML = ''; withdrawList.innerHTML = '';
                 
                 if(s.exists()){
-                    Object.values(s.val()).reverse().forEach(item => {
-                        let st = item.status === 'done' ? 'Thành công' : (item.status === 'pending' ? 'Chờ duyệt' : 'Đã hủy');
-                        let row = `<tr><td><small>${item.time||''}</small></td><td>${item.amount.toLocaleString()}đ</td><td class="status-${item.status}">${st}</td></tr>`;
+                    // Sắp xếp dữ liệu mới nhất lên đầu
+                    const items = [];
+                    s.forEach(child => { items.push(child.val()); });
+                    items.reverse().forEach(item => {
+                        let stText = item.status === 'done' ? 'Thành công' : (item.status === 'pending' ? 'Chờ duyệt' : 'Đã hủy');
+                        let html = `<tr><td><small>${item.time||''}</small></td><td>${item.amount.toLocaleString()}đ</td><td class="status-${item.status}">${stText}</td></tr>`;
                         
-                        // Phân loại: Nếu tiền dương là nhiệm vụ, tiền âm là rút tiền
-                        if(item.amount > 0) historyList.innerHTML += row;
-                        else withdrawList.innerHTML += row;
+                        // Nếu amount âm ( < 0 ) là rút tiền, đẩy vào bảng rút tiền
+                        if(item.amount < 0) {
+                            withdrawList.innerHTML += html;
+                        } else {
+                            historyList.innerHTML += html;
+                        }
                     });
                 }
+                if(!withdrawList.innerHTML) withdrawList.innerHTML = '<tr><td colspan="3" style="text-align:center">Chưa có lệnh rút nào.</td></tr>';
+                if(!historyList.innerHTML) historyList.innerHTML = '<tr><td colspan="3" style="text-align:center">Chưa có nhiệm vụ nào.</td></tr>';
             });
         } else { location.href = 'login.html'; }
     });
@@ -153,7 +148,7 @@
 
         db.ref(`users/${uid}/money`).once('value', s => {
             const current = s.val() || 0;
-            if(!acc || !amt || amt < 20000) return alert("Kiểm tra lại thông tin và số tiền (tối thiểu 20.000đ)!");
+            if(!acc || !amt || amt < 20000) return alert("Kiểm tra lại thông tin!");
             if(amt > current) return alert("Số dư không đủ!");
 
             const wId = "WD" + Date.now();
@@ -161,7 +156,7 @@
 
             db.ref(`withdraw_requests/${wId}`).set({ userId: uid, bankName: bank, bankAcc: acc, amount: amt, status: 'pending', time: time });
             db.ref(`history/${uid}/${wId}`).set({ amount: -amt, status: 'pending', time: time, withdrawId: wId })
-            .then(() => { alert("Đã gửi yêu cầu!"); document.getElementById('bank-acc').value = ""; document.getElementById('withdraw-amount').value = ""; });
+            .then(() => { alert("Đã gửi yêu cầu!"); });
         });
     }
 </script>
