@@ -7,13 +7,13 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-fontawesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding-bottom: 70px; }
         .card { background: white; margin: 15px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
         .balance { font-size: 24px; color: #2ecc71; font-weight: bold; margin: 10px 0; }
         .task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
-        .btn-task { background: #e94560; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        .btn-task { background: #e94560; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
         .nav-item { text-align: center; font-size: 12px; color: #777; text-decoration: none; }
         .nav-item i { font-size: 20px; display: block; }
@@ -31,14 +31,7 @@
 
     <div class="card" style="text-align: left;">
         <h3><i class="fas fa-tasks"></i> Nhiệm vụ mới</h3>
-        <div class="task-item">
-            <span>Nhiệm vụ Traffictot</span>
-            <button class="btn-task" onclick="doTask('Traffictot', 250)">250đ</button>
-        </div>
-        <div class="task-item">
-            <span>Nhiệm vụ Click1s</span>
-            <button class="btn-task" onclick="doTask('Click1s', 300)">300đ</button>
-        </div>
+        <div id="task-list-render">Đang tải nhiệm vụ...</div>
     </div>
 
     <div class="card" style="text-align: left;">
@@ -52,11 +45,11 @@
     </nav>
 
     <script>
-        // 1. Cấu hình Firebase của bạn
+        // 1. Cấu hình Firebase (BẠN HÃY ĐIỀN THÔNG TIN THẬT CỦA BẠN VÀO ĐÂY)
         const firebaseConfig = {
             apiKey: "AIza...",
             authDomain: "fastraffic-...",
-            databaseURL: "https://fastraffic-...",
+            databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "fastraffic-...",
             storageBucket: "fastraffic-...",
             messagingSenderId: "...",
@@ -64,125 +57,94 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        <script>
-    // 1. Cấu hình Firebase (Giữ nguyên của bạn)
-    const firebaseConfig = { ... };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
 
-    // 2. DÁN ĐOẠN CODE BẢNG GIÁ VÀ LOAD NHIỆM VỤ VÀO ĐÂY
-    const priceMap = {
-        "Traffictot": 250,
-        "Click1s": 300
-    };
+        // 2. Bảng giá cố định
+        const priceMap = {
+            "Traffictot": 250,
+            "Click1s": 300
+        };
 
-    db.ref('Task').on('value', snapshot => {
-        const taskContainer = document.getElementById('task-list-render');
-        if (!taskContainer) return;
-        taskContainer.innerHTML = ''; 
+        // 3. Tự động lấy nhiệm vụ từ Firebase
+        db.ref('Task').on('value', snapshot => {
+            const taskContainer = document.getElementById('task-list-render');
+            if (!taskContainer) return;
+            taskContainer.innerHTML = ''; 
 
-        snapshot.forEach(child => {
-            const taskName = child.key; 
-            const taskLink = child.val(); 
-            const taskPrice = priceMap[taskName] || 0; 
+            snapshot.forEach(child => {
+                const taskName = child.key; 
+                const taskLink = child.val(); 
+                const taskPrice = priceMap[taskName] || 0; 
 
-            taskContainer.innerHTML += `
-                <div style="background: white; padding: 15px; margin: 10px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                    <div>
-                        <b style="color: #e94560;">${taskName}</b><br>
-                        <small>Tiền nhận: <b style="color: #27ae60;">${taskPrice.toLocaleString()}đ</b></small>
-                    </div>
-                    <button onclick="doTask('${taskName}', ${taskPrice}, '${taskLink}')" 
-                        style="background: #e94560; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                        Làm ngay
-                    </button>
-                </div>`;
+                taskContainer.innerHTML += `
+                    <div class="task-item">
+                        <div>
+                            <b>${taskName}</b><br>
+                            <small>Nhận ngay: <b style="color: #27ae60;">${taskPrice.toLocaleString()}đ</b></small>
+                        </div>
+                        <button class="btn-task" onclick="doTask('${taskName}', ${taskPrice}, '${taskLink}')">
+                            Làm ngay
+                        </button>
+                    </div>`;
+            });
         });
-    });
 
-    // 3. Hàm doTask (Cũng dán vào đây)
-    function doTask(name, price, link) {
-        if(!link || link === "undefined") return alert("Nhiệm vụ chưa có link!");
-        window.open(link, '_blank'); 
-        const user = firebase.auth().currentUser;
-        const uid = user.email.replace(/\./g, '_');
-        const taskId = "TASK_" + Date.now();
-        db.ref(`history/${uid}/${taskId}`).set({
-            task: name,
-            amount: price,
-            status: 'pending',
-            time: new Date().toLocaleString()
-        }).then(() => { alert("Đã mở link! Chờ Admin duyệt " + price + "đ"); });
-    }
-
-    // 4. Đoạn kiểm tra đăng nhập (Phải nằm TRƯỚC thẻ </script>)
-    firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-            document.getElementById('user-display-email').innerText = user.email;
-            // ... các lệnh lấy tiền và lịch sử khác ...
-        } else {
-            window.location.href = "login.html";
-        }
-    });
-
-</script> </body>
-</html>        
-
-        // 2. Kiểm tra đăng nhập và tải dữ liệu
+        // 4. Kiểm tra đăng nhập và tải dữ liệu người dùng
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 const uid = user.email.replace(/\./g, '_');
                 document.getElementById('user-email').innerText = user.email;
 
-                // Lấy số dư thực tế
+                // Lấy số dư
                 db.ref(`users/${uid}/money`).on('value', s => {
                     document.getElementById('user-balance').innerText = (s.val() || 0).toLocaleString() + "đ";
                 });
 
-                // Lấy lịch sử và phân loại
+                // Lấy lịch sử
                 db.ref(`history/${uid}`).on('value', s => {
                     let html = '';
-                    s.forEach(child => {
-                        const data = child.val();
-                        // Chỉ hiện nhiệm vụ (số tiền dương)
-                        if (data.amount > 0) {
-                            html += `
-                            <div class="task-item">
-                                <div>
-                                    <b>${data.task}</b><br>
-                                    <small>${data.time}</small>
-                                </div>
-                                <div class="${data.status === 'pending' ? 'status-pending' : 'status-success'}">
-                                    +${data.amount}đ<br>
-                                    <small>${data.status === 'pending' ? 'Chờ duyệt' : 'Hoàn thành'}</small>
-                                </div>
-                            </div>`;
-                        }
-                    });
-                    document.getElementById('history-list').innerHTML = html || "Chưa có nhiệm vụ nào.";
+                    if(s.exists()){
+                        s.forEach(child => {
+                            const data = child.val();
+                            if (data.amount > 0) { // Chỉ hiện tiền cộng (Nhiệm vụ)
+                                html += `
+                                <div class="task-item">
+                                    <div>
+                                        <b>${data.task}</b><br>
+                                        <small>${data.time}</small>
+                                    </div>
+                                    <div class="${data.status === 'pending' ? 'status-pending' : 'status-success'}">
+                                        +${data.amount}đ<br>
+                                        <small>${data.status === 'pending' ? 'Chờ duyệt' : 'Hoàn thành'}</small>
+                                    </div>
+                                </div>`;
+                            }
+                        });
+                    }
+                    document.getElementById('history-list').innerHTML = html || "Chưa có lịch sử.";
                 });
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        // 3. Hàm xử lý làm nhiệm vụ
-        function doTask(name, price) {
+        // 5. Hàm xử lý làm nhiệm vụ
+        function doTask(name, price, link) {
+            if(!link || link === "undefined") return alert("Nhiệm vụ chưa có link!");
+            window.open(link, '_blank'); 
+
             const user = firebase.auth().currentUser;
             const uid = user.email.replace(/\./g, '_');
             const taskId = "TASK_" + Date.now();
-            const time = new Date().toLocaleString();
 
             db.ref(`history/${uid}/${taskId}`).set({
                 task: name,
                 amount: price,
                 status: 'pending',
-                time: time
+                time: new Date().toLocaleString()
             }).then(() => {
-                alert("Đã gửi yêu cầu! Vui lòng chờ Admin duyệt.");
+                alert("Đã mở link! Chờ Admin duyệt " + price + "đ.");
             });
         }
     </script>
 </body>
 </html>
-
