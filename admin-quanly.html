@@ -3,130 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản trị viên - FASTRAFFIC</title>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <title>QUẢN TRỊ VIÊN - FASTRAFFIC</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
-        .container { max-width: 1100px; margin: auto; }
-        .header { text-align: center; padding: 20px; background: white; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { color: #e94560; font-size: 18px; display: flex; align-items: center; gap: 10px; margin-top: 25px; }
-        .card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-approve { background: #28a745; }
-        .btn-reject { background: #dc3545; margin-left: 5px; }
-        .btn-blue { background: #007bff; width: 100%; margin-top: 10px; padding: 12px; color: white; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .bank-box { background: #fff3f3; padding: 5px; border-radius: 4px; color: #d63031; font-weight: bold; border: 1px dashed #fab1a0; font-size: 13px; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .header { background: #fff; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 28px; letter-spacing: 2px; }
+        .section-title { color: #e94560; font-weight: bold; margin: 25px 0 15px; display: flex; align-items: center; gap: 10px; }
+        
+        .table-box { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: #fff; }
+        th { background: #f8f9fa; padding: 15px; text-align: left; font-size: 14px; border-bottom: 2px solid #eee; }
+        td { padding: 15px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        
+        .form-box { background: #fff; padding: 20px; border-radius: 15px; border: 2px solid #007bff; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
+        .btn-update { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .btn-update:hover { background: #0056b3; }
+        
+        .btn-action { padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; color: white; }
+        .btn-approve { background: #27ae60; }
+        .btn-reject { background: #e74c3c; margin-left: 5px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header"><h1>QUẢN TRỊ VIÊN</h1><p>Duyệt nhiệm vụ & Quản lý hệ thống</p></div>
+<div class="header">
+    <h1>QUẢN TRỊ VIÊN</h1>
+    <p style="color: #666;">Duyệt nhiệm vụ & Quản lý hệ thống</p>
+</div>
 
-    <h2><i class="fas fa-university"></i> Yêu cầu rút tiền</h2>
-    <div class="card">
-        <table>
-            <thead><tr><th>Thời gian</th><th>Người dùng</th><th>Thông tin Bank</th><th>Số tiền</th><th>Hành động</th></tr></thead>
-            <tbody id="withdraw-list"></tbody>
-        </table>
-    </div>
+<div class="section-title"><i class="fas fa-university"></i> Yêu cầu rút tiền</div>
+<div class="table-box">
+    <table>
+        <thead>
+            <tr>
+                <th>Thời gian</th>
+                <th>Người dùng</th>
+                <th>Thông tin Bank</th>
+                <th>Số tiền</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="list-withdraw">
+            </tbody>
+    </table>
+</div>
 
-    <h2><i class="fas fa-tasks"></i> Danh sách chờ duyệt</h2>
-    <div class="card">
-        <table>
-            <thead><tr><th>Người dùng</th><th>Nhiệm vụ</th><th>Tiền thưởng</th><th>Hành động</th></tr></thead>
-            <tbody id="task-list"></tbody>
-        </table>
-    </div>
+<div class="section-title"><i class="fas fa-tasks"></i> Danh sách chờ duyệt</div>
+<div class="table-box">
+    <table>
+        <thead>
+            <tr>
+                <th>Người dùng</th>
+                <th>Nhiệm vụ</th>
+                <th>Tiền thưởng</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="list-tasks">
+            </tbody>
+    </table>
+</div>
 
-    <h2><i class="fas fa-user-cog"></i> Tùy chỉnh số dư người dùng</h2>
-    <div class="card" style="padding: 20px; border: 2px solid #007bff;">
-        <input type="text" id="target-email" placeholder="Nhập Email người dùng...">
-        <button class="btn-blue" onclick="manualUpdate()">CẬP NHẬT SỐ DƯ</button>
-    </div>
+<div class="section-title"><i class="fas fa-user-cog"></i> Tùy chỉnh số dư người dùng</div>
+<div class="form-box">
+    <input type="text" id="target-uid" placeholder="Nhập UID người dùng (Lấy từ Firebase Console)">
+    <input type="number" id="target-amount" placeholder="Nhập số tiền muốn cộng/trừ (Ví dụ: 10000)">
+    <button class="btn-update" onclick="updateUserBalance()">CẬP NHẬT SỐ DƯ</button>
 </div>
 
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
         authDomain: "fastraffic-8b585.firebaseapp.com",
-        projectId: "fastraffic-8b585",
-        databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app"
+        databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "fastraffic-8b585"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    firebase.auth().onAuthStateChanged(user => {
-        if (user && user.email === "nguyenthanhduy281009@gmail.com") { loadAll(); }
-    });
+    // 1. Cập nhật số dư
+    async function updateUserBalance() {
+        const uid = document.getElementById('target-uid').value.trim();
+        const amount = parseInt(document.getElementById('target-amount').value);
+        
+        if(!uid || isNaN(amount)) return alert("Vui lòng nhập UID và Số tiền hợp lệ!");
 
-    function loadAll() {
-        // LOAD RÚT TIỀN: Chỉ lấy từ withdraw_requests
-        db.ref('withdraw_requests').on('value', snap => {
-            const list = document.getElementById('withdraw-list');
-            list.innerHTML = '';
-            snap.forEach(child => {
-                const r = child.val();
-                if (r.status === 'pending') {
-                    list.innerHTML += `<tr>
-                        <td><small>${r.time || ''}</small></td>
-                        <td>${r.userId.replace(/_/g, '.')}</td>
-                        <td><div class="bank-box">${r.bankAcc} - ${r.bankName}</div></td>
-                        <td style="color:red">-${r.amount.toLocaleString()}đ</td>
-                        <td>
-                            <button class="btn btn-approve" onclick="handleWithdraw('${child.key}','${r.userId}',${r.amount},'done')">Đã Bank</button>
-                            <button class="btn btn-reject" onclick="handleWithdraw('${child.key}','${r.userId}',0,'cancelled')">Hủy</button>
-                        </td>
-                    </tr>`;
-                }
+        const userRef = db.ref("users/" + uid + "/money");
+        
+        try {
+            const snapshot = await userRef.once("value");
+            const currentMoney = snapshot.val() || 0;
+            const newMoney = currentMoney + amount;
+
+            await userRef.set(newMoney);
+            
+            // Ghi vào lịch sử
+            await db.ref("history/" + uid + "/" + Date.now()).set({
+                task: "Admin điều chỉnh số dư",
+                amount: amount,
+                status: "success",
+                time: new Date().toLocaleString()
             });
-        });
 
-        // LOAD NHIỆM VỤ: Chỉ lấy tiền dương (amount > 0)
-        db.ref('history').on('value', snap => {
-            const list = document.getElementById('task-list');
-            list.innerHTML = '';
-            snap.forEach(userSnap => {
-                userSnap.forEach(taskSnap => {
-                    const t = taskSnap.val();
-                    if (t.status === 'pending' && t.amount > 0) {
-                        list.innerHTML += `<tr>
-                            <td>${userSnap.key.replace(/_/g, '.')}</td>
-                            <td><small>${t.task || 'Làm nhiệm vụ'}</small></td>
-                            <td style="color:green">+${t.amount.toLocaleString()}đ</td>
-                            <td><button class="btn btn-approve" onclick="handleTask('${userSnap.key}','${taskSnap.key}',${t.amount})">Duyệt</button></td>
-                        </tr>`;
+            alert("Thành công! Số dư mới: " + newMoney.toLocaleString() + "đ");
+        } catch (e) {
+            alert("Lỗi: " + e.message);
+        }
+    }
+
+    // 2. Tải danh sách chờ duyệt (Nhiệm vụ & Rút tiền)
+    function loadData() {
+        db.ref("history").on("value", (snapshot) => {
+            const listTasks = document.getElementById('list-tasks');
+            const listWithdraw = document.getElementById('list-withdraw');
+            listTasks.innerHTML = "";
+            listWithdraw.innerHTML = "";
+
+            snapshot.forEach((userHistory) => {
+                const uid = userHistory.key;
+                userHistory.forEach((item) => {
+                    const data = item.val();
+                    const itemId = item.key;
+
+                    if (data.status === "pending") {
+                        // Phân loại Rút tiền và Nhiệm vụ
+                        if (data.amount < 0) {
+                            listWithdraw.innerHTML += `
+                                <tr>
+                                    <td>${data.time}</td>
+                                    <td>${uid.substring(0,8)}...</td>
+                                    <td>${data.task}</td>
+                                    <td style="color:red">${data.amount.toLocaleString()}đ</td>
+                                    <td>
+                                        <button class="btn-action btn-approve" onclick="approveItem('${uid}', '${itemId}', 'success')">Duyệt</button>
+                                        <button class="btn-action btn-reject" onclick="approveItem('${uid}', '${itemId}', 'rejected')">Hủy</button>
+                                    </td>
+                                </tr>`;
+                        } else {
+                            listTasks.innerHTML += `
+                                <tr>
+                                    <td>${uid.substring(0,8)}...</td>
+                                    <td>${data.task}</td>
+                                    <td style="color:green">+${data.amount}đ</td>
+                                    <td>
+                                        <button class="btn-action btn-approve" onclick="approveItem('${uid}', '${itemId}', 'success')">Duyệt</button>
+                                    </td>
+                                </tr>`;
+                        }
                     }
                 });
             });
         });
     }
 
-    function handleWithdraw(id, uid, amt, status) {
-        if (status === 'done') db.ref(`users/${uid}/money`).transaction(c => (c || 0) - amt);
-        db.ref(`withdraw_requests/${id}`).update({ status: status });
-        db.ref(`history/${uid}/${id}`).update({ status: status });
-        alert("Xong!");
+    // 3. Hàm xử lý Duyệt/Hủy
+    async function approveItem(uid, itemId, newStatus) {
+        try {
+            await db.ref("history/" + uid + "/" + itemId).update({ status: newStatus });
+            alert("Đã cập nhật trạng thái!");
+        } catch (e) { alert("Lỗi: " + e.message); }
     }
 
-    function handleTask(uid, tid, amt) {
-        db.ref(`users/${uid}/money`).transaction(c => (c || 0) + amt);
-        db.ref(`history/${uid}/${tid}`).update({ status: 'done' });
-        alert("Đã cộng tiền!");
-    }
-
-    function manualUpdate() {
-        const email = document.getElementById('target-email').value.trim();
-        const uid = email.replace(/\./g, '_');
-        const val = prompt("Nhập số dư mới:");
-        if (val) db.ref(`users/${uid}/money`).set(parseInt(val)).then(() => alert("Đã cập nhật!"));
-    }
+    loadData();
 </script>
 </body>
 </html>
