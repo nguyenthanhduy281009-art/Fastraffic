@@ -2,47 +2,78 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Fastraffic - Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - FASTRAFFIC</title>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: sans-serif; margin: 0; display: flex; background: #f4f7f6; color: #333; }
-        .sidebar { width: 250px; background: #fff; height: 100vh; border-right: 1px solid #ddd; position: fixed; }
-        .sidebar-header { padding: 25px; font-weight: bold; color: #e94560; font-size: 22px; text-align: center; border-bottom: 1px solid #eee; }
-        .menu-item { padding: 15px 20px; display: flex; align-items: center; color: #333; cursor: pointer; transition: 0.2s; }
-        .menu-item:hover { background: #f9f9f9; }
-        .menu-item.active { background: #fff5f6; color: #e94560; border-left: 4px solid #e94560; }
-        .main { margin-left: 250px; flex: 1; min-height: 100vh; }
-        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        .content { padding: 30px; }
-        .logout { background: #ff4d4d; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .money-card { background: linear-gradient(135deg, #e94560, #ff6b81); color: white; padding: 25px; border-radius: 15px; display: inline-block; min-width: 280px; box-shadow: 0 8px 16px rgba(233, 69, 96, 0.2); margin-bottom: 30px; }
-        #userMoney { font-size: 32px; font-weight: bold; margin-top: 5px; }
-        .withdraw-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn-do { width: 100%; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 20px; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        th, td { padding: 12px; border: 1px solid #eee; text-align: center; }
-        th { background: #f8f9fa; color: #666; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
+        .container { max-width: 1100px; margin: auto; }
+        .header { text-align: center; padding: 20px; background: white; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { color: #e94560; font-size: 20px; display: flex; align-items: center; gap: 10px; margin-top: 30px; }
+        .card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: #666; font-size: 12px; text-transform: uppercase; }
+        .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-approve { background: #28a745; }
+        .btn-reject { background: #dc3545; margin-left: 5px; }
+        .btn-edit { background: #007bff; width: 100%; margin-top: 10px; padding: 12px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .bank-info { background: #fff3f3; padding: 5px; border-radius: 4px; color: #d63031; font-weight: bold; border: 1px dashed #fab1a0; }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <div class="sidebar-header">FASTRAFFIC</div>
-    <div id="m-trangchu" class="menu-item" onclick="showPage('trangchu')"><i class="fas fa-home" style="margin-right:10px"></i> Trang chủ</div>
-    <div id="m-lichsu" class="menu-item" onclick="showPage('lichsu')"><i class="fas fa-history" style="margin-right:10px"></i> Lịch sử</div>
-    <div id="m-quydinh" class="menu-item" onclick="showPage('quydinh')"><i class="fas fa-gavel" style="margin-right:10px"></i> Quy định</div>
-    <div id="m-ruttien" class="menu-item" onclick="showPage('ruttien')"><i class="fas fa-wallet" style="margin-right:10px"></i> Rút tiền</div>
-</div>
-
-<div class="main">
-    <div class="top-bar">
-        <span>Chào, <b id="userMail" style="color:#e94560">Đang tải...</b></span>
-        <button class="logout" onclick="logout()">Đăng xuất</button>
+<div class="container">
+    <div class="header">
+        <h1 style="margin:0; color:#333;">QUẢN TRỊ VIÊN</h1>
+        <p style="font-size:13px; color:#666;">Duyệt nhiệm vụ & Quản lý hệ thống</p>
     </div>
-    <div class="content" id="view"></div>
+
+    <h2><i class="fas fa-university"></i> Yêu cầu rút tiền</h2>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Thời gian</th>
+                    <th>Người dùng</th>
+                    <th>Thông tin Bank</th>
+                    <th>Số tiền rút</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="withdraw-list">
+                <tr><td colspan="5" style="text-align:center">Đang tải...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2><i class="fas fa-tasks"></i> Danh sách chờ duyệt</h2>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Người dùng</th>
+                    <th>Nhiệm vụ</th>
+                    <th>Tiền thưởng</th>
+                    <th>Thời gian</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="task-list">
+                <tr><td colspan="5" style="text-align:center">Đang tải...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2><i class="fas fa-user-cog"></i> Tùy chỉnh số dư người dùng</h2>
+    <div class="card" style="padding: 20px; border: 2px solid #007bff;">
+        <input type="text" id="user-email" placeholder="Nhập Email người dùng...">
+        <button class="btn btn-edit" onclick="manualEditBalance()">CẬP NHẬT SỐ DƯ</button>
+    </div>
 </div>
 
 <script>
@@ -52,113 +83,110 @@
         projectId: "fastraffic-8b585",
         databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let currentUserId = "";
-    let currentBalance = 0;
-
-    firebase.auth().onAuthStateChanged((user) => {
-        if (user) {
-            currentUserId = user.email.replace(/\./g, '_');
-            document.getElementById("userMail").innerText = user.email;
-            showPage('trangchu'); 
-        } else { window.location.href = "index.html"; }
-    });
-
-    function showPage(page) {
-        const view = document.getElementById("view");
-        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        if(document.getElementById('m-' + page)) document.getElementById('m-' + page).classList.add('active');
-
-        if (page === 'trangchu') {
-            view.innerHTML = `<div class="money-card"><div id="userMoney">0 VNĐ</div></div><h3>Hệ thống nhiệm vụ</h3><div id="taskList">Đang tải...</div>`;
-            loadMoney();
-        } 
-        else if (page === 'ruttien') {
-            view.innerHTML = `
-                <h2>Rút tiền</h2>
-                <div style="background:white; padding:25px; border-radius:15px; max-width:500px; box-shadow:0 4px 10px rgba(0,0,0,0.05)">
-                    <p>Số dư hiện tại: <b id="drawBalance" style="color:#e94560">0 VNĐ</b></p>
-                    
-                    <label><b>Số tiền rút:</b></label>
-                    <input type="number" id="amount" class="withdraw-input" placeholder="Tối thiểu 20.000">
-                    
-                    <label><b>Ngân hàng hoặc Ví điện tử:</b></label>
-                    <input type="text" id="bankName" class="withdraw-input" placeholder="Ví dụ: MB Bank, MoMo...">
-                    
-                    <label><b>Số tài khoản nhận tiền:</b></label>
-                    <input type="text" id="bankAcc" class="withdraw-input" placeholder="Nhập số tài khoản chính xác">
-                    
-                    <button onclick="requestWithdraw()" class="btn-do" style="background:#e94560">Gửi yêu cầu rút tiền</button>
-                </div>
-
-                <h3 style="margin-top:40px">Lịch sử rút tiền</h3>
-                <div id="withdrawHistory">Đang tải...</div>`;
-            loadMoney();
-            loadWithdrawHistory();
+    function manualEditBalance() {
+        const email = document.getElementById('user-email').value.trim();
+        if(!email) return alert("Vui lòng nhập Email!");
+        const uid = email.replace(/\./g, '_');
+        const val = prompt("Nhập số tiền mới:");
+        if (val !== null && !isNaN(val)) {
+            db.ref(`users/${uid}/money`).set(parseInt(val)).then(() => alert("Xong!"));
         }
     }
 
-    function loadMoney() {
-        db.ref('users/' + currentUserId).on('value', (s) => {
-            currentBalance = s.val() ? s.val().money : 0;
-            const moneyStr = currentBalance.toLocaleString() + " VNĐ";
-            if(document.getElementById("userMoney")) document.getElementById("userMoney").innerText = moneyStr;
-            if(document.getElementById("drawBalance")) document.getElementById("drawBalance").innerText = moneyStr;
-        });
-    }
-
-    function requestWithdraw() {
-        const amt = parseInt(document.getElementById('amount').value);
-        const name = document.getElementById('bankName').value;
-        const acc = document.getElementById('bankAcc').value;
-
-        if (isNaN(amt) || amt < 20000) return alert("Số tiền rút tối thiểu là 20.000 VNĐ!");
-        if (amt > currentBalance) return alert("Số dư khả dụng không đủ!");
-        if (!name || !acc) return alert("Vui lòng nhập đầy đủ thông tin ngân hàng!");
-
-        const timestamp = Date.now();
-        const withdrawData = {
-            amount: amt,
-            bankName: name,
-            bankAcc: acc,
-            status: "pending",
-            time: new Date().toLocaleString('vi-VN')
-        };
-
-        // 1. Lưu vào nhánh tổng cho Admin duyệt
-        db.ref('withdraw_requests/' + timestamp).set({
-            ...withdrawData,
-            userId: currentUserId
-        });
-
-        // 2. Lưu vào lịch sử riêng của User để hiển thị bảng
-        db.ref('user_withdrawals/' + currentUserId + '/' + timestamp).set(withdrawData).then(() => {
-            alert("Đã gửi yêu cầu rút tiền thành công!");
-            document.getElementById('amount').value = '';
-            document.getElementById('bankName').value = '';
-            document.getElementById('bankAcc').value = '';
-        });
-    }
-
-    function loadWithdrawHistory() {
-        db.ref('user_withdrawals/' + currentUserId).on('value', (s) => {
-            let h = `<table><tr><th>Thời gian</th><th>Số tiền</th><th>Ngân hàng</th><th>Trạng thái</th></tr>`;
-            const d = s.val();
-            if(!d) {
-                h += `<tr><td colspan="4">Bạn chưa thực hiện lệnh rút nào.</td></tr>`;
-            } else {
-                Object.values(d).reverse().forEach(i => {
-                    let st = i.status === 'pending' ? '<span style="color:orange">Chờ duyệt</span>' : '<span style="color:green">Đã chuyển</span>';
-                    h += `<tr><td>${i.time}</td><td>${i.amount.toLocaleString()}đ</td><td>${i.bankName}</td><td>${st}</td></tr>`;
+    function loadWithdraws() {
+        db.ref('withdraw_requests').on('value', snap => {
+            const list = document.getElementById('withdraw-list');
+            list.innerHTML = '';
+            const data = snap.val();
+            if (data) {
+                Object.keys(data).forEach(id => {
+                    const r = data[id];
+                    if (r.status === 'pending') {
+                        list.innerHTML += `<tr>
+                            <td><small>${r.time || 'N/A'}</small></td>
+                            <td><b>${r.userId.replace(/_/g, '.')}</b></td>
+                            <td><div class="bank-info">${r.bankAcc} - ${r.bankName}</div></td>
+                            <td style="color:red">-${(r.amount || 0).toLocaleString()}đ</td>
+                            <td>
+                                <button class="btn btn-approve" onclick="approveWithdraw('${id}','${r.userId}',${r.amount})">Đã Bank</button>
+                                <button class="btn btn-reject" onclick="cancelWithdraw('${id}')">Hủy</button> 
+                            </td>
+                        </tr>`;
+                    }
                 });
             }
-            document.getElementById("withdrawHistory").innerHTML = h + `</table>`;
         });
     }
 
-    function logout() { firebase.auth().signOut().then(() => window.location.href = "index.html"); }
+    // DUYỆT RÚT TIỀN: Cập nhật trạng thái ở cả 2 nơi để người dùng thấy
+    function approveWithdraw(id, uid, amt) {
+        if(confirm("Xác nhận đã chuyển tiền?")) {
+            db.ref(`users/${uid}/money`).transaction(c => (c || 0) - amt).then(() => {
+                // Cập nhật trạng thái yêu cầu rút tiền
+                db.ref(`withdraw_requests/${id}`).update({ status: 'done' });
+                // ĐỒNG BỘ: Tìm trong history để cập nhật trạng thái hiển thị cho người dùng
+                db.ref(`history/${uid}`).once('value', hSnap => {
+                    hSnap.forEach(child => {
+                        if(child.val().withdrawId === id) {
+                            child.ref.update({ status: 'done' });
+                        }
+                    });
+                });
+                alert("Đã duyệt thành công!");
+            });
+        }
+    }
+
+    function cancelWithdraw(id) {
+        if(confirm("Hủy yêu cầu?")) {
+            db.ref(`withdraw_requests/${id}`).update({ status: 'cancelled' });
+            alert("Đã hủy!");
+        }
+    }
+
+    function loadTasks() {
+        db.ref('history').on('value', snap => {
+            const list = document.getElementById('task-list');
+            list.innerHTML = '';
+            const data = snap.val();
+            if (data) {
+                Object.keys(data).forEach(uid => {
+                    const tasks = data[uid];
+                    Object.keys(tasks).forEach(tid => {
+                        if (tasks[tid].status === 'pending' && !tasks[tid].withdrawId) {
+                            list.innerHTML += `<tr>
+                                <td><b>${uid.replace(/_/g, '.')}</b></td>
+                                <td><small>${tasks[tid].task}</small></td>
+                                <td style="color:green">+${tasks[tid].amount.toLocaleString()}đ</td>
+                                <td><small>${tasks[tid].time || 'N/A'}</small></td>
+                                <td>
+                                    <button class="btn btn-approve" onclick="approveTask('${uid}','${tid}',${tasks[tid].amount})">Duyệt</button>
+                                    <button class="btn btn-reject" onclick="deleteItem('history/${uid}/${tid}')">Xóa</button>
+                                </td>
+                            </tr>`;
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    function approveTask(uid, tid, amt) {
+        db.ref(`users/${uid}/money`).transaction(c => (c || 0) + amt).then(() => {
+            db.ref(`history/${uid}/${tid}`).update({ status: 'done' });
+        });
+    }
+
+    function deleteItem(path) { if(confirm("Xóa?")) db.ref(path).remove(); }
+
+    firebase.auth().onAuthStateChanged(user => {
+        if (user && user.email === "nguyenthanhduy281009@gmail.com") {
+            loadTasks(); loadWithdraws();
+        }
+    });
 </script>
 </body>
 </html>
