@@ -9,63 +9,76 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 15px; }
         .container { max-width: 1100px; margin: auto; }
-        .header { text-align: center; padding: 20px; background: white; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { color: #e94560; font-size: 20px; display: flex; align-items: center; gap: 10px; margin-top: 30px; }
-        .card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
+        .header { text-align: center; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { color: #e94560; font-size: 18px; margin-top: 30px; border-left: 4px solid #e94560; padding-left: 10px; }
+        .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; color: #666; font-size: 12px; text-transform: uppercase; }
-        .time-col { font-size: 11px; color: #888; }
-        .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
-        .btn-approve { background: #28a745; }
-        .btn-reject { background: #dc3545; margin-left: 5px; }
-        .edit-link { font-size: 11px; color: #007bff; cursor: pointer; text-decoration: underline; display: block; margin-top: 4px; }
-        .money-val { font-weight: bold; color: #333; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #fdfdfd; color: #888; font-size: 11px; text-transform: uppercase; }
+        .btn { border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: 600; color: #fff; }
+        .btn-approve { background: #2ecc71; }
+        .btn-reject { background: #e74c3c; margin-left: 5px; }
+        .btn-edit { background: #3498db; }
+        .money-text { font-weight: bold; color: #2c3e50; }
+        .user-email { font-weight: 600; color: #333; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1 style="margin:0; color:#333;">QUẢN TRỊ VIÊN</h1>
-        <p style="font-size:13px; color:#666;">Duyệt nhiệm vụ & Tùy chỉnh số dư</p>
+        <h1 style="margin:0; font-size: 24px;">HỆ THỐNG QUẢN TRỊ</h1>
     </div>
 
-    <h2><i class="fas fa-tasks"></i> Danh sách chờ duyệt</h2>
+    <h2><i class="fas fa-users"></i> Quản Lý Số Dư Thành Viên</h2>
     <div class="card">
         <table>
             <thead>
                 <tr>
-                    <th>Người dùng</th>
-                    <th>Nhiệm vụ</th>
-                    <th>Tiền thưởng</th>
-                    <th>Số dư hiện tại</th>
-                    <th>Thời gian</th>
-                    <th>Hành động</th>
+                    <th>Email Người Dùng</th>
+                    <th>Số Dư Hiện Tại</th>
+                    <th>Hành Động</th>
                 </tr>
             </thead>
-            <tbody id="task-list">
-                <tr><td colspan="6" style="text-align:center">Đang kết nối dữ liệu...</td></tr>
+            <tbody id="user-admin-list">
+                <tr><td colspan="3" style="text-align:center">Đang tải danh sách thành viên...</td></tr>
             </tbody>
         </table>
     </div>
 
-    <h2><i class="fas fa-university"></i> Yêu cầu rút tiền</h2>
-    <div class="card" style="margin-top:10px;">
+    <h2><i class="fas fa-check-circle"></i> Duyệt Nhiệm Vụ Đang Chờ</h2>
+    <div class="card">
         <table>
             <thead>
                 <tr>
-                    <th>Người dùng</th>
-                    <th>Thông tin nhận</th>
-                    <th>Số tiền rút</th>
-                    <th>Thời gian</th>
-                    <th>Hành động</th>
+                    <th>Người Dùng</th>
+                    <th>Nhiệm Vụ</th>
+                    <th>Thưởng</th>
+                    <th>Thời Gian</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody id="task-list">
+                <tr><td colspan="5" style="text-align:center">Không có nhiệm vụ chờ duyệt.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2><i class="fas fa-wallet"></i> Yêu Cầu Rút Tiền</h2>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Người Dùng</th>
+                    <th>Thông Tin Nhận</th>
+                    <th>Số Tiền</th>
+                    <th>Hành Động</th>
                 </tr>
             </thead>
             <tbody id="withdraw-list">
-                <tr><td colspan="5" style="text-align:center">Đang tải...</td></tr>
+                <tr><td colspan="4" style="text-align:center">Không có yêu cầu rút tiền.</td></tr>
             </tbody>
         </table>
     </div>
@@ -80,108 +93,115 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    // KIỂM TRA QUYỀN ADMIN (Thay bằng email của bạn)
     const ADMIN_EMAIL = "nguyenthanhduy281009@gmail.com";
 
     firebase.auth().onAuthStateChanged(user => {
         if (!user || user.email !== ADMIN_EMAIL) {
-            alert("Bạn không có quyền!");
+            alert("Quyền truy cập bị từ chối!");
             window.location.href = "index.html";
         } else {
-            loadTasks();
-            loadWithdraws();
+            loadAllUsers(); // Tải danh sách thành viên
+            loadTasks();    // Tải nhiệm vụ
+            loadWithdraws();// Tải rút tiền
         }
     });
 
-    // 1. Tải danh sách nhiệm vụ
+    // 1. Hàm Quản lý Thành viên & Tùy chỉnh số dư
+    function loadAllUsers() {
+        db.ref('users').on('value', snap => {
+            const list = document.getElementById('user-admin-list');
+            list.innerHTML = '';
+            const users = snap.val();
+            if (users) {
+                Object.keys(users).forEach(uid => {
+                    const u = users[uid];
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="user-email">${uid.replace(/_/g, '.')}</td>
+                        <td class="money-text">${(u.money || 0).toLocaleString()}đ</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="setNewBalance('${uid}', '${u.money || 0}')">
+                                <i class="fas fa-edit"></i> Chỉnh số dư
+                            </button>
+                        </td>
+                    `;
+                    list.appendChild(row);
+                });
+            }
+        });
+    }
+
+    // Hàm thiết lập lại toàn bộ số dư
+    function setNewBalance(uid, oldMoney) {
+        const val = prompt(`Số dư hiện tại: ${oldMoney}đ\nNhập SỐ TIỀN MỚI bạn muốn thiết lập (Ví dụ nhập 0 để xóa sạch):`);
+        if (val !== null && val !== "") {
+            const newMoney = parseInt(val);
+            if (!isNaN(newMoney)) {
+                // Sử dụng .set() để thay thế hoàn toàn giá trị cũ
+                db.ref(`users/${uid}/money`).set(newMoney).then(() => {
+                    alert("Đã thiết lập số dư mới thành công!");
+                });
+            } else {
+                alert("Vui lòng chỉ nhập số!");
+            }
+        }
+    }
+
+    // 2. Tải danh sách nhiệm vụ
     function loadTasks() {
         db.ref('history').on('value', snap => {
-            const taskList = document.getElementById('task-list');
-            taskList.innerHTML = '';
+            const list = document.getElementById('task-list');
+            list.innerHTML = '';
             const data = snap.val();
-            
-            if (!data) {
-                taskList.innerHTML = '<tr><td colspan="6" style="text-align:center">Hết nhiệm vụ chờ duyệt.</td></tr>';
-                return;
-            }
-
-            Object.keys(data).forEach(uid => {
-                // Lấy số dư hiện tại của mỗi User
-                db.ref(`users/${uid}/money`).on('value', moneySnap => {
-                    const currentMoney = moneySnap.val() || 0;
-                    const tasks = data[uid];
-                    
-                    Object.keys(tasks).forEach(tid => {
-                        const t = tasks[tid];
+            if (data) {
+                Object.keys(data).forEach(uid => {
+                    Object.keys(data[uid]).forEach(tid => {
+                        const t = data[uid][tid];
                         if (t.status === 'pending') {
-                            const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td><b>${uid.replace(/_/g, '.')}</b></td>
+                            list.innerHTML += `<tr>
+                                <td>${uid.replace(/_/g, '.')}</td>
                                 <td><small>${t.task}</small></td>
-                                <td style="color:green; font-weight:bold">+${t.amount.toLocaleString()}đ</td>
-                                <td>
-                                    <span class="money-val">${currentMoney.toLocaleString()}đ</span>
-                                    <span class="edit-link" onclick="editBalance('${uid}')">Tùy chỉnh số dư</span>
-                                </td>
-                                <td class="time-col">${t.time || 'N/A'}</td>
+                                <td style="color:green">+${t.amount}đ</td>
+                                <td><small>${t.time || ''}</small></td>
                                 <td>
                                     <button class="btn btn-approve" onclick="approveTask('${uid}','${tid}',${t.amount})">Duyệt</button>
                                     <button class="btn btn-reject" onclick="deleteItem('history/${uid}/${tid}')">Xóa</button>
                                 </td>
-                            `;
-                            taskList.appendChild(row);
+                            </tr>`;
                         }
                     });
                 });
-            });
+            }
         });
     }
 
-    // 2. Tải danh sách rút tiền
+    // 3. Tải danh sách rút tiền
     function loadWithdraws() {
         db.ref('withdraw_requests').on('value', snap => {
-            const withdrawList = document.getElementById('withdraw-list');
-            withdrawList.innerHTML = '';
+            const list = document.getElementById('withdraw-list');
+            list.innerHTML = '';
             const data = snap.val();
             if (data) {
                 Object.keys(data).forEach(id => {
                     const r = data[id];
                     if (r.status === 'pending') {
-                        withdrawList.innerHTML += `
-                            <tr>
-                                <td><b>${r.userId.replace(/_/g, '.')}</b></td>
-                                <td><small>${r.info}</small></td>
-                                <td style="color:red; font-weight:bold">-${r.amount.toLocaleString()}đ</td>
-                                <td class="time-col">${r.time || 'N/A'}</td>
-                                <td>
-                                    <button class="btn btn-approve" onclick="approveWithdraw('${id}','${r.userId}',${r.amount})">Đã Bank</button>
-                                    <button class="btn btn-reject" onclick="deleteItem('withdraw_requests/${id}')">Hủy</button>
-                                </td>
-                            </tr>`;
+                        list.innerHTML += `<tr>
+                            <td>${r.userId.replace(/_/g, '.')}</td>
+                            <td><small>${r.info}</small></td>
+                            <td style="color:red">-${r.amount}đ</td>
+                            <td>
+                                <button class="btn btn-approve" onclick="approveWithdraw('${id}','${r.userId}',${r.amount})">Đã Bank</button>
+                                <button class="btn btn-reject" onclick="deleteItem('withdraw_requests/${id}')">Hủy</button>
+                            </td>
+                        </tr>`;
                     }
                 });
-            } else {
-                withdrawList.innerHTML = '<tr><td colspan="5" style="text-align:center">Không có yêu cầu rút tiền.</td></tr>';
             }
         });
     }
 
-    // TÙY CHỈNH SỐ DƯ
-    function editBalance(uid) {
-        const val = prompt("Nhập số tiền mới cho người dùng này (Ví dụ: 0 để xóa sạch):");
-        if (val !== null) {
-            const newMoney = parseInt(val);
-            if (!isNaN(newMoney)) {
-                db.ref(`users/${uid}/money`).set(newMoney).then(() => alert("Đã cập nhật số dư!"));
-            } else {
-                alert("Vui lòng nhập số!");
-            }
-        }
-    }
-
     function approveTask(uid, tid, amt) {
-        if(confirm("Duyệt " + amt + "đ?")) {
+        if(confirm("Duyệt thưởng?")) {
             db.ref(`users/${uid}/money`).transaction(c => (c || 0) + amt).then(() => {
                 db.ref(`history/${uid}/${tid}`).update({ status: 'done' });
             });
@@ -189,7 +209,7 @@
     }
 
     function approveWithdraw(id, uid, amt) {
-        if(confirm("Xác nhận đã chuyển khoản?")) {
+        if(confirm("Xác nhận đã chuyển tiền?")) {
             db.ref(`users/${uid}/money`).transaction(c => (c || 0) - amt).then(() => {
                 db.ref(`withdraw_requests/${id}`).update({ status: 'done' });
             });
@@ -202,4 +222,3 @@
 </script>
 </body>
 </html>
-
