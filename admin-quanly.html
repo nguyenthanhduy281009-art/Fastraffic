@@ -74,7 +74,7 @@
 
     // 2. Kiểm tra quyền Admin (Sửa email của bạn ở đây)
     firebase.auth().onAuthStateChanged(user => {
-        if (!user || user.email !== 'email-cua-ban@gmail.com') {
+        if (!user || user.email !== 'nguyenthanhduy281009@gmail.com') {
             alert("Bạn không có quyền truy cập!");
             window.location.href = "index.html";
         } else {
@@ -156,4 +156,5 @@
     }
 </script>
 </body>
+
 </html>
