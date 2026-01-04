@@ -24,15 +24,16 @@
         .task-card { background: white; border-radius: 12px; padding: 20px; border: 1px dashed #ccc; transition: 0.3s; }
         .btn-do { width: 100%; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin: 15px 0; font-size: 14px; }
         .task-info { display: flex; justify-content: space-around; border-top: 1px solid #eee; padding-top: 12px; font-size: 11px; text-align: center; }
+        .rules-card { background: white; padding: 25px; border-radius: 15px; border-left: 5px solid #e94560; line-height: 1.6; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <div class="sidebar-header">FASTRAFFIC</div>
-    <div id="m-trangchu" class="menu-item" onclick="showPage('trangchu')"><i class="fas fa-home"></i> Trang chủ</div>
-    <div id="m-lichsu" class="menu-item" onclick="showPage('lichsu')"><i class="fas fa-history"></i> Lịch sử</div>
-    <div id="m-ruttien" class="menu-item" onclick="showPage('ruttien')"><i class="fas fa-wallet"></i> Rút tiền</div>
+    <div id="m-trangchu" class="menu-item" onclick="showPage('trangchu')"><i class="fas fa-home" style="margin-right:10px"></i> Trang chủ</div>
+    <div id="m-quydinh" class="menu-item" onclick="showPage('quydinh')"><i class="fas fa-gavel" style="margin-right:10px"></i> Quy định</div>
+    <div id="m-ruttien" class="menu-item" onclick="showPage('ruttien')"><i class="fas fa-wallet" style="margin-right:10px"></i> Rút tiền</div>
 </div>
 
 <div class="main">
@@ -54,61 +55,74 @@
     const db = firebase.database();
 
     let currentUserId = "";
-    
+
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
             currentUserId = user.email.replace(/\./g, '_');
             document.getElementById("userMail").innerText = user.email;
-            checkDailyReset(); // Kiểm tra reset ngày mới
+            checkDailyReset();
             showPage('trangchu'); 
         } else { window.location.href = "index.html"; }
     });
 
-    // Hàm kiểm tra reset lúc 00:00
     function checkDailyReset() {
         const today = new Date().toLocaleDateString();
-        const lastDate = localStorage.getItem('last_date');
-        if (lastDate !== today) {
-            localStorage.setItem('done_tasks', '[]'); // Xóa danh sách nhiệm vụ đã làm
+        if (localStorage.getItem('last_date') !== today) {
+            localStorage.setItem('done_tasks', '[]');
             localStorage.setItem('last_date', today);
         }
     }
 
     function showPage(page) {
         const view = document.getElementById("view");
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        document.getElementById('m-' + page).classList.add('active');
+
         if (page === 'trangchu') {
             view.innerHTML = `
                 <div class="money-card"><div id="userMoney">0 VNĐ</div></div>
                 <h3 style="color:#e94560">Hệ thống Traffictot</h3>
                 <div id="list-traffictot" class="task-container"></div>
                 <h3 style="color:#28a745">Hệ thống Click1s</h3>
-                <div id="list-click1s" class="task-container"></div>
-            `;
-            loadMoney();
-            renderTasks();
+                <div id="list-click1s" class="task-container"></div>`;
+            loadMoney(); renderTasks();
         } 
-        // ... (Các page khác giữ nguyên)
+        else if (page === 'quydinh') {
+            view.innerHTML = `
+                <h2>Quy định làm việc</h2>
+                <div class="rules-card">
+                    <p><b>1. Tính hợp lệ:</b> Mỗi nhiệm vụ chỉ được làm 1 lần/ngày. Hệ thống sẽ reset nhiệm vụ vào lúc 00:00 mỗi ngày.</p>
+                    <p><b>2. Quy trình:</b> Bạn phải vượt link và lấy đúng mã code yêu cầu để được duyệt tiền thưởng.</p>
+                    <p><b>3. Nghiêm cấm:</b> Sử dụng công cụ tự động (Auto click), VPN hoặc các thủ thuật gian lận sẽ bị khóa tài khoản vĩnh viễn.</p>
+                    <p><b>4. Thanh toán:</b> Số tiền tối thiểu để rút là 50.000 VNĐ. Lệnh rút tiền được duyệt trong vòng 24h.</p>
+                </div>`;
+        }
+        else if (page === 'ruttien') {
+            view.innerHTML = `
+                <h2>Rút tiền</h2>
+                <div class="rules-card" style="max-width:500px">
+                    <p>Số dư khả dụng: <b id="drawBalance" style="color:#e94560">0 VNĐ</b></p>
+                    <input type="number" id="amount" style="width:100%; padding:10px; margin-bottom:10px" placeholder="Số tiền rút">
+                    <textarea id="bankInfo" style="width:100%; padding:10px; margin-bottom:10px" rows="3" placeholder="Ngân hàng - STK - Tên"></textarea>
+                    <button onclick="requestWithdraw()" class="btn-do" style="background:#e94560">Rút ngay</button>
+                </div>`;
+            loadMoney();
+        }
     }
 
     function renderTasks() {
         const doneTasks = JSON.parse(localStorage.getItem('done_tasks') || '[]');
-
         db.ref('Task/Traffictot').on('value', (s) => {
             let h = ''; const d = s.val();
             if(d) Object.keys(d).forEach(k => {
-                if (!doneTasks.includes('Traffictot_' + k)) { // Nếu chưa làm thì hiện
-                    h += createTaskUI('Traffictot', k, d[k], 250, '#e94560');
-                }
+                if (!doneTasks.includes('Traffictot_' + k)) h += createTaskUI('Traffictot', k, d[k], 250, '#e94560');
             });
             document.getElementById('list-traffictot').innerHTML = h || 'Hết nhiệm vụ hôm nay.';
         });
-
         db.ref('Task/Click1s').on('value', (s) => {
             let h = ''; const d = s.val();
             if(d) Object.keys(d).forEach(k => {
-                if (!doneTasks.includes('Click1s_' + k)) { // Nếu chưa làm thì hiện
-                    h += createTaskUI('Click1s', k, d[k], 500, '#28a745');
-                }
+                if (!doneTasks.includes('Click1s_' + k)) h += createTaskUI('Click1s', k, d[k], 500, '#28a745');
             });
             document.getElementById('list-click1s').innerHTML = h || 'Hết nhiệm vụ hôm nay.';
         });
@@ -119,26 +133,18 @@
             <div class="task-card" style="border-color:${col}" id="card_${sys}_${id}">
                 <div style="font-weight:bold; color:${col}">${sys}</div>
                 <button class="btn-do" style="background:${col}" onclick="goTask('${url}','${sys}','${id}',${cash})">Thực hiện</button>
-                <div class="task-info">
-                    <div><b>${cash}đ</b><br>Tiền</div>
-                    <div style="color:green"><b>Sẵn sàng</b></div>
-                </div>
+                <div class="task-info"><div><b>${cash}đ</b></div><div style="color:green">Sẵn sàng</div></div>
             </div>`;
     }
 
     function goTask(url, sys, id, amt) {
-        // 1. Lưu ID nhiệm vụ vào danh sách đã làm
         const doneTasks = JSON.parse(localStorage.getItem('done_tasks') || '[]');
         doneTasks.push(sys + '_' + id);
         localStorage.setItem('done_tasks', JSON.stringify(doneTasks));
-
-        // 2. Gửi lịch sử lên Firebase
         db.ref('history/' + currentUserId + '/' + Date.now()).set({
             task: sys + " - " + id, amount: amt, status: "pending", time: new Date().toLocaleString('vi-VN')
         }).then(() => {
-            // 3. Ẩn nhiệm vụ trên giao diện ngay lập tức
             document.getElementById(`card_${sys}_${id}`).style.display = 'none';
-            // 4. Mở link vượt mã
             window.open(`wait.html?target=${btoa(url)}`, '_blank');
         });
     }
@@ -146,7 +152,9 @@
     function loadMoney() {
         db.ref('users/' + currentUserId).on('value', (s) => {
             const m = s.val() ? s.val().money : 0;
-            document.getElementById("userMoney").innerText = m.toLocaleString() + " VNĐ";
+            const str = m.toLocaleString() + " VNĐ";
+            if(document.getElementById("userMoney")) document.getElementById("userMoney").innerText = str;
+            if(document.getElementById("drawBalance")) document.getElementById("drawBalance").innerText = str;
         });
     }
     function logout() { firebase.auth().signOut().then(() => window.location.href = "index.html"); }
