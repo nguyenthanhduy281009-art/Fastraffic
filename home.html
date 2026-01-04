@@ -24,7 +24,9 @@
         .task-card { background: white; border-radius: 12px; padding: 20px; border: 1px dashed #ccc; transition: 0.3s; }
         .btn-do { width: 100%; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin: 15px 0; font-size: 14px; }
         .task-info { display: flex; justify-content: space-around; border-top: 1px solid #eee; padding-top: 12px; font-size: 11px; text-align: center; }
-        .rules-card { background: white; padding: 25px; border-radius: 15px; border-left: 5px solid #e94560; line-height: 1.6; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: center; }
+        th { background: #f8f9fa; color: #666; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -32,6 +34,7 @@
 <div class="sidebar">
     <div class="sidebar-header">FASTRAFFIC</div>
     <div id="m-trangchu" class="menu-item" onclick="showPage('trangchu')"><i class="fas fa-home" style="margin-right:10px"></i> Trang chủ</div>
+    <div id="m-lichsu" class="menu-item" onclick="showPage('lichsu')"><i class="fas fa-history" style="margin-right:10px"></i> Lịch sử</div>
     <div id="m-quydinh" class="menu-item" onclick="showPage('quydinh')"><i class="fas fa-gavel" style="margin-right:10px"></i> Quy định</div>
     <div id="m-ruttien" class="menu-item" onclick="showPage('ruttien')"><i class="fas fa-wallet" style="margin-right:10px"></i> Rút tiền</div>
 </div>
@@ -87,24 +90,21 @@
                 <div id="list-click1s" class="task-container"></div>`;
             loadMoney(); renderTasks();
         } 
+        else if (page === 'lichsu') {
+            view.innerHTML = `<h2>Lịch sử chờ duyệt</h2><div id="historyData">Đang tải...</div>`;
+            loadHistory();
+        }
         else if (page === 'quydinh') {
-            view.innerHTML = `
-                <h2>Quy định làm việc</h2>
-                <div class="rules-card">
-                    <p><b>1. Tính hợp lệ:</b> Mỗi nhiệm vụ chỉ được làm 1 lần/ngày. Hệ thống sẽ reset nhiệm vụ vào lúc 00:00 mỗi ngày.</p>
-                    <p><b>2. Quy trình:</b> Bạn phải vượt link và lấy đúng mã code yêu cầu để được duyệt tiền thưởng.</p>
-                    <p><b>3. Nghiêm cấm:</b> Sử dụng công cụ tự động (Auto click), VPN hoặc các thủ thuật gian lận sẽ bị khóa tài khoản vĩnh viễn.</p>
-                    <p><b>4. Thanh toán:</b> Số tiền tối thiểu để rút là 50.000 VNĐ. Lệnh rút tiền được duyệt trong vòng 24h.</p>
-                </div>`;
+            view.innerHTML = `<h2>Quy định</h2><p>Vượt link và lấy mã chính xác để được duyệt tiền.</p>`;
         }
         else if (page === 'ruttien') {
             view.innerHTML = `
                 <h2>Rút tiền</h2>
-                <div class="rules-card" style="max-width:500px">
-                    <p>Số dư khả dụng: <b id="drawBalance" style="color:#e94560">0 VNĐ</b></p>
-                    <input type="number" id="amount" style="width:100%; padding:10px; margin-bottom:10px" placeholder="Số tiền rút">
-                    <textarea id="bankInfo" style="width:100%; padding:10px; margin-bottom:10px" rows="3" placeholder="Ngân hàng - STK - Tên"></textarea>
-                    <button onclick="requestWithdraw()" class="btn-do" style="background:#e94560">Rút ngay</button>
+                <div style="background:white; padding:25px; border-radius:15px; max-width:500px">
+                    <p>Số dư: <b id="drawBalance" style="color:#e94560">0 VNĐ</b></p>
+                    <input type="number" id="amount" style="width:100%; padding:10px; margin:10px 0" placeholder="Số tiền rút">
+                    <textarea id="bankInfo" style="width:100%; padding:10px; margin-bottom:10px" rows="3" placeholder="Thông tin ngân hàng"></textarea>
+                    <button onclick="requestWithdraw()" class="btn-do" style="background:#e94560">Gửi yêu cầu</button>
                 </div>`;
             loadMoney();
         }
@@ -146,6 +146,18 @@
         }).then(() => {
             document.getElementById(`card_${sys}_${id}`).style.display = 'none';
             window.open(`wait.html?target=${btoa(url)}`, '_blank');
+        });
+    }
+
+    function loadHistory() {
+        db.ref('history/' + currentUserId).on('value', (s) => {
+            let h = `<table><tr><th>Nhiệm vụ</th><th>Thời gian</th><th>Tiền</th><th>Trạng thái</th></tr>`;
+            const d = s.val();
+            if(d) Object.values(d).reverse().forEach(i => {
+                let st = i.status === 'pending' ? '<span style="color:orange">Chờ duyệt</span>' : '<span style="color:green">Đã cộng</span>';
+                h += `<tr><td>${i.task}</td><td>${i.time}</td><td>+${i.amount}</td><td>${st}</td></tr>`;
+            });
+            document.getElementById("historyData").innerHTML = h + `</table>`;
         });
     }
 
