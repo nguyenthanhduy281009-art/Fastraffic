@@ -41,7 +41,7 @@
 
 <div class="main">
     <div class="top-bar">
-        <span>Chào, <b id="userMail" style="color:#e94560">Đang tải...</b></span>
+        <span>Xin Chào, <b id="userMail" style="color:#e94560">Đang tải...</b></span>
         <button class="logout" onclick="logout()">Đăng xuất</button>
     </div>
     <div class="content" id="view"></div>
@@ -95,9 +95,19 @@
             view.innerHTML = `<h2>Lịch sử làm nhiệm vụ</h2><div id="historyData">Đang tải...</div>`;
             loadHistory();
         }
-        else if (page === 'quydinh') {
-            view.innerHTML = `<h2>Quy định</h2><p>Lấy mã chính xác để được duyệt tiền. Tuyệt đối không gian lận.</p>`;
-        }
+       else if (page === 'quydinh') {
+    view.innerHTML = `
+        <h2>Quy định</h2>
+        <div style="background:white; padding:20px; border-radius:15px; line-height:1.8">
+            <p><b>1.</b> Do quy định nhà cung cấp nên: Mỗi người chỉ được tạo 1 tài khoản duy nhất trên cùng 1 IP ( trừ tường hợp không còn sử dụng tài khoản cũ )</p>
+            <p><b>2.</b> Chúng tôi không chấp nhận các tài khoản tạo giả mạo hay các hành vi gian lận.</p>
+            <p><b>3.</b> Nghiêm cấm sử dụng Proxy/VPN - V2Ray và sử dụng trình duyệt ẩn danh khi vượt link.</p>
+            <p><b>4.</b> Không được bật tắt 3G/4G/Wifi để thay đổi IP khi làm nhiệm vụ.</p>
+            <p><b>5.</b> Trình duyệt cần cho phép sử dụng Cookie, Javascript.</p>
+            <p><b>6.</b> Không sử dụng Ad Block và các phần mềm chặn quảng cáo.</p>
+            <p><b>7.</b> Tuyệt đối không vi phạm để tránh bị khóa tài khoản vĩnh viễn và xóa toàn bộ số dư.</p>
+            </div>`;
+}
         else if (page === 'ruttien') {
             view.innerHTML = `<h2>Rút tiền</h2><div style="background:white; padding:25px; border-radius:15px; max-width:450px"><p id="drawBalance">Số dư: 0 VNĐ</p><input type="number" id="amount" style="width:100%; padding:10px; margin:10px 0" placeholder="Số tiền rút"><textarea id="bankInfo" style="width:100%; padding:10px" placeholder="Thông tin bank"></textarea><button onclick="requestWithdraw()" class="btn-do" style="background:#e94560">Gửi yêu cầu</button></div>`;
             loadMoney();
@@ -166,3 +176,4 @@
 </script>
 </body>
 </html>
+
