@@ -1,61 +1,90 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Đang xác thực...</title>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <meta charset="UTF-8">
+    <title>Xác thực người dùng</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f4f7f6; }
+        .box { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input { padding: 10px; width: 60px; text-align: center; margin: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; background: #e94560; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #status { color: #e94560; }
+    </style>
 </head>
-
 <body>
-<h3 id="status">🔒 Xác thực bạn là con người</h3>
 
-<p>2 + 5 = ?</p>
-<input id="ans">
-<button onclick="verify()">Xác nhận</button>
+<div class="box">
+    <h3 id="status">🔒 Xác thực bạn là con người</h3>
+    
+    <p id="question">2 + 5 = ?</p>
+    <input type="number" id="ans" placeholder="?">
+    <button onclick="verify()">Xác nhận</button>
+</div>
 
 <script>
-const firebaseConfig = {
-  /* FIREBASE CONFIG Ở ĐÂY */
-};
+    // 1. Cấu hình Firebase của bạn
+    const firebaseConfig = {
+        apiKey: "AIzaSyBka80W-Aa9m4NXQ7PD4kmx1xew-lz67l0",
+        authDomain: "fastraffic-8b585.firebaseapp.com",
+        projectId: "fastraffic-8b585",
+        databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-const params = new URLSearchParams(window.location.search);
-const linkId = params.get("id");
+    // 2. Lấy link nhiệm vụ được truyền từ trang Home
+    const params = new URLSearchParams(window.location.search);
+    const targetEncoded = params.get("target");
+    let finalLink = "";
 
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    window.location.href = "auth.html";
-  }
-});
-
-function verify() {
-  if (document.getElementById("ans").value !== "7") {
-    alert("Sai rồi!");
-    return;
-  }
-
-  let time = 5;
-  const status = document.getElementById("status");
-  status.innerText = "⏳ Vui lòng chờ " + time + " giây";
-
-  const interval = setInterval(() => {
-    time--;
-    status.innerText = "⏳ Vui lòng chờ " + time + " giây";
-
-    if (time <= 0) {
-      clearInterval(interval);
-
-      // 👉 LINK THẬT
-      window.location.href = "https://nghienapp.online/w8FPq4AcEYKjHprf0Qqm";
+    if (targetEncoded) {
+        finalLink = atob(targetEncoded); // Giải mã link
     }
-  }, 1000);
-}
+
+    // 3. Kiểm tra đăng nhập
+    auth.onAuthStateChanged(user => {
+        if (!user) {
+            window.location.href = "index.html"; // Quay về trang login nếu chưa đăng nhập
+        }
+    });
+
+    // 4. Hàm xác thực giống code cũ của bạn
+    function verify() {
+        const answer = document.getElementById("ans").value;
+        
+        // Kiểm tra kết quả (2 + 5 = 7)
+        if (answer !== "7") {
+            alert("Sai rồi! Vui lòng tính lại.");
+            return;
+        }
+
+        // Nếu đúng, bắt đầu đếm ngược
+        let time = 3; // Bạn có thể chỉnh 5 giây hoặc hơn
+        const status = document.getElementById("status");
+        const btn = document.querySelector("button");
+        
+        btn.disabled = true; // Khóa nút sau khi bấm đúng
+        status.innerText = "⏳ Vui lòng chờ " + time + " giây";
+
+        const interval = setInterval(() => {
+            time--;
+            status.innerText = "⏳ Vui lòng chờ " + time + " giây";
+
+            if (time <= 0) {
+                clearInterval(interval);
+                
+                // Chuyển hướng đến link nhiệm vụ
+                if (finalLink) {
+                    window.location.href = finalLink;
+                } else {
+                    status.innerText = "❌ Lỗi: Không tìm thấy link nhiệm vụ!";
+                }
+            }
+        }, 1000);
+    }
 </script>
 </body>
 </html>
-
-
