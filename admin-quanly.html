@@ -2,55 +2,41 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - FASTRAFFIC</title>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
-        .container { max-width: 1100px; margin: auto; }
-        .header { text-align: center; padding: 20px; background: white; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { color: #e94560; font-size: 20px; display: flex; align-items: center; gap: 10px; margin-top: 30px; }
-        .card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; color: #666; font-size: 12px; text-transform: uppercase; }
-        .time-col { font-size: 11px; color: #888; }
-        .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 15px; }
+        h2 { color: #e94560; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: center; }
+        th { background: #f8f9fa; color: #666; font-size: 12px; }
+        .btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; }
         .btn-approve { background: #28a745; }
-        .btn-reject { background: #dc3545; margin-left: 5px; }
-        .money-val { font-weight: bold; color: #333; }
-        .bank-info { font-size: 13px; line-height: 1.4; }
+        .btn-reject { background: #dc3545; }
+        .time-col { font-size: 11px; color: #888; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h1 style="margin:0; color:#333;">QUẢN TRỊ VIÊN</h1>
-        <p style="font-size:13px; color:#666;">Duyệt nhiệm vụ & Quản lý rút tiền</p>
-    </div>
+    <h1 style="text-align:center;">QUẢN TRỊ VIÊN</h1>
 
-    <h2><i class="fas fa-university"></i> Yêu cầu rút tiền chờ duyệt</h2>
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Thời gian</th>
-                    <th>Người dùng</th>
-                    <th>Ngân hàng/Ví</th>
-                    <th>Số tài khoản</th>
-                    <th>Số tiền rút</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody id="withdraw-list">
-                <tr><td colspan="6" style="text-align:center">Đang tải yêu cầu...</td></tr>
-            </tbody>
-        </table>
-    </div>
+    <h2><i class="fas fa-university"></i> Yêu cầu rút tiền (Đã thêm cột Thời gian)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Thời gian</th> <th>Người dùng</th>
+                <th>Thông tin Bank</th>
+                <th>Số tiền</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="withdraw-list"></tbody>
+    </table>
 </div>
 
 <script>
@@ -60,15 +46,15 @@
         projectId: "fastraffic-8b585",
         databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Chặn email Admin
-    const ADMIN_EMAIL = "nguyenthanhduy281009@gmail.com";
+    // BẠN PHẢI SỬA EMAIL NÀY GIỐNG HỆT EMAIL BẠN DÙNG ĐỂ ĐĂNG NHẬP
+    const ADMIN_EMAIL = "nguyenthanhduy281009@gmail.com"; 
 
     firebase.auth().onAuthStateChanged(user => {
         if (!user || user.email !== ADMIN_EMAIL) {
-            alert("Bạn không có quyền truy cập!");
+            alert("Bạn không có quyền!"); // Lỗi bạn đang gặp ở hình 2
             window.location.href = "index.html";
         } else {
             loadWithdraws();
@@ -77,59 +63,42 @@
 
     function loadWithdraws() {
         db.ref('withdraw_requests').on('value', snap => {
-            const withdrawList = document.getElementById('withdraw-list');
-            withdrawList.innerHTML = '';
+            const list = document.getElementById('withdraw-list');
+            list.innerHTML = '';
             const data = snap.val();
-            
-            if (!data) {
-                withdrawList.innerHTML = '<tr><td colspan="6" style="text-align:center">Không có yêu cầu nào.</td></tr>';
-                return;
+            if (data) {
+                Object.keys(data).reverse().forEach(id => {
+                    const r = data[id];
+                    if (r.status === 'pending') {
+                        list.innerHTML += `
+                            <tr>
+                                <td class="time-col">${r.time || 'N/A'}</td> <td><b>${r.userId.replace(/_/g, '.')}</b></td>
+                                <td>${r.bankName} - ${r.bankAcc}</td>
+                                <td style="color:red; font-weight:bold">${r.amount.toLocaleString()}đ</td>
+                                <td>
+                                    <button class="btn btn-approve" onclick="approveWithdraw('${id}','${r.userId}',${r.amount})">Duyệt & Trừ tiền</button>
+                                    <button class="btn btn-reject" onclick="deleteItem('${id}')">Xóa</button>
+                                </td>
+                            </tr>`;
+                    }
+                });
+            } else {
+                list.innerHTML = '<tr><td colspan="5">Không có yêu cầu.</td></tr>';
             }
-
-            // Sắp xếp mới nhất lên đầu
-            const keys = Object.keys(data).reverse();
-            let hasPending = false;
-
-            keys.forEach(id => {
-                const r = data[id];
-                if (r.status === 'pending') {
-                    hasPending = true;
-                    withdrawList.innerHTML += `
-                        <tr>
-                            <td class="time-col">${r.time || 'N/A'}</td>
-                            <td><b>${r.userId.replace(/_/g, '.')}</b></td>
-                            <td class="bank-info">${r.bankName || 'Trống'}</td>
-                            <td class="bank-info"><b>${r.bankAcc || 'Trống'}</b></td>
-                            <td style="color:red; font-weight:bold">${r.amount.toLocaleString()}đ</td>
-                            <td>
-                                <button class="btn btn-approve" onclick="approveWithdraw('${id}','${r.userId}',${r.amount})">Duyệt</button>
-                                <button class="btn btn-reject" onclick="deleteItem('withdraw_requests/${id}', '${r.userId}', '${id}')">Hủy</button>
-                            </td>
-                        </tr>`;
-                }
-            });
-
-            if(!hasPending) withdrawList.innerHTML = '<tr><td colspan="6" style="text-align:center">Hết yêu cầu chờ duyệt.</td></tr>';
         });
     }
 
     function approveWithdraw(id, uid, amt) {
-        if(confirm(`Xác nhận đã bank ${amt.toLocaleString()}đ? Hệ thống sẽ tự trừ tiền ví User.`)) {
-            // Cập nhật trạng thái tổng
+        if(confirm("Xác nhận đã bank tiền? Hệ thống sẽ tự động trừ ví user.")) {
             db.ref(`withdraw_requests/${id}`).update({ status: 'done' });
-            // Cập nhật lịch sử riêng của User
             db.ref(`user_withdrawals/${uid}/${id}`).update({ status: 'done' });
-            // Trừ tiền ví User
             db.ref(`users/${uid}/money`).transaction(c => (c || 0) - amt);
-            alert("Duyệt thành công!");
+            alert("Đã duyệt thành công!");
         }
     }
 
-    function deleteItem(path, uid, rid) {
-        if(confirm("Xóa yêu cầu này? (Không trừ tiền)")) {
-            db.ref(path).remove();
-            db.ref(`user_withdrawals/${uid}/${rid}`).remove();
-        }
+    function deleteItem(id) {
+        if(confirm("Xóa lệnh này?")) db.ref(`withdraw_requests/${id}`).remove();
     }
 </script>
 </body>
