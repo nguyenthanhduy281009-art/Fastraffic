@@ -10,10 +10,10 @@
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
         .box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 350px; }
-        #status { color: #e94560; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+        #status { color: #6c5ce7; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
         .cf-turnstile { margin: 25px 0; display: flex; justify-content: center; }
         #timer-box { display: none; font-size: 22px; color: #333; font-weight: bold; margin-top: 20px; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #e94560; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: inline-block; vertical-align: middle; margin-right: 10px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6c5ce7; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: inline-block; vertical-align: middle; margin-right: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -42,12 +42,13 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // 2. Lấy link từ URL (đã được encode btoa từ home.html)
+    // 2. Lấy link từ URL (Nhận tham số ?url= từ file home)
     const params = new URLSearchParams(window.location.search);
-    const target = params.get("target");
-    let finalLink = "";
-    if (target) {
-        try { finalLink = atob(target); } catch(e) { console.error("Link lỗi"); }
+    const targetUrl = params.get("url"); // Nhận link nhiệm vụ
+    let decodedLink = "";
+
+    if (targetUrl) {
+        decodedLink = decodeURIComponent(targetUrl);
     }
 
     // 3. Khi xác thực Turnstile thành công
@@ -55,13 +56,15 @@
         document.querySelector('.cf-turnstile').style.display = 'none';
         document.getElementById('timer-box').style.display = 'block';
         document.getElementById('status').innerText = "✅ Xác thực thành công";
+        document.getElementById('status').style.color = "#27ae60";
         startCountdown();
     }
 
     // 4. Hàm đếm ngược chuyển link
     function startCountdown() {
-        let time = 3;
+        let time = 3; // Bạn có thể chỉnh lên 60 giây nếu muốn
         const secSpan = document.getElementById("sec");
+        secSpan.innerText = time;
 
         const interval = setInterval(() => {
             time--;
@@ -69,20 +72,22 @@
 
             if (time <= 0) {
                 clearInterval(interval);
-                if (finalLink) {
-                    window.location.href = finalLink;
+                if (decodedLink) {
+                    window.location.href = decodedLink;
                 } else {
-                    alert("Không tìm thấy link nhiệm vụ!");
+                    alert("Không tìm thấy link nhiệm vụ! Quay lại trang chủ.");
+                    window.location.href = "home.html";
                 }
             }
         }, 1000);
     }
 
-    // Kiểm tra đăng nhập để bảo mật trang wait
+    // 5. Kiểm tra đăng nhập (Bảo mật)
     firebase.auth().onAuthStateChanged(user => {
-        if (!user) window.location.href = "index.html";
+        if (!user) {
+            window.location.href = "index.html";
+        }
     });
 </script>
 </body>
 </html>
-
