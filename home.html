@@ -106,39 +106,73 @@
         el.classList.toggle('active');
     }
 
-    function doTask(name, link, bonus) {
-        window.open(link, "_blank");
-        const uid = firebase.auth().currentUser.uid;
-        db.ref("history/" + uid + "/" + Date.now()).set({
-            task: name, amount: bonus, status: "pending", time: new Date().toLocaleString()
-        });
-    }
+   // Hàm làm nhiệm vụ: Chỉ ghi log "pending", chưa cộng tiền
+function doTask(name, link, bonus) {
+    window.open(link, "_blank");
+    const uid = firebase.auth().currentUser.uid;
+    db.ref("history/" + uid + "/" + Date.now()).set({
+        task: name, 
+        amount: bonus, 
+        status: "pending", // Trạng thái chờ Admin duyệt mới được cộng tiền
+        time: new Date().toLocaleString(),
+        type: "task"
+    });
+    alert("Đã ghi nhận! Vui lòng chờ Admin duyệt để nhận tiền.");
+}
 
-    function handleWithdraw() {
-        const amt = parseInt(document.getElementById("w-amount").value);
-        const info = document.getElementById("w-info").value;
-        const uid = firebase.auth().currentUser.uid;
-        if (amt < 20000 || !info) return alert("Vui lòng nhập đúng yêu cầu!");
-        db.ref("users/" + uid + "/money").once("value", s => {
-            const cur = s.val() || 0;
-            if (cur < amt) return alert("Không đủ số dư!");
-            db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
-                db.ref("history/" + uid + "/" + Date.now()).set({
-                    task: "Rút tiền: " + info, amount: -amt, status: "pending", time: new Date().toLocaleString()
-                });
-                alert("Đã gửi yêu cầu rút tiền!");
+// Hàm rút tiền: Trừ tiền trực tiếp và ghi log chờ duyệt
+function handleWithdraw() {
+    const amt = parseInt(document.getElementById("w-amount").value);
+    const info = document.getElementById("w-info").value;
+    const uid = firebase.auth().currentUser.uid;
+
+    if (amt < 20000 || !info) return alert("Tối thiểu 20k và đủ thông tin!");
+
+    db.ref("users/" + uid + "/money").once("value", s => {
+        const currentBalance = s.val() || 0;
+        if (currentBalance < amt) return alert("Số dư không đủ để rút!");
+
+        // 1. Trừ tiền trực tiếp vào tài khoản
+        db.ref("users/" + uid + "/money").set(currentBalance - amt).then(() => {
+            // 2. Ghi vào lịch sử rút tiền
+            db.ref("history/" + uid + "/" + Date.now()).set({
+                task: "Rút tiền: " + info,
+                amount: -amt,
+                status: "processing", // Trạng thái đang xử lý
+                time: new Date().toLocaleString(),
+                type: "withdraw"
             });
+            alert("Đã trừ tiền và gửi yêu cầu rút!");
         });
-    }
+    });
+}
 
-    firebase.auth().onAuthStateChanged(user => {
-        if (!user) { window.location.href = "index.html"; return; }
-        document.getElementById("u-mail").innerText = user.email;
-        document.getElementById("u-uid").innerText = user.uid;
+// Logic hiển thị phân loại (Trong onAuthStateChanged)
+db.ref("history/" + user.uid).on("value", s => {
+    let taskHtml = "";
+    let withdrawHtml = "";
+    
+    s.forEach(c => {
+        const d = c.val();
+        const statusText = d.status === "pending" ? "Chờ duyệt" : (d.status === "success" ? "Thành công" : "Từ chối");
+        const statusColor = d.status === "pending" || d.status === "processing" ? "#f39c12" : (d.status === "success" ? "#27ae60" : "#e74c3c");
 
-        db.ref("users/" + user.uid + "/money").on("value", s => {
-            document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
-        });
+        const ui = `<div class="card-ui" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+            <div>
+                <b>${d.task}</b><br>
+                <small>${d.time}</small><br>
+                <span style="color:${statusColor}; font-size:11px; font-weight:bold">${statusText}</span>
+            </div>
+            <b style="color:${d.amount < 0 ? '#e74c3c' : '#27ae60'}">${d.amount > 0 ? '+' : ''}${d.amount.toLocaleString()}đ</b>
+        </div>`;
+
+        if (d.amount > 0) taskHtml = ui + taskHtml; 
+        else withdrawHtml = ui + withdrawHtml;
+    });
+    
+    document.getElementById("render-history-tasks").innerHTML = taskHtml || "Chưa có nhiệm vụ.";
+    document.getElementById("render-history-withdraw").innerHTML = withdrawHtml || "Chưa có lệnh rút.";
+});
 
         db.ref("Task").on("value", snap => {
             const div = document.getElementById("render-tasks");
@@ -186,3 +220,4 @@
 </script>
 </body>
 </html>
+
