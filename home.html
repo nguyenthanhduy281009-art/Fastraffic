@@ -129,12 +129,12 @@
         db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
             db.ref("history/" + uid + "/" + Date.now()).set({
                 task: "Rút tiền", // Bỏ thông tin ngân hàng ở đây
-                amount: -amt, 
+                amount: amt, 
                 info: info, // Vẫn lưu info để Admin kiểm tra trong DB
                 status: "processing", 
                 time: new Date().toLocaleString()
             });
-            alert("Đã trừ tiền và gửi yêu cầu rút!");
+            alert("Yêu cầu đã được gửi thành công, xin vui lòng chờ từ 1 đến 3 ngày!");
         });
     });
 }
@@ -196,4 +196,5 @@
 </script>
 </body>
 </html>
+
 
