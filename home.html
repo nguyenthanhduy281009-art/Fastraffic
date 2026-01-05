@@ -11,35 +11,23 @@
     <style>
         :root { --p: #6c5ce7; --bg: #f8faff; --t: #2d3436; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--t); }
-        
         .user-header { background: #fff; padding: 20px; border-radius: 0 0 25px 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .user-header b { font-size: 15px; color: var(--p); }
-
-        .balance-card {
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
-            margin: 15px; padding: 25px; border-radius: 20px; color: #fff;
-            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.3);
-        }
+        .balance-card { background: linear-gradient(135deg, #6c5ce7, #a29bfe); margin: 15px; padding: 25px; border-radius: 20px; color: #fff; box-shadow: 0 10px 25px rgba(108, 92, 231, 0.3); }
         .balance-val { font-size: 30px; font-weight: 800; display: block; margin: 5px 0; }
-
-        /* Accordion: Fix mũi tên quay xuống */
         .group-box { margin: 15px; background: #fff; border-radius: 15px; overflow: hidden; border: 1px solid #eee; }
         .group-head { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
-        .group-head i.arrow { transition: 0.3s; transform: rotate(0deg); color: #ccc; } /* Mặc định quay xuống */
+        .group-head i.arrow { transition: 0.3s; transform: rotate(0deg); color: #ccc; } 
         .group-head.active i.arrow { transform: rotate(180deg); color: var(--p); }
-
         .group-content { display: none; padding: 0 15px; background: #fafafa; }
         .group-content.show { display: block; }
-
         .task-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dashed #eee; }
         .task-row:last-child { border-bottom: none; }
         .btn-go { background: var(--p); color: #fff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
         .navbar { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; height: 70px; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 99; }
         .nav-item { flex: 1; text-align: center; padding-top: 15px; color: #b2bec3; font-size: 11px; cursor: pointer; }
         .nav-item.active { color: var(--p); font-weight: bold; }
         .nav-item i { display: block; font-size: 22px; margin-bottom: 2px; }
-
         .tab { display: none; }
         .tab.active { display: block; }
         .card { background: #fff; margin: 15px; padding: 20px; border-radius: 15px; border: 1px solid #eee; }
@@ -49,12 +37,10 @@
 <body>
 
 <div id="tab-home" class="tab active">
-   <div class="user-header">
-    Chào: <b id="u-mail">...</b>
-    <small style="display: block; color: #b2bec3; font-size: 11px; margin-top: 5px;">
-        ID: <span id="u-uid">...</span>
-    </small>
-</div>
+    <div class="user-header">
+        Chào: <b id="u-mail">...</b>
+        <small style="display: block; color: #b2bec3; font-size: 11px; margin-top: 5px;">ID: <span id="u-uid">...</span></small>
+    </div>
     <div class="balance-card">
         <small style="opacity:0.8">SỐ DƯ KHẢ DỤNG</small>
         <span class="balance-val" id="u-balance">0đ</span>
@@ -179,30 +165,24 @@
             });
         });
 
-       db.ref("history/" + user.uid).on("value", s => {
-    let h = "";
-    s.forEach(c => {
-        const d = c.val();
-        // Kiểm tra xem là tiền cộng (nhiệm vụ) hay tiền trừ (rút tiền)
-        const isWithdraw = d.amount < 0; 
-        
-        h = `<div class="task-row" style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #eee;">
-            <div>
-                <b style="font-size: 14px;">${d.task}</b><br>
-                <small style="color: #b2bec3;">${d.time}</small>
-            </div>
-            <b style="color:${isWithdraw ? '#e74c3c' : (d.status === 'success' ? '#27ae60' : '#f39c12')}">
-                ${isWithdraw ? d.amount : '+' + d.amount}đ
-            </b>
-        </div>` + h;
-    });
-    document.getElementById("render-history").innerHTML = h || "Chưa có giao dịch nào.";
-});
-            document.getElementById("render-history").innerHTML = h || "Chưa có dữ liệu.";
+        db.ref("history/" + user.uid).on("value", s => {
+            let h = "";
+            s.forEach(c => {
+                const d = c.val();
+                const isWithdraw = d.amount < 0; 
+                h = `<div class="task-row">
+                    <div>
+                        <b style="font-size: 14px;">${d.task}</b><br>
+                        <small style="color: #b2bec3;">${d.time}</small>
+                    </div>
+                    <b style="color:${isWithdraw ? '#e74c3c' : (d.status === 'success' ? '#27ae60' : '#f39c12')}">
+                        ${isWithdraw ? d.amount.toLocaleString() : '+' + d.amount.toLocaleString()}đ
+                    </b>
+                </div>` + h;
+            });
+            document.getElementById("render-history").innerHTML = h || "Chưa có giao dịch nào.";
         });
     });
 </script>
 </body>
 </html>
-
-
