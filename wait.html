@@ -48,8 +48,10 @@
     let decodedLink = "";
 
     if (targetUrl) {
-        decodedLink = decodeURIComponent(targetUrl);
-    }
+        finalLink = decodeURIComponent(targetUrl);
+    } else {
+    console.error("Không tìm thấy link trong tham số url");
+}
 
     // 3. Khi xác thực Turnstile thành công
     function onVerifySuccess(token) {
@@ -91,3 +93,4 @@
 </script>
 </body>
 </html>
+
