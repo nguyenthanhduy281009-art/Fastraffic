@@ -111,19 +111,45 @@
         db.ref("users/" + uid + "/money").on("value", s => {
             document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
         });
+        // Tự động hiển thị nhiệm vụ với giá mặc định theo nhóm
+db.ref("Task").on("value", snap => {
+    const div = document.getElementById("render-tasks");
+    div.innerHTML = "";
+    snap.forEach(group => {
+        const groupName = group.key; // Tên nhóm: Traffictot hoặc Click1s
+        
+        // Thiết lập giá mặc định theo yêu cầu của bạn
+        let defaultBonus = 500; 
+        if (groupName === "Traffictot") defaultBonus = 400;
+        if (groupName === "Click1s") defaultBonus = 600;
 
-        db.ref("Task").on("value", snap => {
-            const div = document.getElementById("render-tasks");
-            div.innerHTML = "";
-            snap.forEach(task => {
-                const name = task.key;
-                task.forEach(l => {
-                    let link = l.val();
-                    if(typeof link === 'object') link = link.link;
-                    div.innerHTML += `<div class="task-item"><span><b>${name}</b></span><button class="btn-do" onclick="doTask('${name}', '${link}')">Làm</button></div>`;
-                });
-            });
+        group.forEach(taskItem => {
+            const data = taskItem.val();
+            // Nếu là link trực tiếp hoặc object có chứa link
+            const link = (typeof data === 'object') ? data.link : data; 
+            const finalBonus = data.bonus || defaultBonus;
+            
+            div.innerHTML += `
+                <div class="task-item">
+                    <span><b>${groupName}</b> (${finalBonus.toLocaleString()}đ)</span>
+                    <button class="btn-do" onclick="doTask('${groupName}', '${link}', ${finalBonus})">Làm</button>
+                </div>`;
         });
+    });
+});
+
+// Hàm ghi nhận lịch sử nhiệm vụ
+function doTask(name, link, bonus) {
+    window.open(link, "_blank");
+    const uid = firebase.auth().currentUser.uid;
+    db.ref("history/" + uid + "/" + Date.now()).set({
+        task: name,
+        amount: bonus, 
+        status: "pending",
+        time: new Date().toLocaleString()
+    });
+}
+       
 
         db.ref("history/" + uid).on("value", s => {
             let h = ""; let w = "";
@@ -176,3 +202,4 @@
 </script>
 </body>
 </html>
+
