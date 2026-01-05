@@ -84,6 +84,20 @@
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+     // Thiết lập mật khẩu admin
+const ADMIN_PASSWORD = "829135"; // Bạn hãy đổi "123" thành mật khẩu của bạn
+
+function checkAdminAuth() {
+    let pass = prompt("Vui lòng nhập mật khẩu để vào khu vực Quản trị viên:");
+    if (pass !== ADMIN_PASSWORD) {
+        alert("Sai mật khẩu! Bạn không có quyền truy cập.");
+        document.body.innerHTML = "<h1 style='text-align:center;margin-top:100px;color:red;'>TRUY CẬP BỊ TỪ CHỐI</h1>";
+        window.location.reload(); 
+    }
+}
+
+// Chạy kiểm tra ngay khi mở trang
+checkAdminAuth();
 
     // 1. Hàm cộng tiền trực tiếp bằng UID
     async function updateUserBalance() {
@@ -174,3 +188,4 @@
 </script>
 </body>
 </html>
+
