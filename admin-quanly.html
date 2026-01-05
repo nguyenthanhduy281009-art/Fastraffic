@@ -161,15 +161,26 @@
     }
 
     // 5. CẬP NHẬT SỐ DƯ THỦ CÔNG
-    async function updateUserBalance() {
-        const uid = document.getElementById('target-uid').value.trim();
-        const amount = parseInt(document.getElementById('target-amount').value);
-        if(!uid || isNaN(amount)) return alert("Nhập UID và số tiền hợp lệ!");
-        db.ref("users/" + uid + "/money").transaction(c => (c || 0) + amount)
-          .then(() => alert("Đã cập nhật số dư thành công!"));
+  // 5. THIẾT LẬP SỐ DƯ TRỰC TIẾP
+async function updateUserBalance() {
+    const uid = document.getElementById('target-uid').value.trim();
+    const amount = parseInt(document.getElementById('target-amount').value);
+    
+    if(!uid || isNaN(amount)) return alert("Nhập UID và số tiền hợp lệ!");
+    
+    if(confirm(`Xác nhận ĐỔI số dư UID này thành ${amount.toLocaleString()}đ?`)) {
+        // Dùng .set() để ghi đè số dư cũ
+        db.ref("users/" + uid + "/money").set(amount)
+          .then(() => {
+              alert("Đã thiết lập số dư mới thành công!");
+              document.getElementById('target-amount').value = "";
+          })
+          .catch(err => alert("Lỗi: " + err.message));
     }
+}
 
     loadData();
 </script>
 </body>
 </html>
+
