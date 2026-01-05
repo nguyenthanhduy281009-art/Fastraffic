@@ -176,12 +176,7 @@ function doTask(name, link, bonus) {
         });
     });
 
-    function doTask(name, link) {
-        window.open(link, "_blank");
-        db.ref("history/" + firebase.auth().currentUser.uid + "/" + Date.now()).set({
-            task: name, amount: 500, status: "pending", time: new Date().toLocaleString()
-        });
-    }
+   
 
     function handleWithdraw() {
         const amt = parseInt(document.getElementById("w-amount").value);
@@ -202,5 +197,6 @@ function doTask(name, link, bonus) {
 </script>
 </body>
 </html>
+
 
 
