@@ -179,21 +179,30 @@
             });
         });
 
-        db.ref("history/" + user.uid).on("value", s => {
-            let h = "";
-            s.forEach(c => {
-                const d = c.val();
-                if (d.amount > 0) {
-                    h = `<div class="task-row">
-                        <div><b>${d.task}</b><br><small>${d.time}</small></div>
-                        <b style="color:${d.status === 'success' ? '#27ae60' : '#f39c12'}">${d.status === 'pending' ? 'Đang duyệt' : '+'+d.amount}</b>
-                    </div>` + h;
-                }
-            });
+       db.ref("history/" + user.uid).on("value", s => {
+    let h = "";
+    s.forEach(c => {
+        const d = c.val();
+        // Kiểm tra xem là tiền cộng (nhiệm vụ) hay tiền trừ (rút tiền)
+        const isWithdraw = d.amount < 0; 
+        
+        h = `<div class="task-row" style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #eee;">
+            <div>
+                <b style="font-size: 14px;">${d.task}</b><br>
+                <small style="color: #b2bec3;">${d.time}</small>
+            </div>
+            <b style="color:${isWithdraw ? '#e74c3c' : (d.status === 'success' ? '#27ae60' : '#f39c12')}">
+                ${isWithdraw ? d.amount : '+' + d.amount}đ
+            </b>
+        </div>` + h;
+    });
+    document.getElementById("render-history").innerHTML = h || "Chưa có giao dịch nào.";
+});
             document.getElementById("render-history").innerHTML = h || "Chưa có dữ liệu.";
         });
     });
 </script>
 </body>
 </html>
+
 
