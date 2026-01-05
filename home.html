@@ -3,116 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FASTRAFFIC - Hệ thống</title>
+    <title>FASTRAFFIC PREMIUM</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 80px; }
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --success: #00b894;
+            --danger: #ff7675;
+            --bg: #f8faff;
+            --text: #2d3436;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--text); padding-bottom: 90px; }
         
-        /* User Info Bar */
-        .user-bar { background: #fff; padding: 15px; margin-bottom: 5px; border-bottom: 1px solid #ddd; }
-        .user-bar b { color: #2d3436; font-size: 15px; }
-        .user-bar small { display: block; color: #636e72; margin-top: 4px; font-family: monospace; }
+        /* Header Profile */
+        .header-profile {
+            background: #fff; padding: 20px 15px; border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .avatar { width: 45px; height: 45px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; }
+        .u-info b { font-size: 14px; display: block; }
+        .u-info small { color: #b2bec3; font-size: 11px; }
 
-        /* Balance Card */
+        /* Card Số Dư Cao Cấp */
         .balance-card {
-            background: linear-gradient(135deg, #0984e3, #6c5ce7);
-            margin: 15px; padding: 25px; border-radius: 20px; color: #fff;
-            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
-            position: relative; overflow: hidden;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            margin: 20px 15px; padding: 30px 20px; border-radius: 25px; color: #fff;
+            position: relative; overflow: hidden; box-shadow: 0 15px 30px rgba(108, 92, 231, 0.3);
         }
-        .balance-card::after {
-            content: ""; position: absolute; right: -20px; bottom: -20px;
-            width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;
+        .balance-card::before {
+            content: ""; position: absolute; top: -20px; right: -20px;
+            width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;
         }
-        .balance-label { font-size: 14px; opacity: 0.9; }
-        .balance-val { font-size: 32px; font-weight: 800; margin: 10px 0; display: block; }
+        .balance-label { font-size: 13px; opacity: 0.8; letter-spacing: 0.5px; }
+        .balance-val { font-size: 36px; font-weight: 800; margin: 10px 0; }
 
-        /* Accordion Style cho Nhiệm vụ */
+        /* Accordion Nhiệm Vụ */
+        .task-group { margin: 15px; border-radius: 20px; background: #fff; overflow: hidden; border: 1px solid #edf2f7; }
         .task-group-header {
-            background: #fff; padding: 15px; margin-top: 10px; border-radius: 12px;
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; border: 1px solid #eee; transition: 0.3s;
+            padding: 18px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: 0.2s;
         }
         .task-group-header:active { background: #f1f2f6; }
-        .task-group-header i.arrow { transition: 0.3s; }
-        .task-group-header.active i.arrow { transform: rotate(180deg); }
+        .task-group-header b { font-size: 15px; color: var(--primary); }
+        .arrow { font-size: 12px; transition: 0.3s; color: #b2bec3; }
+        .active .arrow { transform: rotate(180deg); }
 
-        .task-list-content {
-            display: none; padding: 5px 10px; background: #fafafa;
-            border-radius: 0 0 12px 12px; border: 1px solid #eee; border-top: none;
+        .task-list-content { display: none; padding: 0 15px 15px; border-top: 1px solid #f8f9fa; }
+        .task-list-content.show { display: block; animation: slideIn 0.3s ease; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .task-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 0; border-bottom: 1px dashed #eee;
         }
-        .task-list-content.show { display: block; animation: slideDown 0.3s ease-out; }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .card { background: #fff; margin: 15px; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        h3 { margin-top: 0; font-size: 18px; color: #2d3436; border-left: 4px solid #e74c3c; padding-left: 10px; }
-        
-        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .task-item:last-child { border-bottom: none; }
         
-        .btn-do { background: #e74c3c; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-do {
+            background: linear-gradient(to right, #6c5ce7, #a29bfe);
+            color: #fff; border: none; padding: 10px 24px; border-radius: 12px;
+            font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 4px 10px rgba(108, 92, 231, 0.2);
+        }
 
-        /* Navigation */
-        .nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #eee; height: 65px; z-index: 9999; }
-        .nav-link { flex: 1; text-align: center; padding-top: 12px; font-size: 12px; color: #b2bec3; cursor: pointer; }
-        .nav-link.active { color: #e74c3c; font-weight: bold; }
-        .nav-link i { display: block; font-size: 22px; margin-bottom: 3px; }
+        /* Nav Bottom hiện đại */
+        .nav {
+            position: fixed; bottom: 0; width: 100%; background: #fff;
+            display: flex; height: 75px; border-radius: 25px 25px 0 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 1000;
+        }
+        .nav-link { flex: 1; text-align: center; padding-top: 15px; color: #b2bec3; font-size: 11px; font-weight: 600; }
+        .nav-link.active { color: var(--primary); }
+        .nav-link i { display: block; font-size: 24px; margin-bottom: 4px; }
 
-        .tab-box { display: none; }
+        .tab-box { display: none; padding-top: 10px; }
         .tab-box.active { display: block; }
         
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dfe6e9; border-radius: 10px; box-sizing: border-box; }
-        .status-pending { color: #fdcb6e; font-weight: bold; }
-        .status-success { color: #00b894; font-weight: bold; }
-        .status-rejected { color: #d63031; font-weight: bold; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #edf2f7; border-radius: 15px; background: #fff; box-sizing: border-box; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1); }
+
+        .title-sec { margin: 10px 15px; font-size: 16px; font-weight: 700; color: #2d3436; }
     </style>
 </head>
 <body>
 
 <div id="tab-home" class="tab-box active">
-    <div class="user-bar">
-        Xin chào: <b id="u-mail">...</b>
-        <small>UID: <span id="u-uid">...</span></small>
+    <div class="header-profile">
+        <div class="avatar"><i class="fas fa-user-shield"></i></div>
+        <div class="u-info">
+            <b id="u-mail">...</b>
+            <small>UID: <span id="u-uid">...</span></small>
+        </div>
     </div>
 
     <div class="balance-card">
-        <span class="balance-label"><i class="fas fa-wallet"></i> Số dư khả dụng</span>
-        <span class="balance-val" id="u-balance">0đ</span>
+        <span class="balance-label">SỐ DƯ HIỆN TẠI</span>
+        <div class="balance-val" id="u-balance">0đ</div>
+        <div style="font-size: 11px; opacity: 0.8;"><i class="fas fa-check-circle"></i> Đã bảo mật danh tính</div>
     </div>
 
-    <div class="card">
-        <h3>Danh sách nhiệm vụ</h3>
-        <div id="render-tasks">Đang tải...</div>
-    </div>
+    <div class="title-sec">Nhiệm vụ hàng ngày</div>
+    <div id="render-tasks"></div>
 </div>
 
 <div id="tab-history" class="tab-box">
-    <div class="card"><h3>Lịch sử hoạt động</h3><div id="render-history">...</div></div>
+    <div class="title-sec">Lịch sử giao dịch</div>
+    <div id="render-history" style="margin: 15px; background:#fff; border-radius: 20px; padding: 10px;"></div>
 </div>
-<div id="tab-rules" class="tab-box">
-    <div class="card"><h3>Quy định</h3><ul><li>Không cheat.</li><li>Min rút 20k.</li></ul></div>
-</div>
+
 <div id="tab-withdraw" class="tab-box">
-    <div class="card">
-        <h3>Rút tiền</h3>
-        <input type="number" id="w-amount" placeholder="Số tiền">
-        <input type="text" id="w-info" placeholder="Thông tin STK">
-        <button class="btn-do" style="width:100%; background:#0984e3" onclick="handleWithdraw()">RÚT TIỀN</button>
+    <div class="title-sec">Rút tiền về ví</div>
+    <div style="margin: 15px; background:#fff; border-radius: 20px; padding: 20px;">
+        <input type="number" id="w-amount" placeholder="Số tiền (VND)">
+        <input type="text" id="w-info" placeholder="Ngân hàng - STK - Tên">
+        <button class="btn-do" style="width: 100%; margin-top: 15px; height: 55px;" onclick="handleWithdraw()">XÁC NHẬN RÚT</button>
     </div>
-    <div class="card"><h3>Lịch sử rút</h3><div id="render-withdraw-history">...</div></div>
 </div>
 
 <nav class="nav">
-    <div class="nav-link active" onclick="goTab('tab-home', this)"><i class="fas fa-home"></i>Home</div>
-    <div class="nav-link" onclick="goTab('tab-history', this)"><i class="fas fa-tasks"></i>Lịch sử</div>
-    <div class="nav-link" onclick="goTab('tab-rules', this)"><i class="fas fa-info-circle"></i>Quy định</div>
+    <div class="nav-link active" onclick="goTab('tab-home', this)"><i class="fas fa-th-large"></i>Trang chủ</div>
+    <div class="nav-link" onclick="goTab('tab-history', this)"><i class="fas fa-history"></i>Lịch sử</div>
     <div class="nav-link" onclick="goTab('tab-withdraw', this)"><i class="fas fa-wallet"></i>Rút tiền</div>
 </nav>
 
@@ -126,17 +141,16 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function goTab(tabId, element) {
+    function goTab(t, e) {
         document.querySelectorAll('.tab-box').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        element.classList.add('active');
+        document.getElementById(t).classList.add('active');
+        e.classList.add('active');
     }
 
-    // Hàm đóng mở tab nhiệm vụ
     function toggleGroup(id, el) {
-        const content = document.getElementById(id);
-        content.classList.toggle('show');
+        const c = document.getElementById(id);
+        c.classList.toggle('show');
         el.classList.toggle('active');
     }
 
@@ -153,53 +167,50 @@
         db.ref("Task").on("value", snap => {
             const div = document.getElementById("render-tasks");
             div.innerHTML = "";
-            snap.forEach(group => {
-                const name = group.key;
+            snap.forEach(g => {
+                const name = g.key;
                 let bonus = (name === "Traffictot") ? 400 : (name === "Click1s" ? 600 : 500);
-                const contentId = 'content-' + name;
-
+                const cId = 'c-' + name;
                 let html = `
-                    <div class="task-group-header" onclick="toggleGroup('${contentId}', this)">
-                        <span><i class="fas fa-list-alt"></i> <b>${name}</b> (+${bonus}đ)</span>
-                        <i class="fas fa-chevron-down arrow"></i>
-                    </div>
-                    <div id="${contentId}" class="task-list-content">`;
-                
-                group.forEach(task => {
-                    const data = task.val();
+                    <div class="task-group">
+                        <div class="task-group-header" onclick="toggleGroup('${cId}', this)">
+                            <b><i class="fas fa-bolt" style="color: #f1c40f"></i> ${name}</b>
+                            <span>+${bonus}đ <i class="fas fa-chevron-down arrow"></i></span>
+                        </div>
+                        <div id="${cId}" class="task-list-content">`;
+                g.forEach(t => {
+                    const data = t.val();
                     const link = (typeof data === 'object') ? data.link : data;
                     html += `
                         <div class="task-item">
-                            <span>Nhiệm vụ #${task.key}</span>
-                            <button class="btn-do" onclick="doTask('${name}', '${link}', ${bonus})">Làm</button>
+                            <span style="font-size:13px; font-weight:500;">Link #${t.key}</span>
+                            <button class="btn-do" onclick="doTask('${name}', '${link}', ${bonus})">Bắt đầu</button>
                         </div>`;
                 });
-                html += `</div>`;
+                html += `</div></div>`;
                 div.innerHTML += html;
             });
         });
 
-        // Load Lịch sử (giữ nguyên logic của bạn)
         db.ref("history/" + uid).on("value", s => {
-            let h = ""; let w = "";
+            let h = "";
             s.forEach(c => {
                 const d = c.val();
-                const statusLbl = d.status === "pending" ? "Đang duyệt" : (d.status === "success" ? "Thành công" : "Bị từ chối");
-                if (d.amount < 0) {
-                    w = `<div class="task-item"><div><b>Rút ${Math.abs(d.amount).toLocaleString()}đ</b><br><small>${d.time}</small></div><div class="status-${d.status}">${statusLbl}</div></div>` + w;
-                } else {
-                    h = `<div class="task-item"><div><b>${d.task}</b><br><small>${d.time}</small></div><div class="status-${d.status}">${statusLbl}</div></div>` + h;
+                if (d.amount > 0) {
+                    h = `<div class="task-item">
+                        <div><b style="font-size:13px;">${d.task}</b><br><small style="color:#b2bec3">${d.time}</small></div>
+                        <span style="color:${d.status === 'success' ? '#00b894' : '#f39c12'}; font-weight:bold">${d.status === 'pending' ? 'Đang duyệt' : '+'+d.amount+'đ'}</span>
+                    </div>` + h;
                 }
             });
             document.getElementById("render-history").innerHTML = h || "Trống.";
-            document.getElementById("render-withdraw-history").innerHTML = w || "Trống.";
         });
     });
 
-    function doTask(name, link, bonus) {
-        window.open(link, "_blank");
+    function doTask(n, l, b) {
+        window.open(l, "_blank");
         db.ref("history/" + firebase.auth().currentUser.uid + "/" + Date.now()).set({
-            task: name, amount: bonus, status: "pending", time: new Date().toLocaleString()
+            task: n, amount: b, status: "pending", time: new Date().toLocaleString()
         });
     }
 
@@ -207,15 +218,15 @@
         const amt = parseInt(document.getElementById("w-amount").value);
         const info = document.getElementById("w-info").value;
         const uid = firebase.auth().currentUser.uid;
-        if (amt < 20000 || !info) return alert("Min 20k!");
+        if (amt < 20000 || !info) return alert("Số tiền rút tối thiểu 20,000đ!");
         db.ref("users/" + uid + "/money").once("value", s => {
             const cur = s.val() || 0;
-            if (cur < amt) return alert("Không đủ tiền!");
+            if (cur < amt) return alert("Số dư không đủ!");
             db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
                 db.ref("history/" + uid + "/" + Date.now()).set({
                     task: "Rút tiền: " + info, amount: -amt, status: "pending", time: new Date().toLocaleString()
                 });
-                alert("Đã gửi yêu cầu!");
+                alert("Yêu cầu rút tiền đã được gửi!");
             });
         });
     }
