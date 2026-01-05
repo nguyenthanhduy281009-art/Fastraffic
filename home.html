@@ -49,7 +49,12 @@
 <body>
 
 <div id="tab-home" class="tab active">
-    <div class="user-header">Chào: <b id="u-mail">...</b></div>
+   <div class="user-header">
+    Chào: <b id="u-mail">...</b>
+    <small style="display: block; color: #b2bec3; font-size: 11px; margin-top: 5px;">
+        ID: <span id="u-uid">...</span>
+    </small>
+</div>
     <div class="balance-card">
         <small style="opacity:0.8">SỐ DƯ KHẢ DỤNG</small>
         <span class="balance-val" id="u-balance">0đ</span>
@@ -143,6 +148,7 @@
     firebase.auth().onAuthStateChanged(user => {
         if (!user) { window.location.href = "index.html"; return; }
         document.getElementById("u-mail").innerText = user.email;
+        document.getElementById("u-uid").innerText = user.uid;
 
         db.ref("users/" + user.uid + "/money").on("value", s => {
             document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
@@ -190,3 +196,4 @@
 </script>
 </body>
 </html>
+
