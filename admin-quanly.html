@@ -110,44 +110,44 @@
             listWithdraw.innerHTML = "";
 
             snapshot.forEach((userHistory) => {
-                const uid = userHistory.key;
-                userHistory.forEach((item) => {
-                    const data = item.val();
-                    const itemId = item.key;
+            snapshot.forEach((userHistory) => {
+    const uid = userHistory.key;
+    userHistory.forEach((item) => {
+        const data = item.val();
+        const itemId = item.key;
+        const taskTime = data.time || "Không rõ";
 
-                    if (data.status === "pending") {
-                        const rewardAmount = data.amount || 0;
-                        const taskTime = data.time || "Không rõ";
-
-                        if (rewardAmount > 0) {
-                            listTasks.innerHTML += `
-                                <tr>
-                                    <td><small>${uid.substring(0, 6)}...</small></td>
-                                    <td><b>${data.task}</b><br><small>${taskTime}</small></td>
-                                    <td style="color: #27ae60; font-weight: bold;">+${rewardAmount}đ</td>
-                                    <td>
-                                        <button class="btn-action btn-approve" onclick="approveTask('${uid}', '${itemId}', ${rewardAmount})">Duyệt</button>
-                                        <button class="btn-action btn-reject" style="background:#e74c3c;color:white;border:none;padding:5px;border-radius:4px" onclick="rejectItem('${uid}', '${itemId}')">Hủy</button>
-                                    </td>
-                                </tr>`;
-                        } else {
-                            listWithdraw.innerHTML += `
-                                <tr>
-                                    <td><small>${uid.substring(0, 6)}...</small></td>
-                                    <td>${taskTime}</td>
-                                    <td>${data.task}</td>
-                                    <td style="color: #e74c3c; font-weight: bold;">${rewardAmount.toLocaleString()}đ</td>
-                                    <td>
-                                        <button class="btn-action btn-approve" onclick="approveWithdraw('${uid}', '${itemId}')">Duyệt</button>
-                                        <button class="btn-action btn-reject" style="background:#e74c3c;color:white;border:none;padding:5px;border-radius:4px" onclick="rejectItem('${uid}', '${itemId}')">Hủy</button>
-                                    </td>
-                                </tr>`;
-                        }
-                    }
-                });
-            });
-        });
-    }
+        // 1. Xử lý yêu cầu Rút tiền (Status là processing)
+        if (data.status === "processing") {
+            listWithdraw.innerHTML += `
+                <tr>
+                    <td><small>${uid.substring(0, 6)}...</small></td>
+                    <td>${taskTime}</td>
+                    <td>${data.info || "N/A"}</td>
+                    <td style="color: #e74c3c; font-weight: bold;">${data.amount.toLocaleString()}đ</td>
+                    <td>
+                        <button class="btn-action btn-approve" onclick="approveWithdraw('${uid}', '${itemId}')">Duyệt</button>
+                        <button class="btn-action btn-reject" onclick="rejectWithdraw('${uid}', '${itemId}', ${data.amount})">Hủy</button>
+                    </td>
+                </tr>`;
+        } 
+        // 2. Xử lý Nhiệm vụ chờ duyệt (Status là pending)
+        else if (data.status === "pending") {
+            const rewardAmount = data.amount || 0;
+            listTasks.innerHTML += `
+                <tr>
+                    <td><small>${uid.substring(0, 6)}...</small></td>
+                    <td><b>${data.task}</b><br><small>${taskTime}</small></td>
+                    <td style="color: #27ae60; font-weight: bold;">+${rewardAmount}đ</td>
+                    <td>
+                        <button class="btn-action btn-approve" onclick="approveTask('${uid}', '${itemId}', ${rewardAmount})">Duyệt</button>
+                        <button class="btn-action btn-reject" onclick="rejectItem('${uid}', '${itemId}')">Hủy</button>
+                    </td>
+                </tr>`;
+        }
+    });
+});    
+    
 
     // 3. HÀM DUYỆT NHIỆM VỤ (PHẢI CÓ KHÚC NÀY NÚT MỚI CHẠY)
     function approveTask(uid, itemId, amount) {
@@ -174,6 +174,7 @@
 </script>
 </body>
 </html>
+
 
 
 
