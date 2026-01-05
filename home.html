@@ -117,27 +117,27 @@
         alert("Nhiệm vụ đã gửi, vui lòng chờ duyệt!");
     }
 
-    function handleWithdraw() {
-        const amt = parseInt(document.getElementById("w-amount").value);
-        const info = document.getElementById("w-info").value;
-        const uid = firebase.auth().currentUser.uid;
-        if (amt < 20000 || !info) return alert("Kiểm tra lại số tiền và thông tin!");
+   function handleWithdraw() {
+    const amt = parseInt(document.getElementById("w-amount").value);
+    const info = document.getElementById("w-info").value;
+    const uid = firebase.auth().currentUser.uid;
+    if (amt < 20000 || !info) return alert("Kiểm tra lại số tiền và thông tin!");
 
-        db.ref("users/" + uid + "/money").once("value", s => {
-            const cur = s.val() || 0;
-            if (cur < amt) return alert("Không đủ số dư!");
-            db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
-                db.ref("history/" + uid + "/" + Date.now()).set({
-                    task: "Rút tiền", // Chỉ lưu text cố định
-                    amount: -amt, 
-                    info: info, // Lưu info riêng để admin thấy
-                    status: "processing", 
-                    time: new Date().toLocaleString()
-                });
-                alert("Đã trừ tiền và gửi yêu cầu rút!");
+    db.ref("users/" + uid + "/money").once("value", s => {
+        const cur = s.val() || 0;
+        if (cur < amt) return alert("Không đủ số dư!");
+        db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
+            db.ref("history/" + uid + "/" + Date.now()).set({
+                task: "Rút tiền", // Bỏ thông tin ngân hàng ở đây
+                amount: -amt, 
+                info: info, // Vẫn lưu info để Admin kiểm tra trong DB
+                status: "processing", 
+                time: new Date().toLocaleString()
             });
+            alert("Đã trừ tiền và gửi yêu cầu rút!");
         });
-    }
+    });
+}
 
     firebase.auth().onAuthStateChanged(user => {
         if (!user) return;
@@ -196,3 +196,4 @@
 </script>
 </body>
 </html>
+
