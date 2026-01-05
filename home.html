@@ -32,6 +32,7 @@
         .tab.active { display: block; }
         .card { background: #fff; margin: 15px; padding: 20px; border-radius: 15px; border: 1px solid #eee; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        .stt { font-size: 11px; font-weight: bold; display: block; margin-top: 3px; }
     </style>
 </head>
 <body>
@@ -50,17 +51,15 @@
 </div>
 
 <div id="tab-history" class="tab">
-    <div class="user-header"><b>Lịch sử hoạt động</b></div>
-    <div id="render-history" style="padding:15px"></div>
+    <div class="user-header"><b>Lịch sử nhiệm vụ</b></div>
+    <div id="render-history-tasks" style="padding:15px"></div>
 </div>
 
 <div id="tab-rules" class="tab">
     <div class="user-header"><b>Quy định hệ thống</b></div>
     <div class="card">
-        <p style="color:var(--p); font-weight:bold;">Điều khoản bắt buộc:</p>
         <ul style="padding-left: 20px; line-height: 2; color: #636e72;">
             <li>Không dùng VPN, Fake IP, Proxy.</li>
-            <li>Không sử dụng công cụ auto, giả lập.</li>
             <li>Rút tiền tối thiểu từ 20.000đ.</li>
             <li>Nhiệm vụ sẽ được duyệt sau 24h.</li>
         </ul>
@@ -71,9 +70,11 @@
     <div class="user-header"><b>Rút tiền về ví</b></div>
     <div class="card">
         <input type="number" id="w-amount" placeholder="Số tiền rút (Min 20k)">
-        <input type="text" id="w-info" placeholder="Ngân hàng - STK - Tên chủ thẻ">
+        <input type="text" id="w-info" placeholder="Ngân hàng - STK - Tên">
         <button class="btn-go" style="width:100%; height:45px; margin-top:10px" onclick="handleWithdraw()">XÁC NHẬN RÚT</button>
     </div>
+    <h4 style="margin: 20px 15px 10px">Lịch sử rút tiền</h4>
+    <div id="render-history-withdraw" style="padding:15px"></div>
 </div>
 
 <nav class="navbar">
@@ -101,78 +102,46 @@
     }
 
     function toggleGroup(id, el) {
-        const content = document.getElementById(id);
-        content.classList.toggle('show');
+        document.getElementById(id).classList.toggle('show');
         el.classList.toggle('active');
     }
 
-   // Hàm làm nhiệm vụ: Chỉ ghi log "pending", chưa cộng tiền
-function doTask(name, link, bonus) {
-    window.open(link, "_blank");
-    const uid = firebase.auth().currentUser.uid;
-    db.ref("history/" + uid + "/" + Date.now()).set({
-        task: name, 
-        amount: bonus, 
-        status: "pending", // Trạng thái chờ Admin duyệt mới được cộng tiền
-        time: new Date().toLocaleString(),
-        type: "task"
-    });
-    alert("Đã ghi nhận! Vui lòng chờ Admin duyệt để nhận tiền.");
-}
-
-// Hàm rút tiền: Trừ tiền trực tiếp và ghi log chờ duyệt
-function handleWithdraw() {
-    const amt = parseInt(document.getElementById("w-amount").value);
-    const info = document.getElementById("w-info").value;
-    const uid = firebase.auth().currentUser.uid;
-
-    if (amt < 20000 || !info) return alert("Tối thiểu 20k và đủ thông tin!");
-
-    db.ref("users/" + uid + "/money").once("value", s => {
-        const currentBalance = s.val() || 0;
-        if (currentBalance < amt) return alert("Số dư không đủ để rút!");
-
-        // 1. Trừ tiền trực tiếp vào tài khoản
-        db.ref("users/" + uid + "/money").set(currentBalance - amt).then(() => {
-            // 2. Ghi vào lịch sử rút tiền
-            db.ref("history/" + uid + "/" + Date.now()).set({
-                task: "Rút tiền: " + info,
-                amount: -amt,
-                status: "processing", // Trạng thái đang xử lý
-                time: new Date().toLocaleString(),
-                type: "withdraw"
-            });
-            alert("Đã trừ tiền và gửi yêu cầu rút!");
+    function doTask(name, link, bonus) {
+        window.open(link, "_blank");
+        const uid = firebase.auth().currentUser.uid;
+        db.ref("history/" + uid + "/" + Date.now()).set({
+            task: name, amount: bonus, status: "pending", time: new Date().toLocaleString()
         });
-    });
-}
+        alert("Nhiệm vụ đã gửi, vui lòng chờ duyệt!");
+    }
 
-// Logic hiển thị phân loại (Trong onAuthStateChanged)
-db.ref("history/" + user.uid).on("value", s => {
-    let taskHtml = "";
-    let withdrawHtml = "";
-    
-    s.forEach(c => {
-        const d = c.val();
-        const statusText = d.status === "pending" ? "Chờ duyệt" : (d.status === "success" ? "Thành công" : "Từ chối");
-        const statusColor = d.status === "pending" || d.status === "processing" ? "#f39c12" : (d.status === "success" ? "#27ae60" : "#e74c3c");
+    function handleWithdraw() {
+        const amt = parseInt(document.getElementById("w-amount").value);
+        const info = document.getElementById("w-info").value;
+        const uid = firebase.auth().currentUser.uid;
+        if (amt < 20000 || !info) return alert("Kiểm tra lại số tiền và thông tin!");
 
-        const ui = `<div class="card-ui" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-            <div>
-                <b>${d.task}</b><br>
-                <small>${d.time}</small><br>
-                <span style="color:${statusColor}; font-size:11px; font-weight:bold">${statusText}</span>
-            </div>
-            <b style="color:${d.amount < 0 ? '#e74c3c' : '#27ae60'}">${d.amount > 0 ? '+' : ''}${d.amount.toLocaleString()}đ</b>
-        </div>`;
+        db.ref("users/" + uid + "/money").once("value", s => {
+            const cur = s.val() || 0;
+            if (cur < amt) return alert("Không đủ số dư!");
+            // Trừ tiền trực tiếp
+            db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
+                db.ref("history/" + uid + "/" + Date.now()).set({
+                    task: "Rút tiền: " + info, amount: -amt, status: "processing", time: new Date().toLocaleString()
+                });
+                alert("Đã trừ tiền và gửi yêu cầu rút!");
+            });
+        });
+    }
 
-        if (d.amount > 0) taskHtml = ui + taskHtml; 
-        else withdrawHtml = ui + withdrawHtml;
-    });
-    
-    document.getElementById("render-history-tasks").innerHTML = taskHtml || "Chưa có nhiệm vụ.";
-    document.getElementById("render-history-withdraw").innerHTML = withdrawHtml || "Chưa có lệnh rút.";
-});
+    firebase.auth().onAuthStateChanged(user => {
+        if (!user) return;
+        document.getElementById("u-mail").innerText = user.email;
+        document.getElementById("u-uid").innerText = user.uid;
+
+        db.ref("users/" + user.uid + "/money").on("value", s => {
+            document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
+        });
 
         db.ref("Task").on("value", snap => {
             const div = document.getElementById("render-tasks");
@@ -181,18 +150,13 @@ db.ref("history/" + user.uid).on("value", s => {
                 const name = g.key;
                 let bonus = (name === "Traffictot") ? 400 : (name === "Click1s" ? 600 : 500);
                 const cId = 'c-' + name.replace(/\s+/g, '');
-                let h = `<div class="group-box">
-                    <div class="group-head" onclick="toggleGroup('${cId}', this)">
-                        <span>${name} (+${bonus}đ)</span>
-                        <i class="fas fa-chevron-down arrow"></i>
-                    </div>
-                    <div id="${cId}" class="group-content">`;
+                let h = `<div class="group-box"><div class="group-head" onclick="toggleGroup('${cId}', this)">
+                        <span>${name} (+${bonus}đ)</span><i class="fas fa-chevron-down arrow"></i></div>
+                        <div id="${cId}" class="group-content">`;
                 g.forEach(t => {
-                    const link = (typeof t.val() === 'object') ? t.val().link : t.val();
-                    h += `<div class="task-row">
-                        <span>Nhiệm vụ #${t.key}</span>
-                        <button class="btn-go" onclick="doTask('${name}', '${link}', ${bonus})">Làm</button>
-                    </div>`;
+                    const l = (typeof t.val() === 'object') ? t.val().link : t.val();
+                    h += `<div class="task-row"><span>Nhiệm vụ #${t.key}</span>
+                        <button class="btn-go" onclick="doTask('${name}', '${l}', ${bonus})">Làm</button></div>`;
                 });
                 h += `</div></div>`;
                 div.innerHTML += h;
@@ -200,24 +164,23 @@ db.ref("history/" + user.uid).on("value", s => {
         });
 
         db.ref("history/" + user.uid).on("value", s => {
-            let h = "";
+            let taskH = ""; let drawH = "";
             s.forEach(c => {
                 const d = c.val();
-                const isWithdraw = d.amount < 0; 
-                h = `<div class="task-row">
-                    <div>
-                        <b style="font-size: 14px;">${d.task}</b><br>
-                        <small style="color: #b2bec3;">${d.time}</small>
-                    </div>
-                    <b style="color:${isWithdraw ? '#e74c3c' : (d.status === 'success' ? '#27ae60' : '#f39c12')}">
-                        ${isWithdraw ? d.amount.toLocaleString() : '+' + d.amount.toLocaleString()}đ
-                    </b>
-                </div>` + h;
+                const isW = d.amount < 0;
+                const stText = d.status === "pending" || d.status === "processing" ? "Chờ duyệt" : (d.status === "success" ? "Thành công" : "Từ chối");
+                const stCol = (d.status === "pending" || d.status === "processing") ? "#f39c12" : (d.status === "success" ? "#27ae60" : "#e74c3c");
+
+                const ui = `<div class="task-row"><div><b>${d.task}</b><br><small>${d.time}</small>
+                            <span class="stt" style="color:${stCol}">${stText}</span></div>
+                            <b style="color:${isW ? '#e74c3c' : '#27ae60'}">${isW ? '' : '+'}${d.amount.toLocaleString()}đ</b></div>`;
+
+                if (isW) drawH = ui + drawH; else taskH = ui + taskH;
             });
-            document.getElementById("render-history").innerHTML = h || "Chưa có giao dịch nào.";
+            document.getElementById("render-history-tasks").innerHTML = taskH || "Chưa có dữ liệu.";
+            document.getElementById("render-history-withdraw").innerHTML = drawH || "Chưa có lệnh rút.";
         });
     });
 </script>
 </body>
 </html>
-
