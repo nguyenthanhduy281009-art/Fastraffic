@@ -32,7 +32,6 @@
         .tab.active { display: block; }
         .card { background: #fff; margin: 15px; padding: 20px; border-radius: 15px; border: 1px solid #eee; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        /* CSS mới cho trạng thái căn phải */
         .stt-box { text-align: right; min-width: 90px; }
         .stt-text { font-size: 11px; font-weight: bold; display: block; margin-top: 3px; }
     </style>
@@ -40,14 +39,8 @@
 <body>
 
 <div id="tab-home" class="tab active">
-    <div class="user-header">
-        Chào: <b id="u-mail">...</b>
-        <small style="display: block; color: #b2bec3; font-size: 11px; margin-top: 5px;">ID: <span id="u-uid">...</span></small>
-    </div>
-    <div class="balance-card">
-        <small style="opacity:0.8">SỐ DƯ KHẢ DỤNG</small>
-        <span class="balance-val" id="u-balance">0đ</span>
-    </div>
+    <div class="user-header">Chào: <b id="u-mail">...</b><small style="display: block; color: #b2bec3; font-size: 11px; margin-top: 5px;">ID: <span id="u-uid">...</span></small></div>
+    <div class="balance-card"><small style="opacity:0.8">SỐ DƯ KHẢ DỤNG</small><span class="balance-val" id="u-balance">0đ</span></div>
     <h4 style="margin: 20px 15px 10px"><i class="fas fa-star" style="color:#f1c40f"></i> Nhiệm vụ của bạn</h4>
     <div id="render-tasks">Đang tải...</div>
 </div>
@@ -117,27 +110,28 @@
         alert("Nhiệm vụ đã gửi, vui lòng chờ duyệt!");
     }
 
-   function handleWithdraw() {
-    const amt = parseInt(document.getElementById("w-amount").value);
-    const info = document.getElementById("w-info").value;
-    const uid = firebase.auth().currentUser.uid;
-    if (amt < 20000 || !info) return alert("Kiểm tra lại số tiền và thông tin!");
+    function handleWithdraw() {
+        const amt = parseInt(document.getElementById("w-amount").value);
+        const info = document.getElementById("w-info").value;
+        const uid = firebase.auth().currentUser.uid;
+        if (amt < 20000 || !info) return alert("Kiểm tra lại số tiền và thông tin!");
 
-    db.ref("users/" + uid + "/money").once("value", s => {
-        const cur = s.val() || 0;
-        if (cur < amt) return alert("Không đủ số dư!");
-        db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
-            db.ref("history/" + uid + "/" + Date.now()).set({
-                task: "Rút tiền", // Bỏ thông tin ngân hàng ở đây
-                amount: amt, 
-                info: info, // Vẫn lưu info để Admin kiểm tra trong DB
-                status: "processing", 
-                time: new Date().toLocaleString()
+        db.ref("users/" + uid + "/money").once("value", s => {
+            const cur = s.val() || 0;
+            if (cur < amt) return alert("Không đủ số dư!");
+            db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
+                db.ref("history/" + uid + "/" + Date.now()).set({
+                    task: "Rút tiền", 
+                    amount: amt, 
+                    info: info, 
+                    type: "withdraw",
+                    status: "processing", 
+                    time: new Date().toLocaleString()
+                });
+                alert("Yêu cầu đã được gửi thành công, xin vui lòng chờ từ 1 đến 3 ngày!");
             });
-            alert("Yêu cầu đã được gửi thành công, xin vui lòng chờ từ 1 đến 3 ngày!");
         });
-    });
-}
+    }
 
     firebase.auth().onAuthStateChanged(user => {
         if (!user) return;
@@ -149,22 +143,17 @@
         });
 
         db.ref("Task").on("value", snap => {
-            const div = document.getElementById("render-tasks");
-            div.innerHTML = "";
+            const div = document.getElementById("render-tasks"); div.innerHTML = "";
             snap.forEach(g => {
                 const name = g.key;
                 let bonus = (name === "Traffictot") ? 400 : (name === "Click1s" ? 600 : 500);
                 const cId = 'c-' + name.replace(/\s+/g, '');
-                let h = `<div class="group-box"><div class="group-head" onclick="toggleGroup('${cId}', this)">
-                        <span>${name} (+${bonus}đ)</span><i class="fas fa-chevron-down arrow"></i></div>
-                        <div id="${cId}" class="group-content">`;
+                let h = `<div class="group-box"><div class="group-head" onclick="toggleGroup('${cId}', this)"><span>${name} (+${bonus}đ)</span><i class="fas fa-chevron-down arrow"></i></div><div id="${cId}" class="group-content">`;
                 g.forEach(t => {
                     const l = (typeof t.val() === 'object') ? t.val().link : t.val();
-                    h += `<div class="task-row"><span>Nhiệm vụ #${t.key}</span>
-                        <button class="btn-go" onclick="doTask('${name}', '${l}', ${bonus})">Làm</button></div>`;
+                    h += `<div class="task-row"><span>Nhiệm vụ #${t.key}</span><button class="btn-go" onclick="doTask('${name}', '${l}', ${bonus})">Làm</button></div>`;
                 });
-                h += `</div></div>`;
-                div.innerHTML += h;
+                h += `</div></div>`; div.innerHTML += h;
             });
         });
 
@@ -172,7 +161,7 @@
             let taskH = ""; let drawH = "";
             s.forEach(c => {
                 const d = c.val();
-                const isW = d.amount < 0;
+                const isW = d.type === "withdraw" || d.amount < 0 || d.task === "Rút tiền";
                 const stText = d.status === "pending" || d.status === "processing" ? "Chờ duyệt" : (d.status === "success" ? "Thành công" : "Từ chối");
                 const stCol = (d.status === "pending" || d.status === "processing") ? "#f39c12" : (d.status === "success" ? "#27ae60" : "#e74c3c");
 
@@ -186,7 +175,6 @@
                         ${!isW ? '<b style="color:#27ae60">+' + d.amount.toLocaleString() + 'đ</b>' : ''}
                     </div>
                 </div>`;
-                
                 if (isW) drawH = ui + drawH; else taskH = ui + taskH;
             });
             document.getElementById("render-history-tasks").innerHTML = taskH || "Chưa có dữ liệu.";
@@ -196,5 +184,3 @@
 </script>
 </body>
 </html>
-
-
