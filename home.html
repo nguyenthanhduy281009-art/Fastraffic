@@ -9,76 +9,106 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding-bottom: 80px; }
-        .card { background: #fff; margin: 10px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .balance-val { text-align: center; color: #27ae60; font-size: 32px; font-weight: bold; margin: 10px 0; }
-        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
-        .btn-do { background: #e74c3c; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 80px; }
+        
+        /* User Info Bar */
+        .user-bar { background: #fff; padding: 15px; margin-bottom: 5px; border-bottom: 1px solid #ddd; }
+        .user-bar b { color: #2d3436; font-size: 15px; }
+        .user-bar small { display: block; color: #636e72; margin-top: 4px; font-family: monospace; }
+
+        /* Balance Card Gradient */
+        .balance-card {
+            background: linear-gradient(135deg, #0984e3, #6c5ce7);
+            margin: 15px; padding: 25px; border-radius: 20px; color: #fff;
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+            position: relative; overflow: hidden;
+        }
+        .balance-card::after {
+            content: ""; position: absolute; right: -20px; bottom: -20px;
+            width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;
+        }
+        .balance-label { font-size: 14px; opacity: 0.9; }
+        .balance-val { font-size: 32px; font-weight: 800; margin: 10px 0; display: block; }
+
+        /* Task & Card Style */
+        .card { background: #fff; margin: 15px; padding: 15px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h3 { margin-top: 0; font-size: 18px; color: #2d3436; border-left: 4px solid #e74c3c; padding-left: 10px; }
+        
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
+        .task-item:last-child { border-bottom: none; }
+        .btn-do { background: #e74c3c; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-do:active { transform: scale(0.95); opacity: 0.8; }
+
+        /* Navigation */
         .nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #eee; height: 65px; z-index: 9999; }
-        .nav-link { flex: 1; text-align: center; padding-top: 12px; font-size: 11px; color: #888; cursor: pointer; }
+        .nav-link { flex: 1; text-align: center; padding-top: 12px; font-size: 12px; color: #b2bec3; cursor: pointer; }
         .nav-link.active { color: #e74c3c; font-weight: bold; }
-        .nav-link i { display: block; font-size: 20px; margin-bottom: 3px; }
-        .tab-box { display: none; padding: 5px; }
+        .nav-link i { display: block; font-size: 22px; margin-bottom: 3px; }
+
+        .tab-box { display: none; }
         .tab-box.active { display: block; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 8px; box-sizing: border-box; }
-        .hist-status { font-weight: bold; font-size: 13px; }
-        .status-pending { color: #f39c12; }
-        .status-success { color: #27ae60; }
-        .status-rejected { color: #e74c3c; }
+        
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #dfe6e9; border-radius: 10px; box-sizing: border-box; font-size: 15px; }
+        .status-pending { color: #fdcb6e; font-weight: bold; }
+        .status-success { color: #00b894; font-weight: bold; }
+        .status-rejected { color: #d63031; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="tab-home" class="tab-box active">
-    <div class="card" style="font-size: 14px;">
-    Xin chào: <b id="u-mail">...</b><br>
-    <small style="color: #888;">ID: <span id="u-uid">...</span></small>
-</div>
-    <div class="card">
-        <p style="text-align:center; margin:0; color: #666;">Số dư của bạn</p>
-        <div class="balance-val" id="u-balance">0đ</div>
+    <div class="user-bar">
+        Xin chào: <b id="u-mail">...</b>
+        <small>UID: <span id="u-uid">...</span></small>
     </div>
+
+    <div class="balance-card">
+        <span class="balance-label"><i class="fas fa-wallet"></i> Số dư khả dụng</span>
+        <span class="balance-val" id="u-balance">0đ</span>
+        <small style="opacity: 0.7; font-size: 11px;">Hệ thống bảo mật FASTRAFFIC</small>
+    </div>
+
     <div class="card">
-        <h3><i class="fas fa-fire"></i> Nhiệm vụ:</h3>
+        <h3>Nhiệm vụ khả dụng</h3>
         <div id="render-tasks">Đang tải dữ liệu...</div>
     </div>
 </div>
 
 <div id="tab-history" class="tab-box">
     <div class="card">
-        <h3><i class="fas fa-history"></i> Lịch sử nhiệm vụ</h3>
+        <h3>Lịch sử hoạt động</h3>
         <div id="render-history">Chưa có hoạt động nào.</div>
     </div>
 </div>
 
 <div id="tab-rules" class="tab-box">
     <div class="card">
-        <h3><i class="fas fa-shield-alt"></i> Quy định chung</h3>
-        <ul style="padding-left: 20px; line-height: 1.8; color: #444;">
-            <li>Không dùng công cụ auto, giả lập.</li>
+        <h3>Quy định sử dụng</h3>
+        <ul style="padding-left: 20px; line-height: 2; color: #636e72;">
+            <li>Không sử dụng công cụ auto, giả lập.</li>
             <li>Rút tiền tối thiểu từ 20.000đ.</li>
-            <li>Duyệt rút tiền trong 24h - 48h.</li>
+            <li>Duyệt rút tiền từ 24h - 48h.</li>
         </ul>
     </div>
 </div>
 
 <div id="tab-withdraw" class="tab-box">
     <div class="card">
-        <h3><i class="fas fa-money-check-alt"></i> Đặt lệnh rút tiền</h3>
-        <input type="number" id="w-amount" placeholder="Số tiền muốn rút (Min 20k)">
-        <input type="text" id="w-info" placeholder="STK - Ngân hàng - Tên chủ tài khoản">
-        <button class="btn-do" style="width: 100%; margin-top: 10px;" onclick="handleWithdraw()">XÁC NHẬN RÚT</button>
+        <h3>Rút tiền về tài khoản</h3>
+        <input type="number" id="w-amount" placeholder="Số tiền rút (Min 20,000)">
+        <input type="text" id="w-info" placeholder="Ngân hàng - STK - Tên chủ thẻ">
+        <button class="btn-do" style="width: 100%; margin-top: 10px; background: #0984e3;" onclick="handleWithdraw()">XÁC NHẬN RÚT TIỀN</button>
     </div>
     <div class="card">
-        <h3><i class="fas fa-list"></i> Lịch sử rút tiền</h3>
+        <h3>Lịch sử rút tiền</h3>
         <div id="render-withdraw-history">Chưa có lệnh rút nào.</div>
     </div>
 </div>
 
 <nav class="nav">
     <div class="nav-link active" onclick="goTab('tab-home', this)"><i class="fas fa-home"></i>Home</div>
-    <div class="nav-link" onclick="goTab('tab-history', this)"><i class="fas fa-list-ul"></i>Lịch sử</div>
-    <div class="nav-link" onclick="goTab('tab-rules', this)"><i class="fas fa-book"></i>Quy định</div>
+    <div class="nav-link" onclick="goTab('tab-history', this)"><i class="fas fa-tasks"></i>Lịch sử</div>
+    <div class="nav-link" onclick="goTab('tab-rules', this)"><i class="fas fa-info-circle"></i>Quy định</div>
     <div class="nav-link" onclick="goTab('tab-withdraw', this)"><i class="fas fa-wallet"></i>Rút tiền</div>
 </nav>
 
@@ -103,51 +133,51 @@
         if (!user) { window.location.href = "index.html"; return; }
         const uid = user.uid;
         document.getElementById("u-mail").innerText = user.email;
+        document.getElementById("u-uid").innerText = uid;
 
+        // Cập nhật số dư
         db.ref("users/" + uid + "/money").on("value", s => {
-            document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
+            const val = s.val() || 0;
+            document.getElementById("u-balance").innerText = val.toLocaleString() + "đ";
         });
 
-        // Tải nhiệm vụ từ Firebase
+        // Load Nhiệm vụ
         db.ref("Task").on("value", snap => {
             const div = document.getElementById("render-tasks");
             div.innerHTML = "";
             snap.forEach(group => {
                 const groupName = group.key; 
-                let bonus = 500; 
-                if (groupName === "Traffictot") bonus = 400;
-                if (groupName === "Click1s") bonus = 600;
+                let bonus = (groupName === "Traffictot") ? 400 : (groupName === "Click1s" ? 600 : 500);
 
                 group.forEach(taskItem => {
                     const data = taskItem.val();
                     const link = (typeof data === 'object') ? data.link : data; 
                     div.innerHTML += `
                         <div class="task-item">
-                            <span><b>${groupName}</b> (${bonus}đ)</span>
+                            <span><b>${groupName}</b> <br><small style="color:#888">+${bonus}đ mỗi lượt</small></span>
                             <button class="btn-do" onclick="doTask('${groupName}', '${link}', ${bonus})">Làm</button>
                         </div>`;
                 });
             });
         });
 
-        // Hiển thị lịch sử
+        // Load Lịch sử
         db.ref("history/" + uid).on("value", s => {
             let h = ""; let w = "";
             s.forEach(c => {
                 const d = c.val();
-                const statusText = d.status === "pending" ? "Đang duyệt" : (d.status === "success" ? "Thành công" : "Thất bại");
+                const statusLbl = d.status === "pending" ? "Đang duyệt" : (d.status === "success" ? "Thành công" : "Bị từ chối");
                 if (d.amount < 0) {
-                    w = `<div class="task-item"><div><b>Rút ${Math.abs(d.amount)}đ</b><br><small>${d.time}</small></div><div class="status-${d.status}">${statusText}</div></div>` + w;
+                    w = `<div class="task-item"><div><b>Rút ${Math.abs(d.amount).toLocaleString()}đ</b><br><small>${d.time}</small></div><div class="status-${d.status}">${statusLbl}</div></div>` + w;
                 } else {
-                    h = `<div class="task-item"><div><b>${d.task}</b><br><small>${d.time}</small></div><div class="status-${d.status}">${statusText}</div></div>` + h;
+                    h = `<div class="task-item"><div><b>${d.task}</b><br><small>${d.time}</small></div><div class="status-${d.status}">${statusLbl}</div></div>` + h;
                 }
             });
-            document.getElementById("render-history").innerHTML = h || "Trống.";
-            document.getElementById("render-withdraw-history").innerHTML = w || "Trống.";
+            document.getElementById("render-history").innerHTML = h || "Chưa có hoạt động.";
+            document.getElementById("render-withdraw-history").innerHTML = w || "Chưa có lệnh rút.";
         });
     });
 
-    // Hàm thực hiện nhiệm vụ - ĐÃ ĐỊNH NGHĨA LẠI Ở ĐÂY
     function doTask(name, link, bonus) {
         window.open(link, "_blank");
         const uid = firebase.auth().currentUser.uid;
@@ -163,23 +193,21 @@
         const amt = parseInt(document.getElementById("w-amount").value);
         const info = document.getElementById("w-info").value;
         const uid = firebase.auth().currentUser.uid;
-        if (amt < 20000 || !info) return alert("Min 20k và nhập đủ thông tin!");
+        if (amt < 20000 || !info) return alert("Tối thiểu 20k và nhập đầy đủ thông tin.");
+        
         db.ref("users/" + uid + "/money").once("value", s => {
             const cur = s.val() || 0;
-            if (cur < amt) return alert("Số dư không đủ!");
+            if (cur < amt) return alert("Số dư không đủ.");
             db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
                 db.ref("history/" + uid + "/" + Date.now()).set({
-                    task: "Rút về: " + info, amount: -amt, status: "pending", time: new Date().toLocaleString()
+                    task: "Rút tiền: " + info, amount: -amt, status: "pending", time: new Date().toLocaleString()
                 });
-                alert("Đã gửi yêu cầu rút tiền!");
+                alert("Yêu cầu rút tiền đã được gửi!");
+                document.getElementById("w-amount").value = "";
+                document.getElementById("w-info").value = "";
             });
         });
     }
 </script>
 </body>
 </html>
-
-
-
-
-
