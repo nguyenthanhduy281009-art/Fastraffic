@@ -96,13 +96,6 @@
         element.classList.add('active');
     }
 
-    function getStatusLabel(status) {
-        if (status === "pending") return "Đang duyệt";
-        if (status === "success") return "Thành công";
-        if (status === "rejected") return "Thất bại";
-        return status;
-    }
-
     firebase.auth().onAuthStateChanged(user => {
         if (!user) { window.location.href = "index.html"; return; }
         const uid = user.uid;
@@ -111,64 +104,39 @@
         db.ref("users/" + uid + "/money").on("value", s => {
             document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
         });
-        // Tự động hiển thị nhiệm vụ với giá mặc định theo nhóm
-db.ref("Task").on("value", snap => {
-    const div = document.getElementById("render-tasks");
-    div.innerHTML = "";
-    snap.forEach(group => {
-        const groupName = group.key; // Tên nhóm: Traffictot hoặc Click1s
-        
-        // Thiết lập giá mặc định theo yêu cầu của bạn
-        let defaultBonus = 500; 
-        if (groupName === "Traffictot") defaultBonus = 400;
-        if (groupName === "Click1s") defaultBonus = 600;
 
-        group.forEach(taskItem => {
-            const data = taskItem.val();
-            // Nếu là link trực tiếp hoặc object có chứa link
-            const link = (typeof data === 'object') ? data.link : data; 
-            const finalBonus = data.bonus || defaultBonus;
-            
-            div.innerHTML += `
-                <div class="task-item">
-                    <span><b>${groupName}</b> (${finalBonus.toLocaleString()}đ)</span>
-                    <button class="btn-do" onclick="doTask('${groupName}', '${link}', ${finalBonus})">Làm</button>
-                </div>`;
+        // Tải nhiệm vụ từ Firebase
+        db.ref("Task").on("value", snap => {
+            const div = document.getElementById("render-tasks");
+            div.innerHTML = "";
+            snap.forEach(group => {
+                const groupName = group.key; 
+                let bonus = 500; 
+                if (groupName === "Traffictot") bonus = 400;
+                if (groupName === "Click1s") bonus = 600;
+
+                group.forEach(taskItem => {
+                    const data = taskItem.val();
+                    const link = (typeof data === 'object') ? data.link : data; 
+                    div.innerHTML += `
+                        <div class="task-item">
+                            <span><b>${groupName}</b> (${bonus}đ)</span>
+                            <button class="btn-do" onclick="doTask('${groupName}', '${link}', ${bonus})">Làm</button>
+                        </div>`;
+                });
+            });
         });
-    });
-});
 
-// Hàm ghi nhận lịch sử nhiệm vụ
-function doTask(name, link, bonus) {
-    window.open(link, "_blank");
-    const uid = firebase.auth().currentUser.uid;
-    db.ref("history/" + uid + "/" + Date.now()).set({
-        task: name,
-        amount: bonus, 
-        status: "pending",
-        time: new Date().toLocaleString()
-    });
-}
-       
-
+        // Hiển thị lịch sử
         db.ref("history/" + uid).on("value", s => {
             let h = ""; let w = "";
             s.forEach(c => {
-                const d = c.val(); const id = c.key;
-                const lbl = getStatusLabel(d.status);
-                
-                // Tự động hoàn tiền khi thất bại
-                if (d.amount < 0 && d.status === "rejected" && !d.refunded) {
-                    db.ref("users/" + uid + "/money").once("value", sn => {
-                        db.ref("users/" + uid + "/money").set((sn.val() || 0) + Math.abs(d.amount));
-                        db.ref("history/" + uid + "/" + id).update({ refunded: true });
-                    });
-                }
-
-                if (d.amount < 0) { // Lịch sử rút
-                    w = `<div class="task-item"><div style="text-align:left;"><b>Rút tiền ${Math.abs(d.amount).toLocaleString()}đ</b><br><small>${d.time}</small></div><div class="hist-status status-${d.status}">${lbl}</div></div>` + w;
-                } else { // Lịch sử nhiệm vụ
-                    h = `<div class="task-item"><div style="text-align:left;"><b>${d.task}</b><br><small>${d.time}</small></div><div class="hist-status status-${d.status}">${lbl}</div></div>` + h;
+                const d = c.val();
+                const statusText = d.status === "pending" ? "Đang duyệt" : (d.status === "success" ? "Thành công" : "Thất bại");
+                if (d.amount < 0) {
+                    w = `<div class="task-item"><div><b>Rút ${Math.abs(d.amount)}đ</b><br><small>${d.time}</small></div><div class="status-${d.status}">${statusText}</div></div>` + w;
+                } else {
+                    h = `<div class="task-item"><div><b>${d.task}</b><br><small>${d.time}</small></div><div class="status-${d.status}">${statusText}</div></div>` + h;
                 }
             });
             document.getElementById("render-history").innerHTML = h || "Trống.";
@@ -176,7 +144,17 @@ function doTask(name, link, bonus) {
         });
     });
 
-   
+    // Hàm thực hiện nhiệm vụ - ĐÃ ĐỊNH NGHĨA LẠI Ở ĐÂY
+    function doTask(name, link, bonus) {
+        window.open(link, "_blank");
+        const uid = firebase.auth().currentUser.uid;
+        db.ref("history/" + uid + "/" + Date.now()).set({
+            task: name,
+            amount: bonus,
+            status: "pending",
+            time: new Date().toLocaleString()
+        });
+    }
 
     function handleWithdraw() {
         const amt = parseInt(document.getElementById("w-amount").value);
@@ -186,17 +164,18 @@ function doTask(name, link, bonus) {
         db.ref("users/" + uid + "/money").once("value", s => {
             const cur = s.val() || 0;
             if (cur < amt) return alert("Số dư không đủ!");
-            db.ref("users/" + uid + "/money").set(cur - amt).then(() => { // Trừ tiền ngay
+            db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
                 db.ref("history/" + uid + "/" + Date.now()).set({
-                    task: "Rút về: " + info, amount: -amt, status: "pending", time: new Date().toLocaleString(), refunded: false
+                    task: "Rút về: " + info, amount: -amt, status: "pending", time: new Date().toLocaleString()
                 });
-                alert("Đã trừ tiền và gửi yêu cầu!");
+                alert("Đã gửi yêu cầu rút tiền!");
             });
         });
     }
 </script>
 </body>
 </html>
+
 
 
 
