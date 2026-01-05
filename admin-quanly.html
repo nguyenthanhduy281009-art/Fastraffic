@@ -12,18 +12,15 @@
         .header { background: #fff; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .header h1 { margin: 0; font-size: 28px; letter-spacing: 2px; }
         .section-title { color: #e94560; font-weight: bold; margin: 25px 0 15px; display: flex; align-items: center; gap: 10px; }
-        
         .table-box { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; background: #fff; }
         th { background: #f8f9fa; padding: 15px; text-align: left; font-size: 14px; border-bottom: 2px solid #eee; }
         td { padding: 15px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
-        
         .form-box { background: #fff; padding: 20px; border-radius: 15px; border: 2px solid #007bff; }
         input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
         .btn-update { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
         .btn-update:hover { background: #0056b3; }
-        
-        .btn-action { padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; color: white; }
+        .btn-action { padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; color: white; font-weight: bold; }
         .btn-approve { background: #27ae60; }
         .btn-reject { background: #e74c3c; margin-left: 5px; }
     </style>
@@ -47,8 +44,7 @@
                 <th>Hành động</th>
             </tr>
         </thead>
-        <tbody id="list-withdraw">
-            </tbody>
+        <tbody id="list-withdraw"></tbody>
     </table>
 </div>
 
@@ -63,8 +59,7 @@
                 <th>Hành động</th>
             </tr>
         </thead>
-        <tbody id="list-tasks">
-            </tbody>
+        <tbody id="list-tasks"></tbody>
     </table>
 </div>
 
@@ -85,97 +80,87 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. Hàm cộng tiền trực tiếp bằng UID
-    async function updateUserBalance() {
-        const uid = document.getElementById('target-uid').value.trim();
-        const amount = parseInt(document.getElementById('target-amount').value);
-        if(!uid || isNaN(amount)) return alert("Vui lòng nhập UID và Số tiền hợp lệ!");
-
-        const userRef = db.ref("users/" + uid + "/money");
-        try {
-            const snapshot = await userRef.once("value");
-            const currentMoney = snapshot.val() || 0;
-            const newMoney = currentMoney + amount;
-            await userRef.set(newMoney);
-            alert("Thành công! Số dư mới: " + newMoney.toLocaleString() + "đ");
-        } catch (e) { alert("Lỗi: " + e.message); }
-    }
-
-    // 2. Tải danh sách chờ duyệt
+    // 1. Tải danh sách
     function loadData() {
         db.ref("history").on("value", (snapshot) => {
             const listTasks = document.getElementById('list-tasks');
             const listWithdraw = document.getElementById('list-withdraw');
-            listTasks.innerHTML = "";
-            listWithdraw.innerHTML = "";
+            listTasks.innerHTML = ""; listWithdraw.innerHTML = "";
 
             snapshot.forEach((userHistory) => {
-            snapshot.forEach((userHistory) => {
-    const uid = userHistory.key;
-    userHistory.forEach((item) => {
-        const data = item.val();
-        const itemId = item.key;
-        const taskTime = data.time || "Không rõ";
+                const uid = userHistory.key;
+                userHistory.forEach((item) => {
+                    const data = item.val();
+                    const itemId = item.key;
+                    const taskTime = data.time || "Không rõ";
 
-        // 1. Xử lý yêu cầu Rút tiền (Status là processing)
-        if (data.status === "processing") {
-            listWithdraw.innerHTML += `
-                <tr>
-                    <td><small>${uid.substring(0, 6)}...</small></td>
-                    <td>${taskTime}</td>
-                    <td>${data.info || "N/A"}</td>
-                    <td style="color: #e74c3c; font-weight: bold;">${data.amount.toLocaleString()}đ</td>
-                    <td>
-                        <button class="btn-action btn-approve" onclick="approveWithdraw('${uid}', '${itemId}')">Duyệt</button>
-                        <button class="btn-action btn-reject" onclick="rejectWithdraw('${uid}', '${itemId}', ${data.amount})">Hủy</button>
-                    </td>
-                </tr>`;
-        } 
-        // 2. Xử lý Nhiệm vụ chờ duyệt (Status là pending)
-        else if (data.status === "pending") {
-            const rewardAmount = data.amount || 0;
-            listTasks.innerHTML += `
-                <tr>
-                    <td><small>${uid.substring(0, 6)}...</small></td>
-                    <td><b>${data.task}</b><br><small>${taskTime}</small></td>
-                    <td style="color: #27ae60; font-weight: bold;">+${rewardAmount}đ</td>
-                    <td>
-                        <button class="btn-action btn-approve" onclick="approveTask('${uid}', '${itemId}', ${rewardAmount})">Duyệt</button>
-                        <button class="btn-action btn-reject" onclick="rejectItem('${uid}', '${itemId}')">Hủy</button>
-                    </td>
-                </tr>`;
-        }
-    });
-});    
-    
-
-    // 3. HÀM DUYỆT NHIỆM VỤ (PHẢI CÓ KHÚC NÀY NÚT MỚI CHẠY)
-    function approveTask(uid, itemId, amount) {
-        if (!confirm("Xác nhận cộng " + amount + "đ cho người dùng?")) return;
-        
-        // Cộng tiền cho người dùng
-        db.ref("users/" + uid + "/money").transaction((current) => {
-            return (current || 0) + amount;
-        }).then(() => {
-            // Đổi trạng thái lịch sử
-            db.ref("history/" + uid + "/" + itemId).update({ status: "success" });
-            alert("Đã duyệt thành công!");
-        }).catch(e => alert("Lỗi: " + e.message));
+                    // Phân loại: Lệnh rút (processing) và Nhiệm vụ (pending)
+                    if (data.status === "processing") {
+                        listWithdraw.innerHTML += `
+                            <tr>
+                                <td>${taskTime}</td>
+                                <td><small>${uid.substring(0, 8)}...</small></td>
+                                <td>${data.info || "N/A"}</td>
+                                <td style="color: #e74c3c; font-weight: bold;">${data.amount.toLocaleString()}đ</td>
+                                <td>
+                                    <button class="btn-action btn-approve" onclick="approveWithdraw('${uid}', '${itemId}')">Duyệt</button>
+                                    <button class="btn-action btn-reject" onclick="rejectWithdraw('${uid}', '${itemId}', ${data.amount})">Hủy</button>
+                                </td>
+                            </tr>`;
+                    } else if (data.status === "pending") {
+                        listTasks.innerHTML += `
+                            <tr>
+                                <td><small>${uid.substring(0, 8)}...</small></td>
+                                <td><b>${data.task}</b><br><small>${taskTime}</small></td>
+                                <td style="color: #27ae60; font-weight: bold;">+${data.amount}đ</td>
+                                <td>
+                                    <button class="btn-action btn-approve" onclick="approveTask('${uid}', '${itemId}', ${data.amount})">Duyệt</button>
+                                    <button class="btn-action btn-reject" onclick="rejectItem('${uid}', '${itemId}')">Hủy</button>
+                                </td>
+                            </tr>`;
+                    }
+                });
+            });
+        });
     }
 
-    // 4. Hàm Hủy
+    // 2. Xử lý rút tiền
+    function approveWithdraw(uid, itemId) {
+        if (confirm("Xác nhận đã chuyển khoản?")) {
+            db.ref("history/" + uid + "/" + itemId).update({ status: "success" });
+        }
+    }
+
+    function rejectWithdraw(uid, itemId, amount) {
+        if (confirm("Hủy lệnh và hoàn lại " + amount + "đ cho user?")) {
+            db.ref("users/" + uid + "/money").transaction(c => (c || 0) + amount)
+              .then(() => db.ref("history/" + uid + "/" + itemId).update({ status: "rejected" }));
+        }
+    }
+
+    // 3. Xử lý nhiệm vụ
+    function approveTask(uid, itemId, amount) {
+        if (!confirm("Cộng " + amount + "đ cho user?")) return;
+        db.ref("users/" + uid + "/money").transaction(c => (c || 0) + amount)
+          .then(() => db.ref("history/" + uid + "/" + itemId).update({ status: "success" }));
+    }
+
     function rejectItem(uid, itemId) {
-        if (confirm("Bạn có chắc chắn muốn HỦY yêu cầu này?")) {
+        if (confirm("Từ chối nhiệm vụ này?")) {
             db.ref("history/" + uid + "/" + itemId).update({ status: "rejected" });
         }
+    }
+
+    // 4. Cập nhật số dư thủ công
+    async function updateUserBalance() {
+        const uid = document.getElementById('target-uid').value.trim();
+        const amount = parseInt(document.getElementById('target-amount').value);
+        if(!uid || isNaN(amount)) return alert("Vui lòng nhập UID và Số tiền!");
+        db.ref("users/" + uid + "/money").transaction(c => (c || 0) + amount)
+          .then(() => alert("Cập nhật số dư thành công!"));
     }
 
     loadData();
 </script>
 </body>
 </html>
-
-
-
-
-
