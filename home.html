@@ -21,8 +21,12 @@
         .tab-box { display: none; padding: 5px; }
         .tab-box.active { display: block; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 8px; box-sizing: border-box; }
+        
+        /* Màu sắc trạng thái */
         .hist-status { font-weight: bold; font-size: 13px; }
-        .pending { color: #f39c12; } .success { color: #27ae60; } .rejected { color: #e74c3c; }
+        .status-pending { color: #f39c12; } /* Cam: Đang duyệt */
+        .status-success { color: #27ae60; } /* Xanh: Thành công */
+        .status-rejected { color: #e74c3c; } /* Đỏ: Thất bại */
     </style>
 </head>
 <body>
@@ -96,6 +100,14 @@
         element.classList.add('active');
     }
 
+    // Hàm chuyển đổi nhãn trạng thái
+    function getStatusLabel(status) {
+        if (status === "pending") return "Đang duyệt";
+        if (status === "success") return "Thành công";
+        if (status === "rejected") return "Thất bại";
+        return status;
+    }
+
     firebase.auth().onAuthStateChanged(user => {
         if (!user) { window.location.href = "index.html"; return; }
         const uid = user.uid;
@@ -105,7 +117,6 @@
             document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
         });
 
-        // Load Nhiệm vụ
         db.ref("Task").on("value", snap => {
             const div = document.getElementById("render-tasks");
             div.innerHTML = "";
@@ -119,19 +130,20 @@
             });
         });
 
-        // Load Lịch sử phân tách
+        // Xử lý hiển thị lịch sử với nhãn trạng thái mới
         db.ref("history/" + uid).on("value", s => {
             let histHtml = "";
             let drawHtml = "";
             s.forEach(c => {
                 const d = c.val();
+                const statusLabel = getStatusLabel(d.status);
                 const item = `<div class="task-item">
                     <div style="text-align:left;"><b>${d.task}</b><br><small>${d.time}</small></div>
-                    <div class="hist-status ${d.status}">${d.amount > 0 ? '+' : ''}${d.amount.toLocaleString()}đ</div>
+                    <div class="hist-status status-${d.status}">${statusLabel} (${d.amount.toLocaleString()}đ)</div>
                 </div>`;
                 
-                if (d.amount < 0) drawHtml = item + drawHtml; // Nếu số tiền âm -> Lịch sử rút tiền
-                else histHtml = item + histHtml; // Nếu số tiền dương -> Lịch sử nhiệm vụ
+                if (d.amount < 0) drawHtml = item + drawHtml; 
+                else histHtml = item + histHtml; 
             });
             document.getElementById("render-history").innerHTML = histHtml || "Trống.";
             document.getElementById("render-withdraw-history").innerHTML = drawHtml || "Trống.";
