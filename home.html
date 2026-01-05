@@ -32,7 +32,9 @@
         .tab.active { display: block; }
         .card { background: #fff; margin: 15px; padding: 20px; border-radius: 15px; border: 1px solid #eee; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        .stt { font-size: 11px; font-weight: bold; display: block; margin-top: 3px; }
+        /* CSS mới cho trạng thái căn phải */
+        .stt-box { text-align: right; min-width: 90px; }
+        .stt-text { font-size: 11px; font-weight: bold; display: block; margin-top: 3px; }
     </style>
 </head>
 <body>
@@ -124,10 +126,13 @@
         db.ref("users/" + uid + "/money").once("value", s => {
             const cur = s.val() || 0;
             if (cur < amt) return alert("Không đủ số dư!");
-            // Trừ tiền trực tiếp
             db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
                 db.ref("history/" + uid + "/" + Date.now()).set({
-                    task: "Rút tiền: " + info, amount: -amt, status: "processing", time: new Date().toLocaleString()
+                    task: "Rút tiền", // Chỉ lưu text cố định
+                    amount: -amt, 
+                    info: info, // Lưu info riêng để admin thấy
+                    status: "processing", 
+                    time: new Date().toLocaleString()
                 });
                 alert("Đã trừ tiền và gửi yêu cầu rút!");
             });
@@ -171,16 +176,17 @@
                 const stText = d.status === "pending" || d.status === "processing" ? "Chờ duyệt" : (d.status === "success" ? "Thành công" : "Từ chối");
                 const stCol = (d.status === "pending" || d.status === "processing") ? "#f39c12" : (d.status === "success" ? "#27ae60" : "#e74c3c");
 
-               const ui = `<div class="task-row" style="padding: 12px 0;">
-    <div>
-        <b style="font-size:14px">${d.task}${isW ? ': ' + Math.abs(d.amount).toLocaleString() + 'đ' : ''}</b><br>
-        <small style="color:#b2bec3">${d.time}</small>
-    </div>
-    <div class="stt-box">
-        <span class="stt-text" style="color:${stColor}">${stText}</span><br>
-        ${!isW ? '<b style="color:#27ae60">+' + d.amount.toLocaleString() + 'đ</b>' : ''}
-    </div>
-</div>`;
+                const ui = `<div class="task-row" style="padding: 12px 0;">
+                    <div>
+                        <b style="font-size:14px">${d.task}${isW ? ': ' + Math.abs(d.amount).toLocaleString() + 'đ' : ''}</b><br>
+                        <small style="color:#b2bec3">${d.time}</small>
+                    </div>
+                    <div class="stt-box">
+                        <span class="stt-text" style="color:${stCol}">${stText}</span>
+                        ${!isW ? '<b style="color:#27ae60">+' + d.amount.toLocaleString() + 'đ</b>' : ''}
+                    </div>
+                </div>`;
+                
                 if (isW) drawH = ui + drawH; else taskH = ui + taskH;
             });
             document.getElementById("render-history-tasks").innerHTML = taskH || "Chưa có dữ liệu.";
@@ -190,4 +196,3 @@
 </script>
 </body>
 </html>
-
