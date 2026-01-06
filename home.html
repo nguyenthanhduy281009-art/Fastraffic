@@ -11,10 +11,18 @@
     <style>
         :root { --p: #6c5ce7; --bg: #f8faff; --t: #2d3436; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--t); }
-        .user-header { background: #fff; padding: 20px; border-radius: 0 0 25px 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .user-header { background: #fff; padding: 20px; border-radius: 0 0 25px 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: relative; }
         .user-header b { font-size: 15px; color: var(--p); }
-        .balance-card { background: linear-gradient(135deg, #6c5ce7, #a29bfe); margin: 15px; padding: 25px; border-radius: 20px; color: #fff; box-shadow: 0 10px 25px rgba(108, 92, 231, 0.3); }
+        
+        /* Nút đăng xuất */
+        .btn-logout { background: #ff7675; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; margin-top: 8px; font-weight: bold; }
+        
+        .balance-card { background: linear-gradient(135deg, #6c5ce7, #a29bfe); margin: 15px; padding: 25px; border-radius: 20px; color: #fff; box-shadow: 0 10px 25px rgba(108, 92, 231, 0.3); position: relative; overflow: hidden; }
         .balance-val { font-size: 30px; font-weight: 800; display: block; margin: 5px 0; }
+        
+        /* Chữ bảo mật trong khung số dư */
+        .security-tag { font-size: 10px; opacity: 0.7; font-style: italic; display: block; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 5px; }
+
         .group-box { margin: 15px; background: #fff; border-radius: 15px; overflow: hidden; border: 1px solid #eee; }
         .group-head { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
         .group-head i.arrow { transition: 0.3s; transform: rotate(0deg); color: #ccc; } 
@@ -39,8 +47,18 @@
 <body>
 
 <div id="tab-home" class="tab active">
-    <div class="user-header">Xin Chào: <b id="u-mail">...</b><small style="display: block; color: #b2bec3; font-size: 16px; margin-top: 11px;">ID: <span id="u-uid">...</span></small></div>
-    <div class="balance-card"><small style="opacity:0.8">SỐ DƯ KHẢ DỤNG</small><span class="balance-val" id="u-balance">0đ</span></div>
+    <div class="user-header">
+        Xin Chào: <b id="u-mail">...</b>
+        <small style="display: block; color: #b2bec3; font-size: 14px; margin-top: 5px;">ID: <span id="u-uid">...</span></small>
+        <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ĐĂNG XUẤT</button>
+    </div>
+    
+    <div class="balance-card">
+        <small style="opacity:0.8">SỐ DƯ KHẢ DỤNG</small>
+        <span class="balance-val" id="u-balance">0đ</span>
+        <span class="security-tag"><i class="fas fa-shield-alt"></i> Được bảo mật bởi Fastraffic</span>
+    </div>
+
     <h4 style="margin: 20px 15px 10px"><i class="fas fa-star" style="color:#f1c40f"></i> Nhiệm vụ của bạn</h4>
     <div id="render-tasks">Đang tải...</div>
 </div>
@@ -55,20 +73,18 @@
     <div class="card">
         <ul style="padding-left: 20px; line-height: 2; color: #636e72;">
             <li>Không dùng VPN, Fake IP, Proxy.</li>
-            <li>Mỗi người chỉ được phép sử dụng 1 tài khoản trên cùng 1 IP (trừ trường hợp không còn sử dụng tài khoản cũ)</li>
-            <li>Không chấp nhận các tài khoản giả mạo và các hành vi gian lận.</li>
-            <li>Không sử dụng tab ẩn danh để vượt link.</li>
-            <li>Không được dùng các phần mềm chặn quảng cáo hay auto click.</li>
-            <li>Nếu vi phạm các quy định trên sẽ bị khóa tài khoản vĩnh viễn và xóa toàn bộ số dư.</li>
+            <li>Mỗi người chỉ được phép sử dụng 1 tài khoản trên cùng 1 IP.</li>
+            <li>Không chấp nhận các hành vi gian lận.</li>
+            <li>Nếu vi phạm sẽ bị khóa tài khoản vĩnh viễn.</li>
         </ul>
     </div>
 </div>
 
 <div id="tab-withdraw" class="tab">
-    <div class="user-header"><b>Rút tiền về ví điện tử / ngân hàng</b></div>
+    <div class="user-header"><b>Rút tiền</b></div>
     <div class="card">
         <input type="number" id="w-amount" placeholder="Số tiền rút (Min 20k)">
-        <input type="text" id="w-info" placeholder="Ngân hàng / ví điện tử - STK - Tên (Vui lòng nhập đúng thông tin)">
+        <input type="text" id="w-info" placeholder="Ngân hàng / STK / Tên">
         <button class="btn-go" style="width:100%; height:45px; margin-top:10px" onclick="handleWithdraw()">XÁC NHẬN RÚT</button>
     </div>
     <h4 style="margin: 20px 15px 10px">Lịch sử rút tiền</h4>
@@ -92,6 +108,15 @@
     if (!firebase.apps.length) firebase.initializeApp(config);
     const db = firebase.database();
 
+    // Hàm đăng xuất
+    function logout() {
+        if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+            firebase.auth().signOut().then(() => {
+                window.location.href = "index.html";
+            });
+        }
+    }
+
     function goTab(id, el) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -104,29 +129,21 @@
         el.classList.toggle('active');
     }
 
-    // Logic xử lý nhiệm vụ (Ẩn và Chuyển trang)
     function doTask(groupName, taskId, link, bonus) {
         const today = new Date().toLocaleDateString();
         const taskKey = `${groupName}-${taskId}`;
-
-        // Ghi nhớ nhiệm vụ đã làm vào LocalStorage
         let doneTasks = JSON.parse(localStorage.getItem('done_tasks')) || { date: today, ids: [] };
         if (doneTasks.date !== today) doneTasks = { date: today, ids: [] };
-        
         doneTasks.ids.push(taskKey);
         localStorage.setItem('done_tasks', JSON.stringify(doneTasks));
 
-        // Gửi dữ liệu lên Firebase
         const uid = firebase.auth().currentUser.uid;
         db.ref("history/" + uid + "/" + Date.now()).set({
             task: groupName, amount: bonus, status: "pending", time: new Date().toLocaleString()
         });
 
-        // Ẩn nhiệm vụ trên giao diện ngay lập tức
         const el = document.getElementById("row-" + taskKey);
         if(el) el.style.display = "none";
-
-        // Chuyển sang trang wait.html
         window.location.href = "wait.html?url=" + encodeURIComponent(link);
     }
 
@@ -134,22 +151,22 @@
         const amt = parseInt(document.getElementById("w-amount").value);
         const info = document.getElementById("w-info").value;
         const uid = firebase.auth().currentUser.uid;
-        if (amt < 20000 || !info) return alert("Vui lòng kiểm tra lại thông tin và số dư!!");
+        if (amt < 20000 || !info) return alert("Vui lòng kiểm tra lại!");
 
         db.ref("users/" + uid + "/money").once("value", s => {
             const cur = s.val() || 0;
-            if (cur < amt) return alert("Số dư không đủ để thực hiện giao dịch!!!");
+            if (cur < amt) return alert("Số dư không đủ!");
             db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
                 db.ref("history/" + uid + "/" + Date.now()).set({
                     task: "Rút tiền", amount: amt, info: info, type: "withdraw", status: "processing", time: new Date().toLocaleString()
                 });
-                alert("Yêu cầu rút tiền đã được gửi, vui lòng chờ từ 1 đến 3 ngày!");
+                alert("Yêu cầu đã được gửi!");
             });
         });
     }
 
     firebase.auth().onAuthStateChanged(user => {
-        if (!user) return;
+        if (!user) { window.location.href = "index.html"; return; }
         document.getElementById("u-mail").innerText = user.email;
         document.getElementById("u-uid").innerText = user.uid;
 
@@ -157,45 +174,33 @@
             document.getElementById("u-balance").innerText = (s.val() || 0).toLocaleString() + "đ";
         });
 
-        // Render Nhiệm vụ & Kiểm tra 00h Reset
         db.ref("Task").on("value", snap => {
             const div = document.getElementById("render-tasks"); div.innerHTML = "";
             const today = new Date().toLocaleDateString();
             let doneTasks = JSON.parse(localStorage.getItem('done_tasks')) || { date: today, ids: [] };
-
-            // Nếu qua ngày mới, xóa dữ liệu cũ
-            if (doneTasks.date !== today) {
-                doneTasks = { date: today, ids: [] };
-                localStorage.setItem('done_tasks', JSON.stringify(doneTasks));
-            }
+            if (doneTasks.date !== today) { doneTasks = { date: today, ids: [] }; localStorage.setItem('done_tasks', JSON.stringify(doneTasks)); }
 
             snap.forEach(g => {
                 const name = g.key;
                 let bonus = (name === "Traffictot") ? 400 : (name === "Click1s" ? 600 : 500);
                 const cId = 'c-' + name.replace(/\s+/g, '');
                 let h = `<div class="group-box"><div class="group-head" onclick="toggleGroup('${cId}', this)"><span>${name} (+${bonus}đ)</span><i class="fas fa-chevron-down arrow"></i></div><div id="${cId}" class="group-content">`;
-                
                 g.forEach(t => {
                     const taskKey = `${name}-${t.key}`;
                     const isDone = doneTasks.ids.includes(taskKey);
                     const l = (typeof t.val() === 'object') ? t.val().link : t.val();
-                    
-                    h += `<div class="task-row" id="row-${taskKey}" style="display: ${isDone ? 'none' : 'flex'}">
-                            <span>Nhiệm vụ #${t.key}</span>
-                            <button class="btn-go" onclick="doTask('${name}', '${t.key}', '${l}', ${bonus})">Làm</button>
-                          </div>`;
+                    h += `<div class="task-row" id="row-${taskKey}" style="display: ${isDone ? 'none' : 'flex'}"><span>Nhiệm vụ #${t.key}</span><button class="btn-go" onclick="doTask('${name}', '${t.key}', '${l}', ${bonus})">Làm</button></div>`;
                 });
                 h += `</div></div>`; div.innerHTML += h;
             });
         });
 
-        // Render Lịch sử
         db.ref("history/" + user.uid).on("value", s => {
             let taskH = ""; let drawH = "";
             s.forEach(c => {
                 const d = c.val();
                 const isW = d.type === "withdraw" || d.amount < 0 || d.task === "Rút tiền";
-                const stText = d.status === "pending" || d.status === "processing" ? "Chờ duyệt" : (d.status === "success" ? "Thành công" : "Từ chối");
+                const stText = (d.status === "pending" || d.status === "processing") ? "Chờ duyệt" : (d.status === "success" ? "Thành công" : "Từ chối");
                 const stCol = (d.status === "pending" || d.status === "processing") ? "#f39c12" : (d.status === "success" ? "#27ae60" : "#e74c3c");
                 const ui = `<div class="task-row"><div><b>${d.task}${isW ? ': ' + Math.abs(d.amount).toLocaleString() + 'đ' : ''}</b><br><small>${d.time}</small></div><div class="stt-box"><span class="stt-text" style="color:${stCol}">${stText}</span>${!isW ? '<b style="color:#27ae60">+' + d.amount.toLocaleString() + 'đ</b>' : ''}</div></div>`;
                 if (isW) drawH = ui + drawH; else taskH = ui + taskH;
@@ -207,9 +212,3 @@
 </script>
 </body>
 </html>
-
-
-
-
-
-
