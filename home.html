@@ -39,7 +39,7 @@
 <body>
 
 <div id="tab-home" class="tab active">
-    <div class="user-header">Chào: <b id="u-mail">...</b><small style="display: block; color: #b2bec3; font-size: 11px; margin-top: 5px;">ID: <span id="u-uid">...</span></small></div>
+    <div class="user-header">Xin Chào: <b id="u-mail">...</b><small style="display: block; color: #b2bec3; font-size: 18px; margin-top: 10px;">ID: <span id="u-uid">...</span></small></div>
     <div class="balance-card"><small style="opacity:0.8">SỐ DƯ KHẢ DỤNG</small><span class="balance-val" id="u-balance">0đ</span></div>
     <h4 style="margin: 20px 15px 10px"><i class="fas fa-star" style="color:#f1c40f"></i> Nhiệm vụ của bạn</h4>
     <div id="render-tasks">Đang tải...</div>
@@ -47,7 +47,7 @@
 
 <div id="tab-history" class="tab">
     <div class="user-header"><b>Lịch sử nhiệm vụ</b></div>
-    <div id="render-history-tasks" style="padding:15px"></div>
+    <div id="render-history-tasks" style="padding:20px"></div>
 </div>
 
 <div id="tab-rules" class="tab">
@@ -57,15 +57,18 @@
             <li>Không dùng VPN, Fake IP, Proxy.</li>
             <li>Mỗi người chỉ được phép sử dụng 1 tài khoản trên cùng 1 IP (trừ trường hợp không còn sử dụng tài khoản cũ )</li>
             <li>Không chấp nhận các tài khoản giả mạo và các hành vi gian lận.</li>
+            <li>Không sử dụng tab ẩn danh để vượt link.<li>
+            <li>Không được dùng các phần mềm chặn quảng cáo hay auto click.<li>   
+            <li>Nếu vi phạm các quy định trên sẽ bị khóa tài khoản vĩnh viễn và xóa toàn bộ số dư.<li>   
         </ul>
     </div>
 </div>
 
 <div id="tab-withdraw" class="tab">
-    <div class="user-header"><b>Rút tiền về ví</b></div>
+    <div class="user-header"><b>Rút tiền về ví điện tử / ngân hàng</b></div>
     <div class="card">
         <input type="number" id="w-amount" placeholder="Số tiền rút (Min 20k)">
-        <input type="text" id="w-info" placeholder="Ngân hàng - STK - Tên">
+        <input type="text" id="w-info" placeholder="Ngân hàng / ví điện tử - STK - Tên (Vui lòng nhập đúng thông tin)">
         <button class="btn-go" style="width:100%; height:45px; margin-top:10px" onclick="handleWithdraw()">XÁC NHẬN RÚT</button>
     </div>
     <h4 style="margin: 20px 15px 10px">Lịch sử rút tiền</h4>
@@ -131,16 +134,16 @@
         const amt = parseInt(document.getElementById("w-amount").value);
         const info = document.getElementById("w-info").value;
         const uid = firebase.auth().currentUser.uid;
-        if (amt < 20000 || !info) return alert("Kiểm tra lại số tiền và thông tin!");
+        if (amt < 20000 || !info) return alert("Vui lòng kiểm tra lại thông tin và số dư!!");
 
         db.ref("users/" + uid + "/money").once("value", s => {
             const cur = s.val() || 0;
-            if (cur < amt) return alert("Không đủ số dư!");
+            if (cur < amt) return alert("Số dư không đủ để thực hiện giao dịch!!!");
             db.ref("users/" + uid + "/money").set(cur - amt).then(() => {
                 db.ref("history/" + uid + "/" + Date.now()).set({
                     task: "Rút tiền", amount: amt, info: info, type: "withdraw", status: "processing", time: new Date().toLocaleString()
                 });
-                alert("Yêu cầu rút tiền đã được gửi!");
+                alert("Yêu cầu rút tiền đã được gửi, vui lòng chờ từ 1 đến 3 ngày!");
             });
         });
     }
@@ -204,4 +207,5 @@
 </script>
 </body>
 </html>
+
 
