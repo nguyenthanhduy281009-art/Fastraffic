@@ -40,18 +40,19 @@
         projectId: "fastraffic-8b585",
         databaseURL: "https://fastraffic-8b585-default-rtdb.asia-southeast1.firebasedatabase.app"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
-    // 2. Lấy link từ URL (Nhận tham số ?url= từ file home)
+    // 2. Lấy link từ URL (Đã sửa lỗi biến decodedLink)
     const params = new URLSearchParams(window.location.search);
-    const targetUrl = params.get("url"); // Nhận link nhiệm vụ
+    const targetUrl = params.get("url"); 
     let decodedLink = "";
 
     if (targetUrl) {
-        finalLink = decodeURIComponent(targetUrl);
+        // Gán đúng vào biến decodedLink
+        decodedLink = decodeURIComponent(targetUrl);
     } else {
-    console.error("Không tìm thấy link trong tham số url");
-}
+        console.error("Không tìm thấy link trong tham số url");
+    }
 
     // 3. Khi xác thực Turnstile thành công
     function onVerifySuccess(token) {
@@ -64,7 +65,7 @@
 
     // 4. Hàm đếm ngược chuyển link
     function startCountdown() {
-        let time = 3; // Bạn có thể chỉnh lên 60 giây nếu muốn
+        let time = 5; 
         const secSpan = document.getElementById("sec");
         secSpan.innerText = time;
 
@@ -74,7 +75,8 @@
 
             if (time <= 0) {
                 clearInterval(interval);
-                if (decodedLink) {
+                // Kiểm tra biến decodedLink đã có dữ liệu chưa
+                if (decodedLink && decodedLink !== "") {
                     window.location.href = decodedLink;
                 } else {
                     alert("Không tìm thấy link nhiệm vụ! Quay lại trang chủ.");
@@ -84,7 +86,7 @@
         }, 1000);
     }
 
-    // 5. Kiểm tra đăng nhập (Bảo mật)
+    // 5. Kiểm tra đăng nhập
     firebase.auth().onAuthStateChanged(user => {
         if (!user) {
             window.location.href = "index.html";
@@ -93,4 +95,3 @@
 </script>
 </body>
 </html>
-
