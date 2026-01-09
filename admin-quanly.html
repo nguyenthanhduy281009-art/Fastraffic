@@ -87,7 +87,27 @@
         document.body.innerHTML = "<h1 style='text-align:center;margin-top:100px;color:red;'>TRUY CẬP BỊ TỪ CHỐI</h1>";
         window.stop();
     }
+     // 2. TRA CỨU SỐ DƯ
+    function checkUserBalance() {
+        const uid = document.getElementById('target-uid').value.trim();
+        const res = document.getElementById('result-balance');
+        if (!uid) return alert("Vui lòng nhập UID!");
 
+        res.style.display = "block";
+        res.style.background = "#f8f9fa";
+        res.innerHTML = "🔄 Đang tra cứu...";
+
+        db.ref("users/" + uid).once("value").then(s => {
+            if (s.exists()) {
+                const data = s.val();
+                res.style.background = "#e3f2fd";
+                res.innerHTML = `📧 Email: <b>${data.email || 'N/A'}</b> <br> 💰 Số dư: <b style="color: #27ae60; font-size: 18px;">${(data.money || 0).toLocaleString()}đ</b>`;
+            } else {
+                res.style.background = "#ffebee";
+                res.innerHTML = "❌ Không tìm thấy UID này trên hệ thống!";
+            }
+        });
+    }
     // 2. TẢI VÀ HIỂN THỊ DỮ LIỆU
     function loadData() {
         db.ref("history").on("value", (snapshot) => {
@@ -183,5 +203,6 @@ async function updateUserBalance() {
 </script>
 </body>
 </html>
+
 
 
