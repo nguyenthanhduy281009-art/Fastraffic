@@ -18,10 +18,13 @@
         td { padding: 15px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
         .form-box { background: #fff; padding: 20px; border-radius: 15px; border: 2px solid #007bff; }
         input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
-        .btn-update { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .btn-update { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; margin-top: 5px; }
+        .btn-check { background: #0984e3; margin-bottom: 10px; }
         .btn-action { padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; color: white; font-weight: bold; }
         .btn-approve { background: #27ae60; }
         .btn-reject { background: #e74c3c; margin-left: 5px; }
+        /* Khung hiển thị kết quả tra cứu */
+        #result-balance { display: none; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; line-height: 1.6; border: 1px solid #dee2e6; }
     </style>
 </head>
 <body>
@@ -62,11 +65,20 @@
     </table>
 </div>
 
-<div class="section-title"><i class="fas fa-user-cog"></i> Tùy chỉnh số dư người dùng</div>
+<div class="section-title"><i class="fas fa-user-cog"></i> Tra cứu & Tùy chỉnh số dư</div>
 <div class="form-box">
     <input type="text" id="target-uid" placeholder="Nhập UID người dùng">
-    <input type="number" id="target-amount" placeholder="Nhập số tiền muốn cộng/trừ">
-    <button class="btn-update" onclick="updateUserBalance()">CẬP NHẬT SỐ DƯ</button>
+    
+    <div id="result-balance"></div>
+
+    <button class="btn-update btn-check" onclick="checkUserBalance()">
+        <i class="fas fa-search"></i> KIỂM TRA SỐ DƯ HIỆN TẠI
+    </button>
+    
+    <hr style="margin: 15px 0; border: 0; border-top: 1px dashed #ddd;">
+    
+    <input type="number" id="target-amount" placeholder="Nhập số tiền muốn thiết lập mới">
+    <button class="btn-update" onclick="updateUserBalance()">XÁC NHẬN CẬP NHẬT</button>
 </div>
 
 <script>
@@ -79,7 +91,7 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. KIỂM TRA MẬT KHẨU NGAY LẬP TỨC
+    // 1. KIỂM TRA MẬT KHẨU
     const ADMIN_PASSWORD = "829135"; 
     let pass = prompt("Vui lòng nhập mật khẩu Quản trị viên:");
     if (pass !== ADMIN_PASSWORD) {
@@ -87,7 +99,8 @@
         document.body.innerHTML = "<h1 style='text-align:center;margin-top:100px;color:red;'>TRUY CẬP BỊ TỪ CHỐI</h1>";
         window.stop();
     }
-     // 2. TRA CỨU SỐ DƯ
+
+    // 2. TRA CỨU SỐ DƯ
     function checkUserBalance() {
         const uid = document.getElementById('target-uid').value.trim();
         const res = document.getElementById('result-balance');
@@ -95,114 +108,72 @@
 
         res.style.display = "block";
         res.style.background = "#f8f9fa";
-        res.innerHTML = "🔄 Đang tra cứu...";
+        res.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Đang tra cứu...";
 
         db.ref("users/" + uid).once("value").then(s => {
             if (s.exists()) {
                 const data = s.val();
                 res.style.background = "#e3f2fd";
-                res.innerHTML = `📧 Email: <b>${data.email || 'N/A'}</b> <br> 💰 Số dư: <b style="color: #27ae60; font-size: 18px;">${(data.money || 0).toLocaleString()}đ</b>`;
+                res.style.borderColor = "#007bff";
+                res.innerHTML = `
+                    <div style="color: #0d47a1;">
+                        <i class="fas fa-user"></i> Email: <b>${data.email || 'Không có email'}</b><br>
+                        <i class="fas fa-wallet"></i> Số dư hiện tại: <b style="color: #27ae60; font-size: 18px;">${(data.money || 0).toLocaleString()}đ</b>
+                    </div>`;
             } else {
                 res.style.background = "#ffebee";
-                res.innerHTML = "❌ Không tìm thấy UID này trên hệ thống!";
+                res.style.borderColor = "#f44336";
+                res.innerHTML = "<span style='color: #c62828;'><i class='fas fa-exclamation-triangle'></i> Không tìm thấy người dùng này!</span>";
             }
         });
     }
-    // 2. TẢI VÀ HIỂN THỊ DỮ LIỆU
+
+    // 3. TẢI DỮ LIỆU DANH SÁCH
     function loadData() {
         db.ref("history").on("value", (snapshot) => {
             const listTasks = document.getElementById('list-tasks');
             const listWithdraw = document.getElementById('list-withdraw');
-            listTasks.innerHTML = ""; 
-            listWithdraw.innerHTML = "";
+            listTasks.innerHTML = ""; listWithdraw.innerHTML = "";
 
             snapshot.forEach((userHistory) => {
                 const uid = userHistory.key;
                 userHistory.forEach((item) => {
                     const data = item.val();
                     const itemId = item.key;
-                    const taskTime = data.time || "Không rõ";
+                    const taskTime = data.time || "N/A";
                     const displayAmount = Math.abs(data.amount || 0);
 
                     if (data.status === "processing") {
-                        listWithdraw.innerHTML += `
-                            <tr>
-                                <td>${taskTime}</td>
-                                <td><small>${uid.substring(0, 8)}...</small></td>
-                                <td>${data.info || "N/A"}</td>
-                                <td style="color: #e74c3c; font-weight: bold;">${displayAmount.toLocaleString()}đ</td>
-                                <td>
-                                    <button class="btn-action btn-approve" onclick="approveWithdraw('${uid}', '${itemId}')">Duyệt</button>
-                                    <button class="btn-action btn-reject" onclick="rejectWithdraw('${uid}', '${itemId}', ${displayAmount})">Hủy</button>
-                                </td>
-                            </tr>`;
+                        listWithdraw.innerHTML += `<tr><td>${taskTime}</td><td><small>${uid.substring(0, 8)}...</small></td><td>${data.info}</td><td style="color:#e74c3c;font-weight:bold;">${displayAmount.toLocaleString()}đ</td><td><button class="btn-action btn-approve" onclick="approveWithdraw('${uid}','${itemId}')">Duyệt</button><button class="btn-action btn-reject" onclick="rejectWithdraw('${uid}','${itemId}',${displayAmount})">Hủy</button></td></tr>`;
                     } else if (data.status === "pending") {
-                        listTasks.innerHTML += `
-                            <tr>
-                                <td><small>${uid.substring(0, 8)}...</small></td>
-                                <td><b>${data.task}</b><br><small>${taskTime}</small></td>
-                                <td style="color: #27ae60; font-weight: bold;">+${displayAmount.toLocaleString()}đ</td>
-                                <td>
-                                    <button class="btn-action btn-approve" onclick="approveTask('${uid}', '${itemId}', ${displayAmount})">Duyệt</button>
-                                    <button class="btn-action btn-reject" onclick="rejectItem('${uid}', '${itemId}')">Hủy</button>
-                                </td>
-                            </tr>`;
+                        listTasks.innerHTML += `<tr><td><small>${uid.substring(0, 8)}...</small></td><td><b>${data.task}</b><br><small>${taskTime}</small></td><td style="color:#27ae60;font-weight:bold;">+${displayAmount.toLocaleString()}đ</td><td><button class="btn-action btn-approve" onclick="approveTask('${uid}','${itemId}',${displayAmount})">Duyệt</button><button class="btn-action btn-reject" onclick="rejectItem('${uid}','${itemId}')">Hủy</button></td></tr>`;
                     }
                 });
             });
         });
     }
 
-    // 3. CÁC HÀM XỬ LÝ RÚT TIỀN
-    function approveWithdraw(uid, itemId) {
-        if (confirm("Xác nhận đã chuyển tiền thành công?")) {
-            db.ref("history/" + uid + "/" + itemId).update({ status: "success" });
+    // Xử lý tiền
+    function approveWithdraw(uid, itemId) { if (confirm("Đã chuyển khoản thành công?")) db.ref("history/"+uid+"/"+itemId).update({status:"success"}); }
+    function rejectWithdraw(uid, itemId, amount) { if (confirm("Hủy và hoàn tiền?")) db.ref("users/"+uid+"/money").transaction(c => (c || 0) + amount).then(() => db.ref("history/"+uid+"/"+itemId).update({status:"rejected"})); }
+    function approveTask(uid, itemId, amount) { if (confirm("Cộng tiền cho user?")) db.ref("users/"+uid+"/money").transaction(c => (c || 0) + amount).then(() => db.ref("history/"+uid+"/"+itemId).update({status:"success"})); }
+    function rejectItem(uid, itemId) { if (confirm("Hủy nhiệm vụ này?")) db.ref("history/"+uid+"/"+itemId).update({status:"rejected"}); }
+
+    // Cập nhật số dư trực tiếp
+    async function updateUserBalance() {
+        const uid = document.getElementById('target-uid').value.trim();
+        const amount = parseInt(document.getElementById('target-amount').value);
+        if(!uid || isNaN(amount)) return alert("Nhập UID và số tiền hợp lệ!");
+        if(confirm(`Xác nhận ĐỔI số dư UID này thành ${amount.toLocaleString()}đ?`)) {
+            db.ref("users/" + uid + "/money").set(amount).then(() => {
+                alert("Đã cập nhật số dư mới!");
+                checkUserBalance(); // Tự động load lại khung thông tin
+                document.getElementById('target-amount').value = "";
+            }).catch(e => alert("Lỗi: " + e.message));
         }
     }
-
-    function rejectWithdraw(uid, itemId, amount) {
-        if (confirm("Hủy và hoàn trả " + amount.toLocaleString() + "đ cho user?")) {
-            db.ref("users/" + uid + "/money").transaction(c => (c || 0) + amount)
-              .then(() => db.ref("history/" + uid + "/" + itemId).update({ status: "rejected" }));
-        }
-    }
-
-    // 4. CÁC HÀM XỬ LÝ NHIỆM VỤ
-    function approveTask(uid, itemId, amount) {
-        if (!confirm("Cộng " + amount.toLocaleString() + "đ cho người dùng?")) return;
-        db.ref("users/" + uid + "/money").transaction(c => (c || 0) + amount)
-          .then(() => db.ref("history/" + uid + "/" + itemId).update({ status: "success" }));
-    }
-
-    function rejectItem(uid, itemId) {
-        if (confirm("Hủy yêu cầu nhiệm vụ này?")) {
-            db.ref("history/" + uid + "/" + itemId).update({ status: "rejected" });
-        }
-    }
-
-    
-  // 5. THIẾT LẬP SỐ DƯ TRỰC TIẾP
-async function updateUserBalance() {
-    const uid = document.getElementById('target-uid').value.trim();
-    const amount = parseInt(document.getElementById('target-amount').value);
-    
-    if(!uid || isNaN(amount)) return alert("Nhập UID và số tiền hợp lệ!");
-    
-    if(confirm(`Xác nhận ĐỔI số dư UID này thành ${amount.toLocaleString()}đ?`)) {
-        // Dùng .set() để ghi đè số dư cũ
-        db.ref("users/" + uid + "/money").set(amount)
-          .then(() => {
-              alert("Đã thiết lập số dư mới thành công!");
-              document.getElementById('target-amount').value = "";
-          })
-          .catch(err => alert("Lỗi: " + err.message));
-    }
-}
 
     loadData();
 </script>
 </body>
 </html>
-
-
-
