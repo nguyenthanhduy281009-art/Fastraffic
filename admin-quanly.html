@@ -106,32 +106,33 @@
     }
 
     // 3. Hàm tra cứu (Sửa lỗi hiển thị email)
-    function checkUserBalance() {
-        const uid = document.getElementById('target-uid').value.trim();
-        const res = document.getElementById('result-balance');
-        if (!uid) return alert("Vui lòng nhập UID!");
+  function checkUserBalance() {
+    const uid = document.getElementById('target-uid').value.trim();
+    const res = document.getElementById('result-balance');
+    if (!uid) return alert("Vui lòng nhập UID!");
 
-        res.style.display = "block";
-        res.innerHTML = "🔄 Đang tải dữ liệu...";
+    res.style.display = "block";
+    res.style.background = "#f8f9fa";
+    res.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Đang tra cứu...";
 
-        db.ref("users/" + uid).once("value").then(snapshot => {
-            if (snapshot.exists()) {
-                const val = snapshot.val();
-                // Sửa lỗi ở đây: Quét tất cả các trường có thể chứa email
-                const emailStr = val.email || val.gmail || val.username || val.name || val.info || 'Chưa cập nhật thông tin';
-                const money = (val.money || 0).toLocaleString();
-                
-                res.innerHTML = `
-                    <div style="font-size: 15px; color: #333;">
-                        <i class="fas fa-user-circle"></i> Email/User: <b style="color: #007bff;">${emailStr}</b><br>
-                        <i class="fas fa-wallet"></i> Số dư hiện tại: <b style="color: #27ae60; font-size: 18px;">${money}đ</b>
-                    </div>`;
-            } else {
-                res.innerHTML = "⚠️ Không tìm thấy người dùng này trên hệ thống!";
-            }
-        });
-    }
-
+    db.ref("users/" + uid).once("value").then(s => {
+        if (s.exists()) {
+            const data = s.val();
+            res.style.background = "#e3f2fd";
+            res.style.borderColor = "#007bff";
+            // Đã bỏ dòng Email, chỉ giữ lại Số dư
+            res.innerHTML = `
+                <div style="text-align: center; padding: 10px 0;">
+                    <div style="color: #666; font-size: 13px; margin-bottom: 5px;">SỐ DƯ HIỆN TẠI</div>
+                    <b style="color: #27ae60; font-size: 24px;">${(data.money || 0).toLocaleString()}đ</b>
+                </div>`;
+        } else {
+            res.style.background = "#ffebee";
+            res.style.borderColor = "#f44336";
+            res.innerHTML = "<span style='color: #c62828;'>❌ UID không tồn tại!</span>";
+        }
+    });
+}
     // 4. Load dữ liệu danh sách
     function loadData() {
         db.ref("history").on("value", (snapshot) => {
@@ -184,3 +185,4 @@
 </script>
 </body>
 </html>
+
