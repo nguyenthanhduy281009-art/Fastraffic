@@ -73,18 +73,19 @@
     <div class="card">
         <ul style="padding-left: 20px; line-height: 2; color: #636e72;">
             <li>Không dùng VPN, Fake IP, Proxy.</li>
-            <li>Mỗi người chỉ được phép sử dụng 1 tài khoản trên cùng 1 IP.</li>
-            <li>Không chấp nhận các hành vi gian lận.</li>
-            <li>Nếu vi phạm sẽ bị khóa tài khoản vĩnh viễn.</li>
+            <li>Mỗi người chỉ được phép sử dụng 1 tài khoản trên cùng 1 IP(trừ trường hợp tài khoản cũ không còn sử dụng ).</li>
+            <li>Không chấp nhận các tài khoản giả mạo hay các hành vi gian lận .</li>
+            <li>Không dùng auto click và phần mềm chặn quảng cáo.<li>
+            <li>Nếu vi phạm sẽ bị khóa tài khoản vĩnh viễn và xóa toàn bộ số dư.</li>
         </ul>
     </div>
 </div>
 
 <div id="tab-withdraw" class="tab">
-    <div class="user-header"><b>Rút tiền</b></div>
+    <div class="user-header"><b>Rút tiền về ngân hàng / ví điện tử</b></div>
     <div class="card">
         <input type="number" id="w-amount" placeholder="Số tiền rút (Min 20k)">
-        <input type="text" id="w-info" placeholder="Ngân hàng / STK / Tên">
+        <input type="text" id="w-info" placeholder="Ngân hàng / Ví điện tử - STK - Tên  ( vui lòng nhập đúng thông tin!! )">
         <button class="btn-go" style="width:100%; height:45px; margin-top:10px" onclick="handleWithdraw()">XÁC NHẬN RÚT</button>
     </div>
     <h4 style="margin: 20px 15px 10px">Lịch sử rút tiền</h4>
@@ -151,7 +152,7 @@
         const amt = parseInt(document.getElementById("w-amount").value);
         const info = document.getElementById("w-info").value;
         const uid = firebase.auth().currentUser.uid;
-        if (amt < 20000 || !info) return alert("Vui lòng kiểm tra lại!");
+        if (amt < 20000 || !info) return alert("Vui lòng kiểm tra lại!!!");
 
         db.ref("users/" + uid + "/money").once("value", s => {
             const cur = s.val() || 0;
@@ -212,3 +213,4 @@
 </script>
 </body>
 </html>
+
