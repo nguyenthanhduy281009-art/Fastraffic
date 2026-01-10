@@ -110,25 +110,26 @@
     res.style.background = "#f8f9fa";
     res.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Đang tra cứu...";
 
-    db.ref("users/" + uid).once("value").then(s => {
-        if (s.exists()) {
-            const data = s.val();
-            // Tự động tìm kiếm email ở các trường phổ biến
-            const userDisplay = data.email || data.gmail || data.mail || data.username || 'Chưa cập nhật email';
-            
-            res.style.background = "#e3f2fd";
-            res.style.borderColor = "#007bff";
-            res.innerHTML = `
-                <div style="color: #0d47a1;">
-                    <i class="fas fa-user"></i> Email/User: <b>${userDisplay}</b><br>
-                    <i class="fas fa-wallet"></i> Số dư hiện tại: <b style="color: #27ae60; font-size: 18px;">${(data.money || 0).toLocaleString()}đ</b>
-                </div>`;
-        } else {
-            res.style.background = "#ffebee";
-            res.style.borderColor = "#f44336";
-            res.innerHTML = "<span style='color: #c62828;'><i class='fas fa-exclamation-triangle'></i> UID không tồn tại trên hệ thống!</span>";
-        }
-    });
+   db.ref("users/" + uid).once("value").then(s => {
+    if (s.exists()) {
+        const data = s.val();
+        
+        // Kiểm tra tất cả các tên trường có thể chứa thông tin định danh
+        const userDisplay = data.email || data.gmail || data.username || data.name || 'Chưa cập nhật thông tin';
+        
+        res.style.background = "#e3f2fd";
+        res.style.borderColor = "#007bff";
+        res.innerHTML = `
+            <div style="color: #0d47a1;">
+                <i class="fas fa-user"></i> Email/User: <b>${userDisplay}</b><br>
+                <i class="fas fa-wallet"></i> Số dư hiện tại: <b style="color: #27ae60; font-size: 18px;">${(data.money || 0).toLocaleString()}đ</b>
+            </div>`;
+    } else {
+        res.style.background = "#ffebee";
+        res.style.borderColor = "#f44336";
+        res.innerHTML = "❌ Không tìm thấy UID này!";
+    }
+});
 }
 
     // 3. TẢI DỮ LIỆU DANH SÁCH
@@ -180,4 +181,5 @@
 </script>
 </body>
 </html>
+
 
