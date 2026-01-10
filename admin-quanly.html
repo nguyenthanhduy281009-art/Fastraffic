@@ -102,31 +102,34 @@
 
     // 2. TRA CỨU SỐ DƯ
     function checkUserBalance() {
-        const uid = document.getElementById('target-uid').value.trim();
-        const res = document.getElementById('result-balance');
-        if (!uid) return alert("Vui lòng nhập UID!");
+    const uid = document.getElementById('target-uid').value.trim();
+    const res = document.getElementById('result-balance');
+    if (!uid) return alert("Vui lòng nhập UID!");
 
-        res.style.display = "block";
-        res.style.background = "#f8f9fa";
-        res.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Đang tra cứu...";
+    res.style.display = "block";
+    res.style.background = "#f8f9fa";
+    res.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Đang tra cứu...";
 
-        db.ref("users/" + uid).once("value").then(s => {
-            if (s.exists()) {
-                const data = s.val();
-                res.style.background = "#e3f2fd";
-                res.style.borderColor = "#007bff";
-                res.innerHTML = `
-                    <div style="color: #0d47a1;">
-                        <i class="fas fa-user"></i> Email: <b>${data.email || 'Không có email'}</b><br>
-                        <i class="fas fa-wallet"></i> Số dư hiện tại: <b style="color: #27ae60; font-size: 18px;">${(data.money || 0).toLocaleString()}đ</b>
-                    </div>`;
-            } else {
-                res.style.background = "#ffebee";
-                res.style.borderColor = "#f44336";
-                res.innerHTML = "<span style='color: #c62828;'><i class='fas fa-exclamation-triangle'></i> Không tìm thấy người dùng này!</span>";
-            }
-        });
-    }
+    db.ref("users/" + uid).once("value").then(s => {
+        if (s.exists()) {
+            const data = s.val();
+            // Tự động tìm kiếm email ở các trường phổ biến
+            const userDisplay = data.email || data.gmail || data.mail || data.username || 'Chưa cập nhật email';
+            
+            res.style.background = "#e3f2fd";
+            res.style.borderColor = "#007bff";
+            res.innerHTML = `
+                <div style="color: #0d47a1;">
+                    <i class="fas fa-user"></i> Email/User: <b>${userDisplay}</b><br>
+                    <i class="fas fa-wallet"></i> Số dư hiện tại: <b style="color: #27ae60; font-size: 18px;">${(data.money || 0).toLocaleString()}đ</b>
+                </div>`;
+        } else {
+            res.style.background = "#ffebee";
+            res.style.borderColor = "#f44336";
+            res.innerHTML = "<span style='color: #c62828;'><i class='fas fa-exclamation-triangle'></i> UID không tồn tại trên hệ thống!</span>";
+        }
+    });
+}
 
     // 3. TẢI DỮ LIỆU DANH SÁCH
     function loadData() {
@@ -177,3 +180,4 @@
 </script>
 </body>
 </html>
+
