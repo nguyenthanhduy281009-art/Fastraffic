@@ -23,7 +23,8 @@
         .btn-action { padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; color: white; font-weight: bold; }
         .btn-approve { background: #27ae60; }
         .btn-reject { background: #e74c3c; margin-left: 5px; }
-        /* Khung hiển thị kết quả tra cứu */
+        /* Link UID có thể nhấn */
+        .uid-link { color: #007bff; cursor: pointer; text-decoration: underline; font-weight: bold; }
         #result-balance { display: none; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; line-height: 1.6; border: 1px solid #dee2e6; }
     </style>
 </head>
@@ -100,37 +101,43 @@
         window.stop();
     }
 
-    // 2. TRA CỨU SỐ DƯ
-    function checkUserBalance() {
-    const uid = document.getElementById('target-uid').value.trim();
-    const res = document.getElementById('result-balance');
-    if (!uid) return alert("Vui lòng nhập UID!");
-
-    res.style.display = "block";
-    res.style.background = "#f8f9fa";
-    res.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Đang tra cứu...";
-
-   db.ref("users/" + uid).once("value").then(s => {
-    if (s.exists()) {
-        const data = s.val();
-        
-        // Kiểm tra tất cả các tên trường có thể chứa thông tin định danh
-        const userDisplay = data.email || data.gmail || data.username || data.name || 'Chưa cập nhật thông tin';
-        
-        res.style.background = "#e3f2fd";
-        res.style.borderColor = "#007bff";
-        res.innerHTML = `
-            <div style="color: #0d47a1;">
-                <i class="fas fa-user"></i> Email/User: <b>${userDisplay}</b><br>
-                <i class="fas fa-wallet"></i> Số dư hiện tại: <b style="color: #27ae60; font-size: 18px;">${(data.money || 0).toLocaleString()}đ</b>
-            </div>`;
-    } else {
-        res.style.background = "#ffebee";
-        res.style.borderColor = "#f44336";
-        res.innerHTML = "❌ Không tìm thấy UID này!";
+    // Hàm điền nhanh UID khi nhấn vào bảng
+    function quickFill(uid) {
+        document.getElementById('target-uid').value = uid;
+        checkUserBalance();
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
-});
-}
+
+    // 2. TRA CỨU SỐ DƯ (Đã sửa lỗi hiển thị Email)
+    function checkUserBalance() {
+        const uid = document.getElementById('target-uid').value.trim();
+        const res = document.getElementById('result-balance');
+        if (!uid) return alert("Vui lòng nhập UID!");
+
+        res.style.display = "block";
+        res.style.background = "#f8f9fa";
+        res.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Đang tra cứu...";
+
+        db.ref("users/" + uid).once("value").then(s => {
+            if (s.exists()) {
+                const data = s.val();
+                // Quét qua các trường phổ biến để tìm email
+                const userDisplay = data.email || data.gmail || data.username || data.name || 'Chưa cập nhật thông tin';
+                
+                res.style.background = "#e3f2fd";
+                res.style.borderColor = "#007bff";
+                res.innerHTML = `
+                    <div style="color: #0d47a1;">
+                        <i class="fas fa-user"></i> Email/User: <b>${userDisplay}</b><br>
+                        <i class="fas fa-wallet"></i> Số dư hiện tại: <b style="color: #27ae60; font-size: 18px;">${(data.money || 0).toLocaleString()}đ</b>
+                    </div>`;
+            } else {
+                res.style.background = "#ffebee";
+                res.style.borderColor = "#f44336";
+                res.innerHTML = "❌ Không tìm thấy UID này!";
+            }
+        });
+    }
 
     // 3. TẢI DỮ LIỆU DANH SÁCH
     function loadData() {
@@ -144,36 +151,33 @@
                 userHistory.forEach((item) => {
                     const data = item.val();
                     const itemId = item.key;
-                    const taskTime = data.time || "N/A";
                     const displayAmount = Math.abs(data.amount || 0);
 
                     if (data.status === "processing") {
-                        listWithdraw.innerHTML += `<tr><td>${taskTime}</td><td><small>${uid.substring(0, 8)}...</small></td><td>${data.info}</td><td style="color:#e74c3c;font-weight:bold;">${displayAmount.toLocaleString()}đ</td><td><button class="btn-action btn-approve" onclick="approveWithdraw('${uid}','${itemId}')">Duyệt</button><button class="btn-action btn-reject" onclick="rejectWithdraw('${uid}','${itemId}',${displayAmount})">Hủy</button></td></tr>`;
+                        listWithdraw.innerHTML += `<tr><td>${data.time || 'N/A'}</td><td><span class="uid-link" onclick="quickFill('${uid}')">${uid.substring(0, 8)}...</span></td><td>${data.info}</td><td style="color:#e74c3c;font-weight:bold;">${displayAmount.toLocaleString()}đ</td><td><button class="btn-action btn-approve" onclick="approveWithdraw('${uid}','${itemId}')">Duyệt</button><button class="btn-action btn-reject" onclick="rejectWithdraw('${uid}','${itemId}',${displayAmount})">Hủy</button></td></tr>`;
                     } else if (data.status === "pending") {
-                        listTasks.innerHTML += `<tr><td><small>${uid.substring(0, 8)}...</small></td><td><b>${data.task}</b><br><small>${taskTime}</small></td><td style="color:#27ae60;font-weight:bold;">+${displayAmount.toLocaleString()}đ</td><td><button class="btn-action btn-approve" onclick="approveTask('${uid}','${itemId}',${displayAmount})">Duyệt</button><button class="btn-action btn-reject" onclick="rejectItem('${uid}','${itemId}')">Hủy</button></td></tr>`;
+                        listTasks.innerHTML += `<tr><td><span class="uid-link" onclick="quickFill('${uid}')">${uid.substring(0, 8)}...</span></td><td><b>${data.task}</b><br><small>${data.time || ''}</small></td><td style="color:#27ae60;font-weight:bold;">+${displayAmount.toLocaleString()}đ</td><td><button class="btn-action btn-approve" onclick="approveTask('${uid}','${itemId}',${displayAmount})">Duyệt</button><button class="btn-action btn-reject" onclick="rejectItem('${uid}','${itemId}')">Hủy</button></td></tr>`;
                     }
                 });
             });
         });
     }
 
-    // Xử lý tiền
     function approveWithdraw(uid, itemId) { if (confirm("Đã chuyển khoản thành công?")) db.ref("history/"+uid+"/"+itemId).update({status:"success"}); }
     function rejectWithdraw(uid, itemId, amount) { if (confirm("Hủy và hoàn tiền?")) db.ref("users/"+uid+"/money").transaction(c => (c || 0) + amount).then(() => db.ref("history/"+uid+"/"+itemId).update({status:"rejected"})); }
     function approveTask(uid, itemId, amount) { if (confirm("Cộng tiền cho user?")) db.ref("users/"+uid+"/money").transaction(c => (c || 0) + amount).then(() => db.ref("history/"+uid+"/"+itemId).update({status:"success"})); }
     function rejectItem(uid, itemId) { if (confirm("Hủy nhiệm vụ này?")) db.ref("history/"+uid+"/"+itemId).update({status:"rejected"}); }
 
-    // Cập nhật số dư trực tiếp
     async function updateUserBalance() {
         const uid = document.getElementById('target-uid').value.trim();
         const amount = parseInt(document.getElementById('target-amount').value);
-        if(!uid || isNaN(amount)) return alert("Nhập UID và số tiền hợp lệ!");
+        if(!uid || isNaN(amount)) return alert("Nhập UID và số tiền!");
         if(confirm(`Xác nhận ĐỔI số dư UID này thành ${amount.toLocaleString()}đ?`)) {
             db.ref("users/" + uid + "/money").set(amount).then(() => {
-                alert("Đã cập nhật số dư mới!");
-                checkUserBalance(); // Tự động load lại khung thông tin
+                alert("Đã cập nhật!");
+                checkUserBalance();
                 document.getElementById('target-amount').value = "";
-            }).catch(e => alert("Lỗi: " + e.message));
+            });
         }
     }
 
@@ -181,5 +185,3 @@
 </script>
 </body>
 </html>
-
-
