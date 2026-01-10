@@ -16,9 +16,8 @@
         th { background: #f8f9fa; padding: 15px; text-align: left; font-size: 14px; border-bottom: 2px solid #eee; }
         td { padding: 15px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
         
-        /* CSS Khung tra cứu giống ảnh mẫu */
         .form-box { background: #fff; padding: 25px; border-radius: 15px; border: 2px solid #007bff; box-shadow: 0 4px 12px rgba(0,123,255,0.1); }
-        input { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px; }
+        input { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px; outline: none; }
         
         #result-balance { 
             display: none; 
@@ -27,17 +26,15 @@
             border-radius: 12px; 
             border: 1px solid #007bff; 
             margin-bottom: 15px; 
-            line-height: 1.8;
         }
 
         .btn-update { 
             width: 100%; padding: 14px; background: #007bff; color: white; border: none; 
             border-radius: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase;
         }
-        .btn-check { margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-check { margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; background: #0984e3; }
         .btn-action { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; color: white; font-weight: bold; }
         .btn-approve { background: #27ae60; }
-        .btn-reject { background: #e74c3c; margin-left: 5px; }
         .uid-click { color: #007bff; cursor: pointer; font-weight: bold; text-decoration: underline; }
     </style>
 </head>
@@ -94,46 +91,46 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 1. Mật khẩu truy cập
+    // 1. Mật khẩu quản trị
     const pass = prompt("Nhập mật khẩu Admin:");
     if (pass !== "829135") { alert("Sai mật khẩu!"); document.body.innerHTML = ""; window.stop(); }
 
-    // 2. Hàm điền nhanh UID từ bảng
+    // 2. Điền nhanh UID
     function fillUID(uid) {
         document.getElementById('target-uid').value = uid;
         checkUserBalance();
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
-    // 3. Hàm tra cứu (Sửa lỗi hiển thị email)
-  function checkUserBalance() {
-    const uid = document.getElementById('target-uid').value.trim();
-    const res = document.getElementById('result-balance');
-    if (!uid) return alert("Vui lòng nhập UID!");
+    // 3. Tra cứu số dư (Đã bỏ dòng Email)
+    function checkUserBalance() {
+        const uid = document.getElementById('target-uid').value.trim();
+        const res = document.getElementById('result-balance');
+        if (!uid) return alert("Vui lòng nhập UID!");
 
-    res.style.display = "block";
-    res.style.background = "#f8f9fa";
-    res.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Đang tra cứu...";
+        res.style.display = "block";
+        res.style.background = "#f8f9fa";
+        res.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Đang tra cứu...";
 
-    db.ref("users/" + uid).once("value").then(s => {
-        if (s.exists()) {
-            const data = s.val();
-            res.style.background = "#e3f2fd";
-            res.style.borderColor = "#007bff";
-            // Đã bỏ dòng Email, chỉ giữ lại Số dư
-            res.innerHTML = `
-                <div style="text-align: center; padding: 10px 0;">
-                    <div style="color: #666; font-size: 13px; margin-bottom: 5px;">SỐ DƯ HIỆN TẠI</div>
-                    <b style="color: #27ae60; font-size: 24px;">${(data.money || 0).toLocaleString()}đ</b>
-                </div>`;
-        } else {
-            res.style.background = "#ffebee";
-            res.style.borderColor = "#f44336";
-            res.innerHTML = "<span style='color: #c62828;'>❌ UID không tồn tại!</span>";
-        }
-    });
-}
-    // 4. Load dữ liệu danh sách
+        db.ref("users/" + uid).once("value").then(s => {
+            if (s.exists()) {
+                const data = s.val();
+                res.style.background = "#e3f2fd";
+                res.style.borderColor = "#007bff";
+                res.innerHTML = `
+                    <div style="text-align: center; padding: 10px 0;">
+                        <div style="color: #666; font-size: 13px; margin-bottom: 5px; font-weight: bold;">SỐ DƯ HIỆN TẠI</div>
+                        <b style="color: #27ae60; font-size: 28px;">${(data.money || 0).toLocaleString()}đ</b>
+                    </div>`;
+            } else {
+                res.style.background = "#ffebee";
+                res.style.borderColor = "#f44336";
+                res.innerHTML = "<div style='text-align:center; color:#c62828; font-weight:bold;'>❌ UID không tồn tại!</div>";
+            }
+        });
+    }
+
+    // 4. Load dữ liệu
     function loadData() {
         db.ref("history").on("value", (snapshot) => {
             const listTasks = document.getElementById('list-tasks');
@@ -148,20 +145,20 @@
                     const amount = Math.abs(data.amount || 0).toLocaleString();
 
                     if (data.status === "processing") {
-                        listWithdraw.innerHTML += `<tr><td>${data.time || ''}</td><td><span class="uid-click" onclick="fillUID('${uid}')">${uid.substring(0,8)}...</span></td><td>${data.info}</td><td style="color:red;">${amount}đ</td><td><button class="btn-action btn-approve" onclick="updateStatus('${uid}','${key}','success')">Duyệt</button></td></tr>`;
+                        listWithdraw.innerHTML += `<tr><td>${data.time || ''}</td><td><span class="uid-click" onclick="fillUID('${uid}')">${uid.substring(0,8)}...</span></td><td>${data.info}</td><td style="color:red; font-weight:bold;">${amount}đ</td><td><button class="btn-action btn-approve" onclick="updateStatus('${uid}','${key}','success')">Duyệt</button></td></tr>`;
                     } else if (data.status === "pending") {
-                        listTasks.innerHTML += `<tr><td><span class="uid-click" onclick="fillUID('${uid}')">${uid.substring(0,8)}...</span></td><td>${data.task}</td><td style="color:green;">+${amount}đ</td><td><button class="btn-action btn-approve" onclick="approveTask('${uid}','${key}',${data.amount})">Duyệt</button></td></tr>`;
+                        listTasks.innerHTML += `<tr><td><span class="uid-click" onclick="fillUID('${uid}')">${uid.substring(0,8)}...</span></td><td>${data.task}</td><td style="color:green; font-weight:bold;">+${amount}đ</td><td><button class="btn-action btn-approve" onclick="approveTask('${uid}','${key}',${data.amount})">Duyệt</button></td></tr>`;
                     }
                 });
             });
         });
     }
 
-    // 5. Các hàm xử lý nghiệp vụ
-    function updateStatus(u, k, s) { if(confirm("Xác nhận?")) db.ref("history/"+u+"/"+k).update({status:s}); }
+    // 5. Xử lý nghiệp vụ
+    function updateStatus(u, k, s) { if(confirm("Xác nhận chuyển khoản thành công?")) db.ref("history/"+u+"/"+k).update({status:s}); }
     
     function approveTask(u, k, amt) {
-        if(confirm("Cộng tiền và duyệt?")) {
+        if(confirm("Cộng tiền thưởng và duyệt nhiệm vụ?")) {
             db.ref("users/"+u+"/money").transaction(cur => (cur || 0) + amt).then(() => {
                 db.ref("history/"+u+"/"+k).update({status: "success"});
             });
@@ -170,13 +167,16 @@
 
     async function updateUserBalance() {
         const uid = document.getElementById('target-uid').value.trim();
-        const amt = parseInt(document.getElementById('target-amount').value);
-        if(!uid || isNaN(amt)) return alert("Vui lòng nhập đủ thông tin!");
-        if(confirm("Thiết lập số dư mới cho người dùng này?")) {
+        const amtInput = document.getElementById('target-amount');
+        const amt = parseInt(amtInput.value);
+        
+        if(!uid || isNaN(amt)) return alert("Vui lòng nhập UID và số tiền hợp lệ!");
+        
+        if(confirm(`Thiết lập số dư mới là ${amt.toLocaleString()}đ cho UID này?`)) {
             db.ref("users/"+uid+"/money").set(amt).then(() => {
                 alert("Cập nhật thành công!");
                 checkUserBalance();
-                document.getElementById('target-amount').value = "";
+                amtInput.value = ""; // Xóa trắng ô nhập sau khi cập nhật
             });
         }
     }
@@ -185,4 +185,3 @@
 </script>
 </body>
 </html>
-
